@@ -1,217 +1,386 @@
-import { useMemo, useState } from "react";
-import FilterSelect from "../components/FilterSelect";
-import "./realPages.css";
+import { useEffect, useMemo, useState } from "react";
+import { worldApi } from "../api/worldApi";
+import {
+  HOUSE_BY_ID,
+  HOUSE_FURNITURE_BONUS_CAPS,
+  HOUSE_FURNITURE_CATEGORIES,
+  HOUSES,
+} from "../data/worldData";
+import type { HouseId, HouseSnapshot } from "../types/world";
+import "./worldFinal.css";
 
-type House = {
-  id: string;
-  name: string;
-  price: number | null;
-  level: number;
-  image: string;
-  description: string;
-};
+type Tab = "residence" | "catalogue" | "mobilier";
 
-const HOUSES: House[] = [
-  {
-    id: "sans_abri",
-    name: "🌧️ Sans-abri",
-    price: 0,
-    level: 1,
-    image: "/ImagesMaison/Image_Sans_Abris.png",
-    description:
-      "Chaque aventurier commence quelque part. Le Royaume offre un simple abri de fortune.",
-  },
-  {
-    id: "ferme",
-    name: "🏚️ Petite ferme délabrée",
-    price: 1000,
-    level: 2,
-    image: "/ImagesMaison/Image_Ferme.png",
-    description:
-      "Une vieille ferme qui reprend vie. Ton premier véritable foyer dans TailBlue.",
-  },
-  {
-    id: "cabane",
-    name: "🪵 Cabane confortable",
-    price: 3000,
-    level: 5,
-    image: "/ImagesMaison/Cabane_Confort.png",
-    description:
-      "Une cabane chaleureuse et confortable, parfaite pour souffler entre deux aventures.",
-  },
-  {
-    id: "village",
-    name: "🏡 Maison de Citée",
-    price: 7500,
-    level: 10,
-    image: "/ImagesMaison/Maison_Citee.png",
-    description:
-      "Les habitants commencent à reconnaître ton nom. Une véritable maison au cœur de la cité.",
-  },
-  {
-    id: "manoir",
-    name: "🏛️ Manoir champêtre",
-    price: 15000,
-    level: 15,
-    image: "/ImagesMaison/Manoir.png",
-    description:
-      "Une demeure prestigieuse réservée aux aventuriers qui ont déjà fait leurs preuves.",
-  },
-  {
-    id: "villa",
-    name: "🌸 Villa du royaume",
-    price: 22000,
-    level: 20,
-    image: "/ImagesMaison/villa.png",
-    description:
-      "Une résidence luxueuse et raffinée, digne des héros les plus reconnus du Royaume.",
-  },
-  {
-    id: "plateau",
-    name: "⛰️ Haut plateau royal",
-    price: 30000,
-    level: 25,
-    image: "/ImagesMaison/HautPlateau.png",
-    description:
-      "Une résidence perchée sur les hauteurs de TailBlue, loin du tumulte du Royaume.",
-  },
-  {
-    id: "chateau",
-    name: "👑 Château de Hime-sama",
-    price: null,
-    level: 9999,
-    image: "/ImagesMaison/Image_Chateau.png",
-    description:
-      "La résidence royale de Hime-sama, au cœur du Royaume. Le Château ne peut pas être acheté.",
-  },
-];
+function signed(value: number, suffix = "") {
+  return `${value >= 0 ? "+" : ""}${value}${suffix}`;
+}
 
-// TEMPORAIRE : sera remplacé par le vrai profil joueur via l'API TailBlue.
-const CURRENT_PLAYER_OWNED_HOUSE_IDS = new Set(["chateau"]);
+function formatCookies(value: number | null) {
+  if (value === null) return "Réservé à Hime-sama";
+  return `${value.toLocaleString("fr-CH")} cookies`;
+}
 
 export default function HousePage() {
-  const [filter, setFilter] = useState<"owned" | "all">("all");
-  const [selectedId, setSelectedId] = useState("chateau");
+  const [snapshot, setSnapshot] = useState<HouseSnapshot | null>(null);
+  const [tab, setTab] = useState<Tab>("residence");
+  const [selectedId, setSelectedId] = useState<HouseId>("sans_abri");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const filteredHouses = useMemo(() => {
-    if (filter === "owned") {
-      return HOUSES.filter((house) =>
-        CURRENT_PLAYER_OWNED_HOUSE_IDS.has(house.id)
-      );
+  async function refresh() {
+    if (!worldApi.configured) return;
+    try {
+      const data = await worldApi.getHouse();
+      setSnapshot(data);
+      setSelectedId(data.currentHouseId);
+      setMessage("");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "API indisponible.");
     }
+  }
 
-    return HOUSES;
-  }, [filter]);
+  useEffect(() => {
+    void refresh();
+  }, []);
 
-  const selected =
-    filteredHouses.find((house) => house.id === selectedId) ??
-    filteredHouses[0] ??
-    HOUSES[0];
+  const currentId = snapshot?.currentHouseId ?? selectedId;
+  const currentHouse = HOUSE_BY_ID[currentId] ?? HOUSE_BY_ID.sans_abri;
+  const selectedHouse = HOUSE_BY_ID[selectedId] ?? currentHouse;
 
-  function changeFilter(value: string) {
-    const nextFilter = value as "owned" | "all";
-    setFilter(nextFilter);
+  const slotsUsed =
+    snapshot?.furnitureSlotsUsed ??
+    snapshot?.installedFurnitureIds?.length ??
+    0;
+  const slotsTotal =
+    snapshot?.furnitureSlotsTotal ?? currentHouse.furnitureSlots;
 
-    const nextList =
-      nextFilter === "owned"
-        ? HOUSES.filter((house) =>
-            CURRENT_PLAYER_OWNED_HOUSE_IDS.has(house.id)
-          )
-        : HOUSES;
+  const furnitureByCategory = useMemo(() => {
+    const result = new Map<string, NonNullable<HouseSnapshot["furniture"]>>();
+    for (const item of snapshot?.furniture ?? []) {
+      const key = item.category || "autres";
+      const list = result.get(key) ?? [];
+      list.push(item);
+      result.set(key, list);
+    }
+    return result;
+  }, [snapshot]);
 
-    if (nextList.length > 0) {
-      setSelectedId(nextList[0].id);
+  async function buyHouse(houseId: HouseId) {
+    if (!worldApi.configured || busy) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const data = await worldApi.buyHouse(houseId);
+      setSnapshot(data);
+      setSelectedId(data.currentHouseId);
+      setMessage("🏠 Résidence achetée. Les données viennent de TailBlue.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Achat impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function furnitureAction(
+    action: "buy" | "install" | "store",
+    itemId: string,
+  ) {
+    if (!worldApi.configured || busy) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const data = await worldApi.houseFurniture(action, itemId);
+      setSnapshot(data);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Action mobilier impossible.",
+      );
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <section className="real-page">
-      <div className="real-page-heading">
+    <section className="world-page">
+      <header className="world-heading">
         <div>
-          <p className="eyebrow">RÉSIDENCES DU ROYAUME</p>
-          <h2>Maison</h2>
-          <p className="real-muted">
-            Consulte ta résidence ou découvre toutes les maisons disponibles dans TailBlue.
+          <span className="world-eyebrow">MONDE • RÉSIDENCE</span>
+          <h1>🏠 Maison</h1>
+          <p>
+            Résidence effective, propriété personnelle et mobilier — prêts à
+            être branchés au même état que le bot.
           </p>
         </div>
+        <div className={`world-api-pill ${snapshot ? "is-live" : ""}`}>
+          {snapshot ? "● TailBlue connecté" : "○ Aperçu local"}
+        </div>
+      </header>
 
-        <FilterSelect
-          value={filter}
-          onChange={changeFilter}
-          options={[
-            { value: "owned", label: "Ma maison" },
-            { value: "all", label: "Toutes les maisons" },
-          ]}
-        />
-      </div>
-
-      <article className="showcase-card">
-        <div
-          className="showcase-visual"
-          style={{ backgroundImage: `url("${selected.image}")` }}
+      <div className="world-tabs">
+        <button
+          className={tab === "residence" ? "active" : ""}
+          onClick={() => setTab("residence")}
         >
-          <div className="showcase-blur" />
-          <img
-            className="showcase-main-image"
-            src={selected.image}
-            alt={selected.name}
-          />
-        </div>
-
-        <div className="showcase-info">
-          <div>
-            <p className="eyebrow">
-              {CURRENT_PLAYER_OWNED_HOUSE_IDS.has(selected.id)
-                ? "✓ POSSÉDÉE"
-                : "RÉSIDENCE"}
-            </p>
-
-            <h2>{selected.name}</h2>
-            <p className="showcase-description">{selected.description}</p>
-          </div>
-
-          <div className="showcase-stats">
-            <div>
-              <span>Niveau requis</span>
-              <strong>
-                {selected.id === "chateau" ? "Hime-sama" : selected.level}
-              </strong>
-            </div>
-
-            <div>
-              <span>Prix</span>
-              <strong>
-                {selected.price === null
-                  ? "Réservé à la Couronne"
-                  : selected.price === 0
-                  ? "Gratuit"
-                  : `${selected.price.toLocaleString("fr-CH")} cookies`}
-              </strong>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      <div className="house-selector">
-        {filteredHouses.map((house) => (
-          <button
-            key={house.id}
-            className={`house-thumb ${
-              selected.id === house.id ? "selected" : ""
-            }`}
-            onClick={() => setSelectedId(house.id)}
-          >
-            <div
-              className="thumb-visual"
-              style={{ backgroundImage: `url("${house.image}")` }}
-            >
-              <img src={house.image} alt={house.name} />
-            </div>
-
-            <span>{house.name}</span>
-          </button>
-        ))}
+          Ma résidence
+        </button>
+        <button
+          className={tab === "catalogue" ? "active" : ""}
+          onClick={() => setTab("catalogue")}
+        >
+          Catalogue
+        </button>
+        <button
+          className={tab === "mobilier" ? "active" : ""}
+          onClick={() => setTab("mobilier")}
+        >
+          Mobilier
+        </button>
       </div>
+
+      {message && <div className="world-message">{message}</div>}
+
+      {tab === "residence" && (
+        <div className="world-two-columns">
+          <article className="world-panel">
+            <div className="world-image-stage">
+              <div
+                className="world-image-blur"
+                style={{ backgroundImage: `url("${currentHouse.image}")` }}
+              />
+              <img src={currentHouse.image} alt={currentHouse.name} />
+            </div>
+          </article>
+
+          <article className="world-panel world-detail-panel">
+            <span className="world-kicker">RÉSIDENCE ACTUELLE</span>
+            <h2>{snapshot ? currentHouse.name : "Aperçu du catalogue"}</h2>
+            <p>{currentHouse.description}</p>
+
+            <div className="world-stat-grid">
+              <div>
+                <span>Niveau requis</span>
+                <strong>
+                  {currentHouse.levelRequired === 9999
+                    ? "Hime-sama"
+                    : currentHouse.levelRequired}
+                </strong>
+              </div>
+              <div>
+                <span>Mobilier</span>
+                <strong>
+                  {slotsUsed}/{slotsTotal}
+                </strong>
+              </div>
+              <div>
+                <span>Cookies</span>
+                <strong>{signed(currentHouse.effect.cookiesPct, " %")}</strong>
+              </div>
+              <div>
+                <span>XP</span>
+                <strong>{signed(currentHouse.effect.xpPct, " %")}</strong>
+              </div>
+              <div>
+                <span>Repos Work / Hunt</span>
+                <strong>
+                  {signed(currentHouse.effect.cooldownMinutes, " min")}
+                </strong>
+              </div>
+              <div>
+                <span>Propriété personnelle</span>
+                <strong>
+                  {snapshot
+                    ? HOUSE_BY_ID[snapshot.ownedHouseId]?.name ?? "—"
+                    : "—"}
+                </strong>
+              </div>
+            </div>
+
+            {snapshot?.sharedResidence && (
+              <div className="world-note">
+                💞 Résidence partagée
+                {snapshot.spouseName ? ` avec ${snapshot.spouseName}` : ""}.
+                L’achat d’une propriété personnelle ne doit pas déplacer le
+                conjoint automatiquement.
+              </div>
+            )}
+
+            {!snapshot && (
+              <div className="world-note">
+                Les valeurs ci-dessus viennent du Python. L’identité de ta
+                résidence réelle apparaîtra dès que l’endpoint Maison sera
+                branché.
+              </div>
+            )}
+          </article>
+        </div>
+      )}
+
+      {tab === "catalogue" && (
+        <>
+          <div className="world-card-grid world-house-grid">
+            {HOUSES.map((house) => {
+              const selected = selectedId === house.id;
+              const owned = snapshot?.ownedHouseId === house.id;
+              const lockedLevel =
+                snapshot != null &&
+                snapshot.playerLevel < house.levelRequired &&
+                house.levelRequired !== 9999;
+              const lockedMoney =
+                snapshot != null &&
+                house.price != null &&
+                snapshot.cookies < house.price;
+              const canBuy =
+                Boolean(snapshot) &&
+                house.purchasable &&
+                !owned &&
+                !lockedLevel &&
+                !lockedMoney;
+
+              return (
+                <button
+                  key={house.id}
+                  className={`world-card-button ${selected ? "selected" : ""}`}
+                  onClick={() => setSelectedId(house.id)}
+                >
+                  <div className="world-card-art">
+                    <img src={house.image} alt="" />
+                  </div>
+                  <div className="world-card-body">
+                    <strong>{house.name}</strong>
+                    <span>
+                      Niveau{" "}
+                      {house.levelRequired === 9999
+                        ? "Hime-sama"
+                        : house.levelRequired}
+                    </span>
+                    <span>{formatCookies(house.price)}</span>
+                    {owned && <em>✓ Propriété personnelle</em>}
+                    {canBuy && <em>Disponible</em>}
+                    {lockedLevel && <em>🔒 Niveau insuffisant</em>}
+                    {lockedMoney && !lockedLevel && <em>🍪 Cookies insuffisants</em>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <article className="world-panel world-catalog-detail">
+            <div className="world-catalog-art">
+              <div
+                className="world-image-blur"
+                style={{ backgroundImage: `url("${selectedHouse.image}")` }}
+              />
+              <img src={selectedHouse.image} alt={selectedHouse.name} />
+            </div>
+            <div>
+              <span className="world-kicker">CATALOGUE IMMOBILIER ROYAL</span>
+              <h2>{selectedHouse.name}</h2>
+              <p>{selectedHouse.description}</p>
+              <div className="world-inline-tags">
+                <span>🍪 {signed(selectedHouse.effect.cookiesPct, " %")}</span>
+                <span>✨ {signed(selectedHouse.effect.xpPct, " %")}</span>
+                <span>
+                  ⏳ {signed(selectedHouse.effect.cooldownMinutes, " min")}
+                </span>
+                <span>🪑 {selectedHouse.furnitureSlots} emplacements</span>
+              </div>
+              <button
+                className="world-primary-button"
+                disabled={
+                  busy ||
+                  !worldApi.configured ||
+                  !selectedHouse.purchasable ||
+                  snapshot?.ownedHouseId === selectedHouse.id
+                }
+                onClick={() => void buyHouse(selectedHouse.id)}
+              >
+                {!worldApi.configured
+                  ? "Connexion TailBlue requise"
+                  : !selectedHouse.purchasable
+                    ? "Non achetable"
+                    : snapshot?.ownedHouseId === selectedHouse.id
+                      ? "Déjà possédée"
+                      : `Acheter • ${formatCookies(selectedHouse.price)}`}
+              </button>
+            </div>
+          </article>
+        </>
+      )}
+
+      {tab === "mobilier" && (
+        <div className="world-panel">
+          <div className="world-section-title">
+            <div>
+              <span className="world-kicker">AMÉNAGEMENT</span>
+              <h2>Mobilier de la résidence</h2>
+            </div>
+            <strong>
+              {slotsUsed}/{slotsTotal} emplacements
+            </strong>
+          </div>
+
+          <div className="world-inline-tags">
+            <span>⛏️ Repos Mine : max −{HOUSE_FURNITURE_BONUS_CAPS.mineRestMinutes} min</span>
+            <span>⏳ Activités : max −{HOUSE_FURNITURE_BONUS_CAPS.activityCooldownMinutes} min</span>
+            <span>✨ XP : max +{HOUSE_FURNITURE_BONUS_CAPS.xpPct} %</span>
+            <span>🍪 Cookies : max +{HOUSE_FURNITURE_BONUS_CAPS.cookiesPct} %</span>
+          </div>
+
+          {!snapshot?.furniture?.length ? (
+            <div className="world-empty">
+              <span>🪑</span>
+              <h3>Aucun mobilier réel chargé</h3>
+              <p>
+                On n’invente pas le stock : l’API renverra les meubles
+                réellement possédés/disponibles dans TailBlue.
+              </p>
+              <small>
+                Catégories prévues par le moteur :{" "}
+                {HOUSE_FURNITURE_CATEGORIES.join(" • ")}
+              </small>
+            </div>
+          ) : (
+            <div className="world-card-grid">
+              {[...furnitureByCategory.entries()].flatMap(([category, items]) =>
+                items.map((item) => (
+                  <article className="world-small-card" key={item.id}>
+                    <span className="world-kicker">{category}</span>
+                    <h3>
+                      {item.emoji ?? "🪑"} {item.name}
+                    </h3>
+                    <p>{item.description ?? "Mobilier TailBlue"}</p>
+                    <small>
+                      Possédé : {item.owned ?? 0} •{" "}
+                      {item.installed ? "Installé" : "Rangé"}
+                    </small>
+                    <div className="world-row-actions">
+                      {item.installed ? (
+                        <button
+                          onClick={() =>
+                            void furnitureAction("store", item.id)
+                          }
+                          disabled={busy}
+                        >
+                          Ranger
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() =>
+                            void furnitureAction("install", item.id)
+                          }
+                          disabled={busy}
+                        >
+                          Installer
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                )),
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

@@ -1,209 +1,163 @@
-import { useMemo, useState } from "react";
-import {
-  COMMAND_COUNT,
-  COMMAND_GROUPS,
-  type CommandGuide,
-} from "../data/commandGuideData";
-import "./remainingPages.css";
+import { useMemo, useState, type ChangeEvent } from "react";
+import { ALL_COMMANDS, COMMAND_COUNT, COMMAND_GROUPS, GROUP_COUNT } from "../data/commandGuideData";
+import type { CommandGuide } from "../types/information";
+import "./informationFinal.css";
 
 export default function WikiPage() {
+  const [groupId, setGroupId] = useState(COMMAND_GROUPS[0]?.id ?? "depart");
   const [query, setQuery] = useState("");
-  const [groupId, setGroupId] = useState(COMMAND_GROUPS[0].id);
-  const [selectedId, setSelectedId] = useState(COMMAND_GROUPS[0].commands[0].id);
+  const [selectedId, setSelectedId] = useState(COMMAND_GROUPS[0]?.commands[0]?.id ?? "start");
 
-  const normalizedQuery = query.trim().toLocaleLowerCase("fr");
+  const normalized = query.trim().toLocaleLowerCase("fr");
+  const currentGroup = COMMAND_GROUPS.find((group) => group.id === groupId) ?? COMMAND_GROUPS[0];
 
-  const searchResults = useMemo(() => {
-    if (!normalizedQuery) return [];
-
-    return COMMAND_GROUPS.flatMap((group) =>
-      group.commands
-        .filter((command) => {
-          const haystack = [
-            command.command,
-            command.title,
-            command.summary,
-            command.details,
-            ...(command.usage ?? []),
-            ...(command.prerequisites ?? []),
-            ...(command.effects ?? []),
-            ...(command.tips ?? []),
-            ...(command.related ?? []),
-          ]
-            .join(" ")
-            .toLocaleLowerCase("fr");
-          return haystack.includes(normalizedQuery);
-        })
-        .map((command) => ({ group, command }))
+  const visible = useMemo(() => {
+    if (!normalized) return currentGroup.commands.map((command) => ({ ...command, groupTitle: currentGroup.title, groupIcon: currentGroup.icon }));
+    return ALL_COMMANDS.filter((command) =>
+      [command.command, command.title, command.summary, command.groupTitle]
+        .join(" ")
+        .toLocaleLowerCase("fr")
+        .includes(normalized),
     );
-  }, [normalizedQuery]);
+  }, [currentGroup, normalized]);
 
-  const activeGroup = COMMAND_GROUPS.find((group) => group.id === groupId) ?? COMMAND_GROUPS[0];
-  const activeCommands = normalizedQuery
-    ? searchResults.map((result) => result.command)
-    : activeGroup.commands;
+  const selected =
+    visible.find((command) => command.id === selectedId) ??
+    visible[0] ??
+    currentGroup.commands[0] ??
+    null;
 
-  const selectedCommand = useMemo<CommandGuide | null>(() => {
-    const fromVisible = activeCommands.find((command) => command.id === selectedId);
-    if (fromVisible) return fromVisible;
-    return activeCommands[0] ?? null;
-  }, [activeCommands, selectedId]);
-
-  function chooseGroup(nextGroupId: string) {
-    const nextGroup = COMMAND_GROUPS.find((group) => group.id === nextGroupId);
-    if (!nextGroup) return;
+  function chooseGroup(nextId: string) {
+    const group = COMMAND_GROUPS.find((item) => item.id === nextId);
+    if (!group) return;
+    setGroupId(nextId);
     setQuery("");
-    setGroupId(nextGroup.id);
-    setSelectedId(nextGroup.commands[0]?.id ?? "");
-  }
-
-  function chooseSearchResult(command: CommandGuide) {
-    const owner = COMMAND_GROUPS.find((group) => group.commands.some((entry) => entry.id === command.id));
-    if (owner) setGroupId(owner.id);
-    setSelectedId(command.id);
+    setSelectedId(group.commands[0]?.id ?? "");
   }
 
   return (
-    <section className="extra-page wiki-page wiki-guide-page">
-      <div className="extra-heading wiki-guide-heading">
+    <section className="info-page wiki-final-page">
+      <header className="info-heading">
         <div>
-          <p className="eyebrow">📖 GUIDE COMPLET DU ROYAUME</p>
-          <h2>Wiki des commandes</h2>
-          <p className="extra-muted">
-            Le <strong>!helpme</strong> donne la version rapide sur Discord. Ici, chaque commande explique
-            ce qu'elle fait, comment l'utiliser, ses conditions, ses effets et les commandes liées.
+          <p className="info-eyebrow">📖 GUIDE OFFICIEL DU ROYAUME</p>
+          <h1>Wiki TailBlue</h1>
+          <p>
+            Le catalogue public reprend <strong>tout le HELP_DATA de <code>!helpme</code></strong> :
+            aucune catégorie et aucune commande du guide Discord n'est volontairement retirée.
           </p>
         </div>
-        <div className="wiki-guide-counter">
-          <strong>{COMMAND_COUNT}</strong>
-          <span>commandes documentées</span>
+        <div className="info-heading-pills">
+          <span>✅ {COMMAND_COUNT} commandes</span>
+          <span>📚 {GROUP_COUNT} catégories</span>
+          <span>🐰 Source : !helpme</span>
         </div>
-      </div>
+      </header>
 
-      <div className="wiki-guide-search">
+      <div className="wiki-search-final">
         <span>⌕</span>
         <input
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Chercher une commande : mine, chenil, guilde, craft…"
+          onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
+          placeholder="Rechercher une commande, une fonction ou une catégorie…"
+          aria-label="Rechercher dans le Wiki TailBlue"
         />
         {query && <button onClick={() => setQuery("")}>Effacer</button>}
       </div>
 
-      <div className="wiki-guide-layout">
-        <aside className="wiki-group-rail">
-          <div className="wiki-rail-title">CATÉGORIES</div>
+      <div className="wiki-final-layout">
+        <nav className="wiki-category-rail" aria-label="Catégories du guide TailBlue">
+          <p>CATÉGORIES</p>
           {COMMAND_GROUPS.map((group) => (
             <button
               key={group.id}
-              className={group.id === groupId && !normalizedQuery ? "selected" : ""}
+              className={!normalized && group.id === currentGroup.id ? "selected" : ""}
               onClick={() => chooseGroup(group.id)}
             >
               <span>{group.icon}</span>
-              <div>
-                <strong>{group.title}</strong>
-                <small>{group.commands.length} commande{group.commands.length > 1 ? "s" : ""}</small>
-              </div>
+              <strong>{group.title}</strong>
+              <em>{group.commands.length}</em>
             </button>
           ))}
-        </aside>
+        </nav>
 
         <main className="wiki-command-browser">
-          <div className="wiki-command-list-head">
+          <div className="wiki-browser-top">
             <div>
-              <p className="eyebrow">{normalizedQuery ? "RÉSULTATS" : `${activeGroup.icon} ${activeGroup.title.toUpperCase()}`}</p>
-              <h3>{normalizedQuery ? `${searchResults.length} résultat(s)` : activeGroup.title}</h3>
-              <p>{normalizedQuery ? `Recherche : « ${query.trim()} »` : activeGroup.description}</p>
+              <p className="info-eyebrow">{normalized ? "RÉSULTATS" : `${currentGroup.icon} ${currentGroup.title.toUpperCase()}`}</p>
+              <h2>{normalized ? `${visible.length} résultat(s)` : currentGroup.title}</h2>
+              <p>{normalized ? `Recherche dans les ${COMMAND_COUNT} commandes de !helpme.` : currentGroup.description}</p>
             </div>
           </div>
 
           <div className="wiki-command-list">
-            {activeCommands.map((command) => (
+            {visible.map((command) => (
               <button
-                key={command.id}
-                className={`wiki-command-row ${selectedCommand?.id === command.id ? "selected" : ""}`}
-                onClick={() => chooseSearchResult(command)}
+                key={`${command.groupTitle}-${command.id}`}
+                className={selected?.id === command.id ? "selected" : ""}
+                onClick={() => setSelectedId(command.id)}
               >
                 <span className="wiki-command-icon">{command.icon}</span>
-                <div className="wiki-command-row-copy">
+                <span className="wiki-command-copy">
                   <code>{command.command}</code>
                   <strong>{command.title}</strong>
-                  <p>{command.summary}</p>
-                </div>
-                {command.adminOnly && <span className="wiki-admin-pill">👑 Hime</span>}
-                <span className="wiki-row-arrow">›</span>
+                  <small>{command.summary}</small>
+                </span>
+                {normalized && <span className="wiki-command-group">{command.groupIcon} {command.groupTitle}</span>}
+                <span className="wiki-command-arrow">›</span>
               </button>
             ))}
 
-            {activeCommands.length === 0 && (
-              <div className="wiki-no-result">
+            {!visible.length && (
+              <div className="wiki-empty-final">
                 <span>🔎</span>
                 <h3>Aucune commande trouvée</h3>
-                <p>Essaie un nom plus court ou une autre catégorie.</p>
+                <p>Essaie un nom comme « guilde », « cookie », « maison » ou « mariage ».</p>
               </div>
             )}
           </div>
         </main>
 
-        <aside className="wiki-command-detail">
-          {selectedCommand ? <CommandDetail command={selectedCommand} /> : null}
+        <aside className="wiki-detail-final">
+          {selected ? <CommandDetail command={selected} /> : <div className="wiki-empty-final">Sélectionne une commande.</div>}
         </aside>
       </div>
+
+      <footer className="wiki-source-note">
+        <span>ℹ️</span>
+        <p>
+          Ce Wiki est le miroir du guide public <code>!helpme</code>. Les commandes administratives de
+          <code> !himehelp</code> restent séparées : elles appartiennent au Hime Control et leurs permissions
+          devront rester validées côté backend.
+        </p>
+      </footer>
     </section>
   );
 }
 
-function CommandDetail({ command }: { command: CommandGuide }) {
+function CommandDetail({ command }: { command: CommandGuide & { groupTitle?: string; groupIcon?: string } }) {
   return (
-    <article className="wiki-detail-card">
+    <article className="wiki-detail-card-final">
       <header>
-        <div className="wiki-detail-symbol">{command.icon}</div>
+        <span>{command.icon}</span>
         <div>
-          <p className="eyebrow">FICHE COMMANDE</p>
+          <p className="info-eyebrow">{command.groupIcon} {command.groupTitle ?? "TAILBLUE"}</p>
           <h2>{command.title}</h2>
           <code>{command.command}</code>
         </div>
       </header>
-
-      {command.adminOnly && (
-        <div className="wiki-detail-admin">👑 Commande administrative réservée à Hime-sama</div>
-      )}
-
       <section>
-        <h4>À quoi ça sert ?</h4>
+        <h3>À quoi ça sert ?</h3>
         <p>{command.details}</p>
       </section>
-
-      <DetailList icon="⌨️" title="Syntaxe" values={command.usage} code />
-      <DetailList icon="🔒" title="Conditions" values={command.prerequisites} />
-      <DetailList icon="✨" title="Ce que ça change" values={command.effects} />
-      <DetailList icon="💡" title="À savoir" values={command.tips} />
-      <DetailList icon="🔗" title="Commandes liées" values={command.related} code />
+      <section>
+        <h3>Syntaxe officielle</h3>
+        {command.usage.map((usage) => <code key={usage}>{usage}</code>)}
+      </section>
+      <section>
+        <h3>Description de !helpme</h3>
+        <p>{command.summary}</p>
+      </section>
+      <footer>✅ Commande présente dans le guide public TailBlue</footer>
     </article>
-  );
-}
-
-function DetailList({
-  icon,
-  title,
-  values,
-  code = false,
-}: {
-  icon: string;
-  title: string;
-  values?: string[];
-  code?: boolean;
-}) {
-  if (!values?.length) return null;
-
-  return (
-    <section className="wiki-detail-list">
-      <h4>{icon} {title}</h4>
-      <div>
-        {values.map((value) =>
-          code ? <code key={value}>{value}</code> : <p key={value}>• {value}</p>
-        )}
-      </div>
-    </section>
   );
 }

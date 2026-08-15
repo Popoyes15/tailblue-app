@@ -1,78 +1,110 @@
 import { useMemo, useState } from "react";
-import { HOUSES, PETS } from "../data/tailblueLocalData";
-import { DRAGONS, KENNELS, MUSEUMS, PROVISION_LEVELS } from "../data/worldLocalData";
-import "./remainingPages.css";
+import {
+  GALLERY_ITEMS,
+  type GalleryCategory,
+  type GalleryItem,
+} from "../data/worldData";
+import "./worldFinal.css";
 
-type GalleryAsset = { id: string; category: string; name: string; image: string; subtitle: string };
+type Filter = "all" | GalleryCategory;
+
+const FILTERS: Array<{ id: Filter; label: string }> = [
+  { id: "all", label: "Tout" },
+  { id: "houses", label: "🏠 Maisons" },
+  { id: "museums", label: "🏛️ Musées" },
+  { id: "market", label: "🏘️ Marché" },
+];
 
 export default function GalleryPage() {
-  const [category, setCategory] = useState("all");
-  const [selected, setSelected] = useState<GalleryAsset | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
+  const [selected, setSelected] = useState<GalleryItem | null>(null);
 
-  const assets = useMemo<GalleryAsset[]>(() => [
-    ...PETS.map((pet) => ({ id: `pet-${pet.id}`, category: "pets", name: pet.name, image: pet.image, subtitle: pet.rarity })),
-    ...DRAGONS.map((dragon) => ({ id: `dragon-${dragon.id}`, category: "dragons", name: dragon.name, image: dragon.image, subtitle: dragon.rarity })),
-    ...HOUSES.map((house) => ({ id: `house-${house.id}`, category: "houses", name: house.name, image: house.image, subtitle: "Résidence" })),
-    ...KENNELS.map((kennel) => ({ id: `kennel-${kennel.id}`, category: "kennels", name: kennel.name, image: kennel.image, subtitle: "Chenil" })),
-    ...PROVISION_LEVELS.map((item) => ({ id: `provision-${item.level}`, category: "provisions", name: item.name, image: item.image, subtitle: `Niveau ${item.level}` })),
-    ...MUSEUMS.map((museum) => ({ id: `museum-${museum.id}`, category: "museums", name: museum.name, image: museum.image, subtitle: "Musée" })),
-  ], []);
-
-  const filtered = category === "all" ? assets : assets.filter((asset) => asset.category === category);
-
-  const categories = [
-    ["all", "Tout"],
-    ["pets", "Pets"],
-    ["dragons", "Dragons"],
-    ["houses", "Maisons"],
-    ["kennels", "Chenils"],
-    ["provisions", "Provisions"],
-    ["museums", "Musées"],
-  ];
+  const items = useMemo(
+    () =>
+      filter === "all"
+        ? GALLERY_ITEMS
+        : GALLERY_ITEMS.filter((item) => item.category === filter),
+    [filter],
+  );
 
   return (
-    <section className="extra-page">
-      <div className="extra-heading">
+    <section className="world-page">
+      <header className="world-heading">
         <div>
-          <p className="eyebrow">ARCHIVES VISUELLES</p>
-          <h2>Galerie</h2>
-          <p className="extra-muted">
-            Parcours les illustrations locales utilisées dans TailBlue.
+          <span className="world-eyebrow">MONDE • ARCHIVES VISUELLES</span>
+          <h1>🖼️ Galerie</h1>
+          <p>
+            Une galerie propre à l’application. Elle n’effectue aucune action
+            gameplay et utilise uniquement les illustrations déjà présentes
+            dans TailBlue.
           </p>
         </div>
-        <span className="source-badge">{filtered.length} visuels</span>
-      </div>
+        <div className="world-api-pill is-live">● Locale</div>
+      </header>
 
-      <div className="gallery-filters">
-        {categories.map(([id, label]) => (
-          <button key={id} className={category === id ? "selected" : ""} onClick={() => setCategory(id)}>
-            {label}
+      <div className="world-tabs">
+        {FILTERS.map((entry) => (
+          <button
+            key={entry.id}
+            className={filter === entry.id ? "active" : ""}
+            onClick={() => setFilter(entry.id)}
+          >
+            {entry.label}
           </button>
         ))}
       </div>
 
-      <div className="gallery-grid">
-        {filtered.map((asset) => (
-          <button key={asset.id} className="gallery-tile" onClick={() => setSelected(asset)}>
-            <div style={{ backgroundImage: `url("${asset.image}")` }}>
-              <span />
-              <img src={asset.image} alt={asset.name} />
+      <div className="world-gallery-grid">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            className="world-gallery-card"
+            onClick={() => setSelected(item)}
+          >
+            <div>
+              <img src={item.image} alt="" />
             </div>
-            <section><small>{asset.subtitle}</small><strong>{asset.name}</strong></section>
+            <span>
+              <b>{item.title}</b>
+              <small>{item.subtitle}</small>
+            </span>
           </button>
         ))}
       </div>
 
       {selected && (
-        <div className="gallery-lightbox" onClick={() => setSelected(null)}>
-          <article onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setSelected(null)}>×</button>
-            <div className="lightbox-image" style={{ backgroundImage: `url("${selected.image}")` }}>
-              <span />
-              <img src={selected.image} alt={selected.name} />
+        <div
+          className="world-modal-backdrop"
+          role="presentation"
+          onMouseDown={() => setSelected(null)}
+        >
+          <div
+            className="world-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={selected.title}
+            onMouseDown={(event: { stopPropagation: () => void }) => event.stopPropagation()}
+          >
+            <button
+              className="world-modal-close"
+              onClick={() => setSelected(null)}
+              aria-label="Fermer"
+            >
+              ×
+            </button>
+            <div className="world-modal-image">
+              <div
+                className="world-image-blur"
+                style={{ backgroundImage: `url("${selected.image}")` }}
+              />
+              <img src={selected.image} alt={selected.title} />
             </div>
-            <div className="lightbox-copy"><small>{selected.subtitle}</small><h2>{selected.name}</h2><code>{selected.image}</code></div>
-          </article>
+            <div className="world-modal-copy">
+              <span className="world-kicker">{selected.category}</span>
+              <h2>{selected.title}</h2>
+              <p>{selected.subtitle}</p>
+            </div>
+          </div>
         </div>
       )}
     </section>

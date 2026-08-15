@@ -1,68 +1,113 @@
-import { useState } from "react";
-import "./remainingPages.css";
+import { useEffect, useState } from "react";
+import { worldApi } from "../api/worldApi";
+import type {
+  LeaderboardEntryDto,
+  LeaderboardSnapshot,
+} from "../types/world";
+import "./worldFinal.css";
 
-const categories = [
-  { id: "level", label: "⭐ Niveau", description: "Classement Royal des Niveaux" },
-  { id: "rank", label: "⚔️ Aventurier", description: "Rang calculé par GuildHunt V2" },
-  { id: "museum", label: "🏛️ Musée", description: "Nombre de pièces puis valeur estimée" },
-  { id: "work", label: "💼 Work", description: "Statistiques de travail" },
-];
+function medal(index: number, entry: LeaderboardEntryDto) {
+  if (entry.isHime) return "👑";
+  if (index === 0) return "🥇";
+  if (index === 1) return "🥈";
+  if (index === 2) return "🥉";
+  return `${index + 1}.`;
+}
 
 export default function LeaderboardPage() {
-  const [category, setCategory] = useState("level");
+  const [snapshot, setSnapshot] = useState<LeaderboardSnapshot | null>(null);
+  const [error, setError] = useState("");
 
-  const current = categories.find((item) => item.id === category) ?? categories[0];
+  useEffect(() => {
+    if (!worldApi.configured) return;
+    worldApi
+      .getLevelLeaderboard()
+      .then((data) => {
+        setSnapshot(data);
+        setError("");
+      })
+      .catch((reason) => {
+        setError(reason instanceof Error ? reason.message : "API indisponible.");
+      });
+  }, []);
 
   return (
-    <section className="extra-page leaderboard-page">
-      <div className="extra-heading">
+    <section className="world-page">
+      <header className="world-heading">
         <div>
-          <p className="eyebrow">REGISTRES ROYAUX</p>
-          <h2>Classement</h2>
-          <p className="extra-muted">
-            Une seule interface pour les différents classements du Royaume.
+          <span className="world-eyebrow">MONDE • ROYAUME</span>
+          <h1>🏆 Classement</h1>
+          <p>
+            Le classement réellement existant dans le bot : les 10 meilleurs
+            niveaux, calculés depuis l’XP.
           </p>
         </div>
-      </div>
-
-      <div className="leaderboard-tabs">
-        {categories.map((item) => (
-          <button key={item.id} className={category === item.id ? "selected" : ""} onClick={() => setCategory(item.id)}>
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <article className="leaderboard-banner">
-        <div>
-          <p className="eyebrow">CLASSEMENT SÉLECTIONNÉ</p>
-          <h2>{current.label}</h2>
-          <p>{current.description}</p>
+        <div className={`world-api-pill ${snapshot ? "is-live" : ""}`}>
+          {snapshot ? "● Classement réel" : "○ En attente de TailBlue"}
         </div>
-        <span className="leaderboard-crown">👑</span>
-      </article>
+      </header>
 
-      <div className="podium">
-        <div className="podium-slot second"><span>🥈</span><strong>Connexion</strong><small>backend</small></div>
-        <div className="podium-slot first"><span>🥇</span><strong>Connexion</strong><small>backend</small></div>
-        <div className="podium-slot third"><span>🥉</span><strong>Connexion</strong><small>backend</small></div>
-      </div>
+      {error && <div className="world-message">{error}</div>}
 
-      <div className="ranking-table">
-        <div className="ranking-head"><span>#</span><span>Aventurier</span><span>Valeur</span><span>Évolution</span></div>
-        {Array.from({ length: 7 }).map((_, index) => (
-          <div className="ranking-row" key={index}>
-            <span>{index + 4}</span>
-            <span><i className="avatar-skeleton" /> En attente du serveur</span>
-            <strong>—</strong>
-            <em>—</em>
+      <article className="world-panel world-leaderboard">
+        <div className="world-section-title">
+          <div>
+            <span className="world-kicker">TOPNIVEAU</span>
+            <h2>Classement Royal des Niveaux</h2>
           </div>
-        ))}
-      </div>
+          <strong>Top 10</strong>
+        </div>
 
-      <div className="extra-note">
-        Aucun faux joueur n'est injecté : dès que l'API est branchée, cette page pourra reprendre directement <code>topniveau</code>, le rang aventurier, le classement des musées et les statistiques Work.
-      </div>
+        {!snapshot?.entries.length ? (
+          <div className="world-empty">
+            <span>🏆</span>
+            <h3>Aucun faux classement</h3>
+            <p>
+              Dès que l’API est branchée, cette page affichera les joueurs
+              réels triés exactement comme <code>!topniveau</code>.
+            </p>
+          </div>
+        ) : (
+          <div className="world-ranking-list">
+            {snapshot.entries.slice(0, 10).map((entry, index) => (
+              <article
+                key={entry.userId}
+                className={index < 3 ? `podium p${index + 1}` : ""}
+              >
+                <span className="world-rank">{medal(index, entry)}</span>
+                <div className="world-avatar">
+                  {entry.avatarUrl ? (
+                    <img src={entry.avatarUrl} alt="" />
+                  ) : (
+                    <span>👤</span>
+                  )}
+                </div>
+                <div>
+                  <b>{entry.displayName}</b>
+                  <small>
+                    {entry.isHime ? "Hime-sama • " : ""}Aventurier TailBlue
+                  </small>
+                </div>
+                <strong>Niveau {entry.level}</strong>
+              </article>
+            ))}
+          </div>
+        )}
+
+        {snapshot?.currentUser && (
+          <div className="world-current-rank">
+            <span>TON NIVEAU</span>
+            <b>{snapshot.currentUser.displayName}</b>
+            <strong>Niveau {snapshot.currentUser.level}</strong>
+          </div>
+        )}
+
+        <div className="world-note">
+          Les autres classements ne sont pas inventés ici. Quand un classement
+          global officiel existera dans le Python (rang aventurier, réputation,
+          etc.), on pourra l’ajouter proprement.
+        </div>
+      </article>
     </section>
   );
 }

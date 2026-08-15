@@ -1,0 +1,20 @@
+{
+  "updated_at": "2026-08-15T00:00:00+02:00",
+  "items": [
+    {
+      "id": "shared-api",
+      "status": "current",
+      "title": "API TailBlue partagée",
+      "description": "Brancher l'application aux données et moteurs Python réels.",
+      "area": "Backend",
+      "progress": 25
+    },
+    {
+      "id": "discord-auth",
+      "status": "next",
+      "title": "Connexion Discord sécurisée",
+      "description": "OAuth2 et permissions validées côté serveur.",
+      "area": "Identité"
+    }
+  ]
+}

@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# TailBlue - secrets / local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Archives / doublons locaux inutiles
+public/ImagesBestiaire.7z
+/tailbluepdp.png

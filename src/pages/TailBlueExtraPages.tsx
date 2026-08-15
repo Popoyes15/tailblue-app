@@ -18,8 +18,10 @@ const EXTRA_PAGES = new Set([
   "Wiki",
   "Nouveautés",
   "Roadmap",
+  "ShowIdées",
   "Bilan général",
   "Statistiques",
+  "ShowIdées",
   "Logs",
   "Erreurs",
   "Sécurité",
@@ -32,6 +34,7 @@ const EXTRA_PAGES = new Set([
 const HIME_PAGES = new Set<HimeSection>([
   "Bilan général",
   "Statistiques",
+  "ShowIdées",
   "Logs",
   "Erreurs",
   "Sécurité",

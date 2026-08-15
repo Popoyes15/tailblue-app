@@ -1,112 +1,220 @@
-import { useState } from "react";
-import FilterSelect from "../components/FilterSelect";
-import { MUSEUMS } from "../data/worldLocalData";
-import "./remainingPages.css";
+import { useEffect, useMemo, useState } from "react";
+import { worldApi } from "../api/worldApi";
+import { MUSEUMS, museumForHouse } from "../data/worldData";
+import type { MuseumCandidateDto, MuseumSnapshot } from "../types/world";
+import "./worldFinal.css";
 
-const CURRENT_MUSEUM_ID = "chateau";
-
-const demoPieces = [
-  { emoji: "🏔️", name: "Trophée — La Couronne ensevelie", rarity: "🟣 Épique", value: 0 },
-  { emoji: "🌲", name: "Trophée — Quelque chose rôde à l'est", rarity: "🟣 Épique", value: 0 },
-  { emoji: "🕷️", name: "Trophée — Les fils sous la chapelle", rarity: "🔵 Rare", value: 0 },
-];
+function formatCookies(value: number) {
+  return value.toLocaleString("fr-CH");
+}
 
 export default function MuseumPage() {
-  const [scope, setScope] = useState<"mine" | "all">("mine");
-  const [selectedId, setSelectedId] = useState(CURRENT_MUSEUM_ID);
-  const [rarity, setRarity] = useState("all");
+  const [snapshot, setSnapshot] = useState<MuseumSnapshot | null>(null);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const museums = scope === "mine"
-    ? MUSEUMS.filter((item) => item.id === CURRENT_MUSEUM_ID)
-    : MUSEUMS;
+  async function refresh() {
+    if (!worldApi.configured) return;
+    try {
+      const data = await worldApi.getMuseum();
+      setSnapshot(data);
+      setMessage("");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "API indisponible.");
+    }
+  }
 
-  const selected = museums.find((item) => item.id === selectedId) ?? museums[0] ?? MUSEUMS[0];
-  const pieces = rarity === "all" ? demoPieces : demoPieces.filter((item) => item.rarity.includes(rarity));
+  useEffect(() => {
+    void refresh();
+  }, []);
 
-  function changeScope(value: string) {
-    const next = value as "mine" | "all";
-    setScope(next);
-    setSelectedId(next === "mine" ? CURRENT_MUSEUM_ID : MUSEUMS[0].id);
+  const activeMuseum = useMemo(() => {
+    if (snapshot) {
+      return {
+        name: snapshot.museumName,
+        image:
+          snapshot.museumImage ||
+          museumForHouse(snapshot.houseId).image,
+        description:
+          snapshot.description ||
+          museumForHouse(snapshot.houseId).description,
+      };
+    }
+    return MUSEUMS[previewIndex] ?? MUSEUMS[0];
+  }, [previewIndex, snapshot]);
+
+  async function addPiece(candidate: MuseumCandidateDto) {
+    if (!worldApi.configured || busy) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const data = await worldApi.addMuseumPiece(candidate.name);
+      setSnapshot(data);
+      setMessage(`🏛️ ${candidate.name} rejoint la collection.`);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Ajout au musée impossible.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <section className="extra-page">
-      <div className="extra-heading">
+    <section className="world-page">
+      <header className="world-heading">
         <div>
-          <p className="eyebrow">COLLECTION DU ROYAUME</p>
-          <h2>Musée</h2>
-          <p className="extra-muted">
-            Expose les pièces rares de tes aventures et visite les différents styles de musée associés aux résidences.
+          <span className="world-eyebrow">MONDE • COLLECTION</span>
+          <h1>🏛️ Musée</h1>
+          <p>
+            Le musée suit la résidence et expose les objets réellement retirés
+            de l’inventaire TailBlue.
           </p>
         </div>
+        <div className={`world-api-pill ${snapshot ? "is-live" : ""}`}>
+          {snapshot ? "● Collection réelle" : "○ Aperçu local"}
+        </div>
+      </header>
 
-        <FilterSelect
-          value={scope}
-          onChange={changeScope}
-          options={[
-            { value: "mine", label: "Mon musée" },
-            { value: "all", label: "Tous les musées" },
-          ]}
-        />
+      {message && <div className="world-message">{message}</div>}
+
+      <div className="world-two-columns">
+        <article className="world-panel">
+          <div className="world-image-stage world-museum-stage">
+            <div
+              className="world-image-blur"
+              style={{ backgroundImage: `url("${activeMuseum.image}")` }}
+            />
+            <img src={activeMuseum.image} alt={activeMuseum.name} />
+          </div>
+
+          {!snapshot && (
+            <div className="world-preview-strip">
+              {MUSEUMS.map((museum, index) => (
+                <button
+                  key={museum.houseId}
+                  className={previewIndex === index ? "active" : ""}
+                  onClick={() => setPreviewIndex(index)}
+                  title={museum.name}
+                >
+                  <img src={museum.image} alt="" />
+                </button>
+              ))}
+            </div>
+          )}
+        </article>
+
+        <article className="world-panel world-detail-panel">
+          <span className="world-kicker">
+            {snapshot ? "TON MUSÉE" : "PRÉVISUALISATION DES MUSÉES"}
+          </span>
+          <h2>🏛️ {activeMuseum.name}</h2>
+          <p>{activeMuseum.description}</p>
+
+          <div className="world-stat-grid">
+            <div>
+              <span>Pièces exposées</span>
+              <strong>{snapshot ? snapshot.pieces.length : "—"}</strong>
+            </div>
+            <div>
+              <span>Valeur estimée</span>
+              <strong>
+                {snapshot
+                  ? `${formatCookies(snapshot.estimatedValue)} 🍪`
+                  : "—"}
+              </strong>
+            </div>
+            <div>
+              <span>Objets ajoutables</span>
+              <strong>{snapshot ? snapshot.candidates.length : "—"}</strong>
+            </div>
+          </div>
+
+          <div className="world-note">
+            Le moteur Python classe les comparaisons de musées d’abord par
+            nombre de pièces, puis par valeur totale. Le Haut Plateau n’a pas
+            encore de musée dédié dans le Python et retombe actuellement sur le
+            Musée de Fortune.
+          </div>
+        </article>
       </div>
 
-      <article className="museum-hero">
-        <div className="museum-image" style={{ backgroundImage: `url("${selected.image}")` }}>
-          <div />
-          <img src={selected.image} alt={selected.name} />
+      <div className="world-panel">
+        <div className="world-section-title">
+          <div>
+            <span className="world-kicker">COLLECTION PERMANENTE</span>
+            <h2>Pièces exposées</h2>
+          </div>
+          <strong>{snapshot ? snapshot.pieces.length : "—"}</strong>
         </div>
-        <div className="museum-copy">
-          <p className="eyebrow">{selected.id === CURRENT_MUSEUM_ID ? "👑 TON MUSÉE" : "APERÇU"}</p>
-          <h2>{selected.name}</h2>
-          <p>{selected.description}</p>
-          <div className="museum-stats">
-            <div><span>Pièces exposées</span><strong>Backend</strong></div>
-            <div><span>Valeur estimée</span><strong>Backend</strong></div>
-            <div><span>Rareté max</span><strong>Backend</strong></div>
+
+        {!snapshot?.pieces.length ? (
+          <div className="world-empty">
+            <span>🖼️</span>
+            <h3>{snapshot ? "Les salles sont encore vides" : "Collection non connectée"}</h3>
+            <p>
+              {snapshot
+                ? "Ajoute une pièce depuis les objets réellement présents dans tes sacs."
+                : "Aucune fausse collection n’est affichée. Les pièces arriveront depuis TailBlue."}
+            </p>
+          </div>
+        ) : (
+          <div className="world-card-grid">
+            {snapshot.pieces.map((piece, index) => (
+              <article className="world-small-card" key={piece.id ?? `${piece.name}-${index}`}>
+                <span className="world-kicker">{piece.rarity ?? "Rareté inconnue"}</span>
+                <h3>
+                  {piece.emoji ?? "🖼️"} {piece.name}
+                </h3>
+                <p>{piece.description ?? "Pièce exposée dans le musée."}</p>
+                <small>
+                  💎 {formatCookies(piece.value ?? 0)} cookies
+                </small>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="world-panel">
+        <div className="world-section-title">
+          <div>
+            <span className="world-kicker">DEPUIS TES SACS</span>
+            <h2>Ajouter une pièce</h2>
           </div>
         </div>
-      </article>
 
-      {scope === "all" && (
-        <div className="extra-thumb-grid">
-          {museums.map((museum) => (
-            <button
-              key={museum.id}
-              className={`extra-thumb ${museum.id === selected.id ? "selected" : ""}`}
-              onClick={() => setSelectedId(museum.id)}
-            >
-              <div style={{ backgroundImage: `url("${museum.image}")` }}>
-                <img src={museum.image} alt={museum.name} />
-              </div>
-              <span>{museum.name}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="collection-heading">
-        <div><p className="eyebrow">VITRINES</p><h3>Collection</h3></div>
-        <select value={rarity} onChange={(e) => setRarity(e.target.value)}>
-          <option value="all">Toute la collection</option>
-          <option value="Royal">👑 Royal</option>
-          <option value="Mythique">🌌 Mythique</option>
-          <option value="Légendaire">🟡 Légendaire</option>
-          <option value="Épique">🟣 Épique</option>
-          <option value="Rare">🔵 Rare</option>
-        </select>
-      </div>
-
-      <div className="museum-piece-grid">
-        {pieces.map((piece) => (
-          <article key={piece.name} className="museum-piece">
-            <span>{piece.emoji}</span>
-            <div><small>{piece.rarity}</small><h3>{piece.name}</h3><p>Pièce destinée aux collections et chroniques.</p></div>
-          </article>
-        ))}
-      </div>
-
-      <div className="extra-note">
-        🏛️ Les pièces affichées ici servent de démonstration visuelle. La vraie collection sera lue depuis <code>joueur["musee"]</code> et filtrée avec les raretés déjà prévues par le bot.
+        {!snapshot?.candidates.length ? (
+          <div className="world-empty compact">
+            <span>🎒</span>
+            <p>
+              {snapshot
+                ? "Aucun objet disponible à exposer."
+                : "Les objets ajoutables seront fournis par l’inventaire réel."}
+            </p>
+          </div>
+        ) : (
+          <div className="world-candidate-list">
+            {snapshot.candidates.map((candidate) => (
+              <button
+                key={candidate.id ?? candidate.name}
+                disabled={busy}
+                onClick={() => void addPiece(candidate)}
+              >
+                <span>
+                  <b>
+                    {candidate.emoji ?? "📦"} {candidate.name}
+                  </b>
+                  <small>
+                    x{candidate.quantity} • {candidate.rarity ?? "Rareté inconnue"}
+                  </small>
+                </span>
+                <strong>Exposer</strong>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

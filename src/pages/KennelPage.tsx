@@ -1,233 +1,771 @@
-import { useMemo, useState } from "react";
-import FilterSelect from "../components/FilterSelect";
-import { PETS } from "../data/tailblueLocalData";
-import { KENNELS, PET_FOODS, PROVISION_LEVELS } from "../data/worldLocalData";
-import "./remainingPages.css";
+import { useEffect, useMemo, useState } from "react";
+import {
+  companionApi,
+  companionApiConfigured,
+} from "../api/companionApi";
+import { ImageStage } from "../components/companions/CompanionUi";
+import {
+  KENNELS,
+  PET_FOODS,
+  PROVISION_LEVELS,
+} from "../data/companionsLocalData";
+import type {
+  CompanionSnapshotDto,
+  KennelSnapshotDto,
+  ProvisionSnapshotDto,
+} from "../types/companions";
+import "../components/companions/companionsFinal.css";
 
-const OWNED_KENNEL_ID = "royal_tsundere";
-const PROVISION_LEVEL = 5;
-const OWNED_PET_IDS = new Set(["sugus"]);
+type Tab = "kennel" | "team" | "provisions";
+
+function localKennel(): KennelSnapshotDto {
+  const royal = KENNELS.find((item) => item.id === "royal_tsundere")!;
+
+  return {
+    currentKennel: {
+      ...royal,
+      bonusPlaces: royal.bonusPlaces,
+      royal: true,
+    },
+    gallery: KENNELS.map((item) => ({
+      ...item,
+      bonusPlaces: item.bonusPlaces,
+      royal: item.id === "royal_tsundere",
+    })),
+    activeIds: [],
+    activeLimit: 6,
+    totalCapacity: null,
+    canUpgrade: false,
+    nextKennelId: null,
+    upgradeBlockReason:
+      "Aperçu local du Chenil Royal. Le backend décidera du vrai chenil.",
+    royalPrivilege: true,
+  };
+}
+
+function localProvisions(): ProvisionSnapshotDto {
+  const current = PROVISION_LEVELS[4];
+
+  return {
+    level: 5,
+    current,
+    levels: PROVISION_LEVELS.map((level) => ({ ...level })),
+    stock: PET_FOODS.map((food) => ({ ...food })),
+    inventory: [],
+    canUpgrade: false,
+    nextLevel: null,
+    upgradeBlockReason:
+      "Aperçu local : aucune dépense n'est effectuée.",
+  };
+}
 
 export default function KennelPage() {
-  const [scope, setScope] = useState<"mine" | "all">("mine");
-  const [tab, setTab] = useState<"kennel" | "provisions" | "companions">("kennel");
-  const [selectedId, setSelectedId] = useState(OWNED_KENNEL_ID);
-  const [foodLevel, setFoodLevel] = useState(PROVISION_LEVEL);
+  const [tab, setTab] = useState<Tab>("kennel");
+  const [kennel, setKennel] = useState<KennelSnapshotDto>(
+    localKennel(),
+  );
+  const [provisions, setProvisions] =
+    useState<ProvisionSnapshotDto>(localProvisions());
+  const [companions, setCompanions] =
+    useState<CompanionSnapshotDto>({
+      catalog: [],
+      owned: [],
+    });
+  const [galleryId, setGalleryId] = useState(
+    kennel.currentKennel?.id ?? "royal_tsundere",
+  );
   const [basket, setBasket] = useState<Record<string, number>>({});
+  const [petFoodSelection, setPetFoodSelection] =
+    useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const visibleKennels = scope === "mine"
-    ? KENNELS.filter((item) => item.id === OWNED_KENNEL_ID)
-    : KENNELS;
+  useEffect(() => {
+    if (!companionApiConfigured) return;
 
-  const selected = visibleKennels.find((item) => item.id === selectedId) ?? visibleKennels[0] ?? KENNELS[0];
+    Promise.all([
+      companionApi.getKennel(),
+      companionApi.getProvisions(),
+      companionApi.getCompanions(),
+    ])
+      .then(([nextKennel, nextProvisions, nextCompanions]) => {
+        setKennel(nextKennel);
+        setProvisions(nextProvisions);
+        setCompanions(nextCompanions);
+        setGalleryId(
+          nextKennel.currentKennel?.id ??
+            nextKennel.gallery[0]?.id ??
+            "",
+        );
+      })
+      .catch(() => {
+        // Le mode local reste visible.
+      });
+  }, []);
 
-  const provision = PROVISION_LEVELS.find((item) => item.level === foodLevel) ?? PROVISION_LEVELS[0];
-  const foods = useMemo(() => PET_FOODS.filter((food) => food.level <= foodLevel), [foodLevel]);
+  const selectedKennel =
+    kennel.gallery.find((item) => item.id === galleryId) ??
+    kennel.currentKennel ??
+    kennel.gallery[0];
 
-  const ownedPets = PETS.filter((pet) => OWNED_PET_IDS.has(pet.id));
+  const ownedMap = useMemo(
+    () => new Map(companions.owned.map((pet) => [pet.id, pet])),
+    [companions.owned],
+  );
 
-  function changeScope(value: string) {
-    const next = value as "mine" | "all";
-    setScope(next);
-    setSelectedId(next === "mine" ? OWNED_KENNEL_ID : KENNELS[0].id);
+  const catalogMap = useMemo(
+    () => new Map(companions.catalog.map((pet) => [pet.id, pet])),
+    [companions.catalog],
+  );
+
+  const kennelPets = companions.owned
+    .map((owned) => ({
+      owned,
+      definition: catalogMap.get(owned.id),
+    }))
+    .filter((entry) => entry.definition);
+
+  const foodInventory = useMemo(
+    () =>
+      new Map(
+        provisions.inventory.map((entry) => [
+          entry.foodId,
+          entry.quantity,
+        ]),
+      ),
+    [provisions.inventory],
+  );
+
+  const basketTotal = Object.entries(basket).reduce(
+    (total, [foodId, quantity]) => {
+      const food = provisions.stock.find(
+        (item) => item.id === foodId,
+      );
+      return total + (food?.price ?? 0) * quantity;
+    },
+    0,
+  );
+
+  function addFood(foodId: string, delta: number) {
+    setBasket((old) => {
+      const next = Math.max(
+        0,
+        Math.min(99, (old[foodId] ?? 0) + delta),
+      );
+
+      return {
+        ...old,
+        [foodId]: next,
+      };
+    });
   }
 
-  function addFood(id: string, delta: number) {
-    setBasket((old) => ({
-      ...old,
-      [id]: Math.max(0, Math.min(99, (old[id] ?? 0) + delta)),
-    }));
+  async function buyBasket() {
+    if (!companionApiConfigured || busy) return;
+
+    const entries = Object.entries(basket).filter(
+      ([, quantity]) => quantity > 0,
+    );
+
+    if (!entries.length) return;
+
+    try {
+      setBusy(true);
+      setMessage("");
+
+      let next = provisions;
+
+      for (const [foodId, quantity] of entries) {
+        next = await companionApi.buyFood(foodId, quantity);
+      }
+
+      setProvisions(next);
+      setBasket({});
+      setMessage("🛍️ Provisions ajoutées au sac.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Impossible d'effectuer cet achat.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
-  const basketTotal = Object.entries(basket).reduce((sum, [id, qty]) => {
-    const food = PET_FOODS.find((item) => item.id === id);
-    return sum + (food?.price ?? 0) * qty;
-  }, 0);
+  async function upgradeProvision() {
+    if (!companionApiConfigured || busy) return;
+
+    try {
+      setBusy(true);
+      setMessage("");
+      setProvisions(await companionApi.upgradeProvisions());
+      setMessage("✨ Intendance améliorée.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Amélioration impossible.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function upgradeKennel(kennelId: string) {
+    if (!companionApiConfigured || busy) return;
+
+    try {
+      setBusy(true);
+      setMessage("");
+      const next = await companionApi.upgradeKennel(kennelId);
+      setKennel(next);
+      setGalleryId(next.currentKennel?.id ?? kennelId);
+      setMessage("🏗️ Nouveau chenil enregistré.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Amélioration impossible.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function feedKennelPet(petId: string) {
+    const foodId = petFoodSelection[petId];
+
+    if (!companionApiConfigured || busy || !foodId) return;
+
+    try {
+      setBusy(true);
+      setMessage("");
+
+      const result = await companionApi.feed(petId, foodId);
+
+      setCompanions(result.companions);
+
+      if (result.provisions) {
+        setProvisions(result.provisions);
+      } else {
+        setProvisions(await companionApi.getProvisions());
+      }
+
+      setMessage(
+        `${result.text}${
+          result.hpGain ? ` • ❤️ +${result.hpGain} PV` : ""
+        }${
+          result.energyGain
+            ? ` • ⚡ +${result.energyGain} énergie`
+            : ""
+        }${
+          result.affectionGain
+            ? ` • 💜 +${result.affectionGain} confiance`
+            : ""
+        }`,
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Impossible de nourrir ce compagnon.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <section className="extra-page">
-      <div className="extra-heading">
+    <section className="tb-comp-page">
+      <header className="tb-comp-heading">
         <div>
-          <p className="eyebrow">SANCTUAIRE DES COMPAGNONS</p>
-          <h2>Chenil</h2>
-          <p className="extra-muted">
-            Résidence des familiers, gestion des compagnons actifs et intendance des provisions.
+          <p className="tb-comp-eyebrow">🏠 SANCTUAIRE DES COMPAGNONS</p>
+          <h1>Chenil</h1>
+          <p>
+            Résidence, équipe active et intendance des provisions sont
+            réunies ici. La logique d'achat, de capacité et de privilège
+            reste côté Python.
           </p>
         </div>
 
-        <FilterSelect
-          value={scope}
-          onChange={changeScope}
-          options={[
-            { value: "mine", label: "Mon chenil" },
-            { value: "all", label: "Tous les chenils" },
-          ]}
-        />
-      </div>
+        <div className="tb-comp-source">
+          <i />
+          {companionApiConfigured
+            ? "Backend TailBlue"
+            : "Aperçu local"}
+        </div>
+      </header>
 
-      <div className="extra-tabs">
-        <button className={tab === "kennel" ? "selected" : ""} onClick={() => setTab("kennel")}>🏡 Chenil</button>
-        <button className={tab === "companions" ? "selected" : ""} onClick={() => setTab("companions")}>🐾 Compagnons</button>
-        <button className={tab === "provisions" ? "selected" : ""} onClick={() => setTab("provisions")}>🍖 Provisions</button>
-      </div>
+      <nav className="tb-comp-tabs">
+        <button
+          className={tab === "kennel" ? "is-active" : ""}
+          onClick={() => setTab("kennel")}
+        >
+          🏠 Résidence
+        </button>
+        <button
+          className={tab === "team" ? "is-active" : ""}
+          onClick={() => setTab("team")}
+        >
+          🐾 Compagnons
+        </button>
+        <button
+          className={tab === "provisions" ? "is-active" : ""}
+          onClick={() => setTab("provisions")}
+        >
+          🍖 Provisions
+        </button>
+      </nav>
 
-      {tab === "kennel" && (
-        <>
-          <article className="extra-showcase kennel-showcase">
-            <div className="extra-showcase-image" style={{ backgroundImage: `url("${selected.image}")` }}>
-              <div className="extra-showcase-blur" />
-              <img src={selected.image} alt={selected.name} />
-            </div>
+      {message && (
+        <div className="tb-comp-inline-message">{message}</div>
+      )}
 
-            <div className="extra-showcase-info">
+      {tab === "kennel" && selectedKennel && (
+        <div className="tb-kennel-layout">
+          <main className="tb-kennel-main">
+            <ImageStage
+              image={selectedKennel.image}
+              alt={selectedKennel.name}
+              className="tb-kennel-hero"
+            />
+
+            <article className="tb-kennel-copy-card">
+              <div className="tb-kennel-title">
+                <div>
+                  <p className="tb-comp-eyebrow">
+                    {selectedKennel.id ===
+                    kennel.currentKennel?.id
+                      ? "TON CHENIL"
+                      : "GALERIE DES CHENILS"}
+                  </p>
+                  <h2>{selectedKennel.name}</h2>
+                </div>
+
+                {selectedKennel.royal && (
+                  <span className="tb-royal-pill">
+                    👑 Privilège royal
+                  </span>
+                )}
+              </div>
+
+              <p>{selectedKennel.description}</p>
+
+              <div className="tb-kennel-stats">
+                <div>
+                  <small>Capacité totale</small>
+                  <strong>
+                    {selectedKennel.royal
+                      ? "∞"
+                      : kennel.totalCapacity ?? "—"}
+                  </strong>
+                </div>
+                <div>
+                  <small>Compagnons actifs</small>
+                  <strong>
+                    {kennel.activeIds.length}/{kennel.activeLimit}
+                  </strong>
+                </div>
+                <div>
+                  <small>Places ajoutées</small>
+                  <strong>
+                    {selectedKennel.bonusPlaces == null
+                      ? "∞"
+                      : `+${selectedKennel.bonusPlaces}`}
+                  </strong>
+                </div>
+                <div>
+                  <small>Prix</small>
+                  <strong>
+                    {selectedKennel.royal
+                      ? "Royal"
+                      : `${formatNumber(selectedKennel.price)} 🍪`}
+                  </strong>
+                </div>
+              </div>
+
+              {selectedKennel.id !== kennel.currentKennel?.id &&
+                !selectedKennel.royal && (
+                  <button
+                    className="tb-comp-primary"
+                    disabled={
+                      !companionApiConfigured ||
+                      busy ||
+                      !kennel.canUpgrade
+                    }
+                    onClick={() =>
+                      upgradeKennel(selectedKennel.id)
+                    }
+                  >
+                    🏗️ Acheter / améliorer
+                  </button>
+                )}
+
+              {kennel.upgradeBlockReason && (
+                <p className="tb-comp-preview-note">
+                  {kennel.upgradeBlockReason}
+                </p>
+              )}
+            </article>
+          </main>
+
+          <aside className="tb-kennel-gallery">
+            <div className="tb-comp-side-title">
+              <span>🏛️</span>
               <div>
-                <p className="eyebrow">{selected.id === OWNED_KENNEL_ID ? "✓ TON CHENIL" : "GALERIE"}</p>
-                <h2>{selected.name}</h2>
-                <p>{selected.description}</p>
-              </div>
-
-              <div className="extra-stat-list">
-                <div><span>Capacité</span><strong>{selected.bonusPlaces === null ? "∞ compagnons" : `${2 + selected.bonusPlaces} compagnons`}</strong></div>
-                <div><span>Places bonus</span><strong>{selected.bonusPlaces === null ? "Privilège royal" : `+${selected.bonusPlaces}`}</strong></div>
-                <div><span>Prix</span><strong>{selected.price === 0 ? "Royal / non achetable" : `${selected.price.toLocaleString("fr-CH")} cookies`}</strong></div>
-                <div><span>Actifs</span><strong>{selected.id === "royal_tsundere" ? "Jusqu'à 6" : "Selon niveau joueur"}</strong></div>
+                <p className="tb-comp-eyebrow">GALERIE</p>
+                <h3>Les refuges du Royaume</h3>
               </div>
             </div>
-          </article>
 
-          {scope === "all" && (
-            <div className="extra-thumb-grid">
-              {visibleKennels.map((kennel) => (
+            <div className="tb-kennel-gallery-list">
+              {kennel.gallery.map((item) => (
                 <button
-                  key={kennel.id}
-                  className={`extra-thumb ${selected.id === kennel.id ? "selected" : ""}`}
-                  onClick={() => setSelectedId(kennel.id)}
+                  key={item.id}
+                  className={
+                    item.id === selectedKennel.id
+                      ? "is-selected"
+                      : ""
+                  }
+                  onClick={() => setGalleryId(item.id)}
                 >
-                  <div style={{ backgroundImage: `url("${kennel.image}")` }}>
-                    <img src={kennel.image} alt={kennel.name} />
+                  <img src={item.image} alt="" />
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>
+                      {item.royal
+                        ? "Privilège royal"
+                        : `${formatNumber(item.price)} 🍪 • +${item.bonusPlaces}`}
+                    </small>
                   </div>
-                  <span>{kennel.name}</span>
                 </button>
               ))}
             </div>
-          )}
-        </>
+          </aside>
+        </div>
       )}
 
-      {tab === "companions" && (
-        <div className="kennel-companion-layout">
-          <article className="extra-panel">
-            <div className="panel-headline">
-              <div><p className="eyebrow">COMPAGNONS ACTIFS</p><h3>Équipe actuelle</h3></div>
-              <span>Backend à connecter</span>
+      {tab === "team" && (
+        <div className="tb-team-panel">
+          <div className="tb-team-heading">
+            <div>
+              <p className="tb-comp-eyebrow">⚔️ FORMATION ACTIVE</p>
+              <h2>
+                {kennel.activeIds.length}/{kennel.activeLimit} compagnons
+              </h2>
             </div>
+            <p>
+              Les pets choisis ici sont l'équipe générale. Le compagnon
+              emmené dans la Mine reste un système séparé.
+            </p>
+          </div>
 
-            <div className="active-companion-slots">
-              {Array.from({ length: 6 }).map((_, index) => {
-                const pet = ownedPets[index];
+          {!companionApiConfigured ? (
+            <div className="tb-comp-empty compact">
+              <span>🔌</span>
+              <h2>Les vrais compagnons ne sont pas encore chargés.</h2>
+              <p>
+                Après connexion au backend, ce panneau affichera tous les
+                compagnons possédés avec leur statut et les provisions
+                réellement disponibles.
+              </p>
+            </div>
+          ) : kennelPets.length === 0 ? (
+            <div className="tb-comp-empty compact">
+              <span>🏠</span>
+              <h2>Aucun compagnon dans le chenil.</h2>
+              <p>Les compagnons adoptés apparaîtront ici.</p>
+            </div>
+          ) : (
+            <div className="tb-team-grid tb-kennel-pet-grid">
+              {kennelPets.map(({ owned, definition }) => {
+                const availableFoods = provisions.stock.filter(
+                  (food) => (foodInventory.get(food.id) ?? 0) > 0,
+                );
+
+                const selectedFood =
+                  petFoodSelection[owned.id] ??
+                  availableFoods[0]?.id ??
+                  "";
+
                 return (
-                  <div key={index} className={pet ? "filled" : ""}>
-                    {pet ? (
-                      <>
-                        <img src={pet.image} alt={pet.name} />
-                        <strong>{pet.name}</strong>
-                        <small>Actif</small>
-                      </>
-                    ) : (
-                      <>
-                        <span>＋</span>
-                        <strong>Emplacement {index + 1}</strong>
-                        <small>Libre</small>
-                      </>
-                    )}
-                  </div>
+                  <article key={owned.id}>
+                    <ImageStage
+                      image={
+                        owned.currentImage ||
+                        definition!.image
+                      }
+                      alt={owned.displayName}
+                      className="tb-team-image"
+                    />
+
+                    <div className="tb-kennel-pet-card-copy">
+                      <div className="tb-kennel-pet-title">
+                        <div>
+                          <strong>{owned.displayName}</strong>
+                          <small>
+                            Niveau {owned.level} • {owned.trustLabel}
+                          </small>
+                        </div>
+                        <span
+                          className={
+                            owned.active
+                              ? "tb-pet-status active"
+                              : "tb-pet-status"
+                          }
+                        >
+                          {owned.active ? "⚔️ Actif" : "🏠 Chenil"}
+                        </span>
+                      </div>
+
+                      <div className="tb-kennel-pet-vitals">
+                        <span>
+                          ❤️ {owned.hp}/{owned.maxHp}
+                        </span>
+                        <span>
+                          ⚡ {owned.energy}/{owned.maxEnergy}
+                        </span>
+                      </div>
+
+                      <div className="tb-kennel-feed">
+                        <select
+                          value={selectedFood}
+                          disabled={availableFoods.length === 0 || busy}
+                          onChange={(event) =>
+                            setPetFoodSelection((old) => ({
+                              ...old,
+                              [owned.id]: event.target.value,
+                            }))
+                          }
+                        >
+                          {availableFoods.length === 0 ? (
+                            <option value="">
+                              Aucune provision disponible
+                            </option>
+                          ) : (
+                            availableFoods.map((food) => (
+                              <option key={food.id} value={food.id}>
+                                {food.name} ×
+                                {foodInventory.get(food.id) ?? 0} •
+                                ❤️ +{food.heal} • ⚡ +{food.energy}
+                              </option>
+                            ))
+                          )}
+                        </select>
+
+                        <button
+                          onClick={() =>
+                            feedKennelPet(owned.id)
+                          }
+                          disabled={
+                            busy ||
+                            availableFoods.length === 0 ||
+                            !selectedFood
+                          }
+                        >
+                          🍖 Nourrir
+                        </button>
+                      </div>
+                    </div>
+                  </article>
                 );
               })}
             </div>
-          </article>
-
-          <article className="extra-panel">
-            <p className="eyebrow">SOINS & RELATION</p>
-            <h3>Actions de compagnon</h3>
-            <div className="kennel-action-list">
-              <button>🍖 Nourrir</button>
-              <button>💜 Papouiller</button>
-              <button>📖 Histoire</button>
-              <button>🏠 Mettre au chenil</button>
-            </div>
-            <p className="extra-small-note">
-              Ces actions seront reliées aux vrais PV, énergie, confiance, nourriture et cooldowns de <code>pets.py</code>.
-            </p>
-          </article>
+          )}
         </div>
       )}
 
       {tab === "provisions" && (
-        <>
-          <article className="provision-hero">
-            <div className="provision-image" style={{ backgroundImage: `url("${provision.image}")` }}>
-              <div />
-              <img src={provision.image} alt={provision.name} />
-            </div>
+        <div className="tb-provision-layout">
+          <main className="tb-provision-main">
+            <article className="tb-provision-hero-card">
+              <ImageStage
+                image={provisions.current.image}
+                alt={provisions.current.name}
+                className="tb-provision-hero-art"
+              />
 
-            <div className="provision-info">
-              <p className="eyebrow">INTENDANCE • NIVEAU {foodLevel}/5</p>
-              <h2>{provision.name}</h2>
-              <p>{provision.description}</p>
+              <div className="tb-provision-hero-copy">
+                <p className="tb-comp-eyebrow">
+                  🍖 INTENDANCE • NIVEAU {provisions.level}/5
+                </p>
+                <h2>{provisions.current.name}</h2>
+                <p>{provisions.current.description}</p>
 
-              <div className="level-pips">
-                {PROVISION_LEVELS.map((entry) => (
-                  <button
-                    key={entry.level}
-                    className={entry.level === foodLevel ? "selected" : ""}
-                    onClick={() => setFoodLevel(entry.level)}
-                    title={`Aperçu niveau ${entry.level}`}
-                  >
-                    {entry.level}
-                  </button>
-                ))}
+                {provisions.nextLevel ? (
+                  <div className="tb-provision-next">
+                    <div>
+                      <small>Prochaine amélioration</small>
+                      <strong>
+                        {provisions.nextLevel.name}
+                      </strong>
+                    </div>
+                    <span>
+                      {formatNumber(
+                        provisions.nextLevel.price,
+                      )}{" "}
+                      🍪
+                    </span>
+                  </div>
+                ) : (
+                  <div className="tb-provision-max">
+                    👑 Intendance au niveau maximal.
+                  </div>
+                )}
+
+                <button
+                  className="tb-comp-primary"
+                  onClick={upgradeProvision}
+                  disabled={
+                    !companionApiConfigured ||
+                    busy ||
+                    !provisions.canUpgrade
+                  }
+                >
+                  ✨ Améliorer l'intendance
+                </button>
+
+                {provisions.upgradeBlockReason && (
+                  <p className="tb-comp-preview-note">
+                    {provisions.upgradeBlockReason}
+                  </p>
+                )}
+              </div>
+            </article>
+
+            <section className="tb-food-section">
+              <div className="tb-food-heading">
+                <div>
+                  <p className="tb-comp-eyebrow">🛒 STOCK DISPONIBLE</p>
+                  <h2>Provisions</h2>
+                </div>
+                {provisions.cookies != null && (
+                  <span>
+                    🍪 {formatNumber(provisions.cookies)}
+                  </span>
+                )}
               </div>
 
-              {foodLevel < 5 ? (
-                <button className="extra-primary">
-                  🏗️ Amélioration suivante • {PROVISION_LEVELS[foodLevel]?.price.toLocaleString("fr-CH")} cookies
-                </button>
+              <div className="tb-food-grid">
+                {provisions.stock.map((food) => {
+                  const quantity = basket[food.id] ?? 0;
+
+                  return (
+                    <article key={food.id}>
+                      <div className="tb-food-name">
+                        <strong>{food.name}</strong>
+                        <span>Niv. {food.level}</span>
+                      </div>
+
+                      <div className="tb-food-effects">
+                        <span>❤️ +{food.heal} PV</span>
+                        <span>⚡ +{food.energy}</span>
+                      </div>
+
+                      <div className="tb-food-owned">
+                        Sac : ×
+                        {foodInventory.get(food.id) ?? 0}
+                      </div>
+
+                      <div className="tb-food-bottom">
+                        <strong>{food.price} 🍪</strong>
+
+                        <div className="tb-food-qty">
+                          <button
+                            onClick={() =>
+                              addFood(food.id, -1)
+                            }
+                          >
+                            −
+                          </button>
+                          <span>{quantity}</span>
+                          <button
+                            onClick={() =>
+                              addFood(food.id, 1)
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          </main>
+
+          <aside className="tb-basket">
+            <div className="tb-comp-side-title">
+              <span>🧺</span>
+              <div>
+                <p className="tb-comp-eyebrow">PANIER</p>
+                <h3>Commande</h3>
+              </div>
+            </div>
+
+            <div className="tb-basket-lines">
+              {Object.entries(basket).filter(
+                ([, quantity]) => quantity > 0,
+              ).length === 0 ? (
+                <p>Aucune provision sélectionnée.</p>
               ) : (
-                <div className="max-level-badge">👑 Intendance au niveau maximal</div>
+                Object.entries(basket)
+                  .filter(([, quantity]) => quantity > 0)
+                  .map(([foodId, quantity]) => {
+                    const food = provisions.stock.find(
+                      (item) => item.id === foodId,
+                    );
+                    if (!food) return null;
+
+                    return (
+                      <div key={foodId}>
+                        <span>
+                          {food.name} ×{quantity}
+                        </span>
+                        <strong>
+                          {formatNumber(
+                            food.price * quantity,
+                          )}{" "}
+                          🍪
+                        </strong>
+                      </div>
+                    );
+                  })
               )}
             </div>
-          </article>
 
-          <div className="provision-grid">
-            {foods.map((food) => {
-              const qty = basket[food.id] ?? 0;
-              return (
-                <article key={food.id} className="food-card">
-                  <div className="food-name"><strong>{food.name}</strong><span>Niv. {food.level}</span></div>
-                  <div className="food-effects">
-                    <span>❤️ +{food.heal} PV</span>
-                    <span>⚡ +{food.energy}</span>
-                    <span>🍪 {food.price}</span>
-                  </div>
-                  <div className="quantity-control">
-                    <button onClick={() => addFood(food.id, -10)}>-10</button>
-                    <button onClick={() => addFood(food.id, -1)}>-1</button>
-                    <strong>{qty}</strong>
-                    <button onClick={() => addFood(food.id, 1)}>+1</button>
-                    <button onClick={() => addFood(food.id, 10)}>+10</button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+            <div className="tb-basket-total">
+              <span>Total</span>
+              <strong>{formatNumber(basketTotal)} 🍪</strong>
+            </div>
 
-          <div className="basket-bar">
-            <div><span>🧺 Panier</span><strong>{Object.values(basket).reduce((a, b) => a + b, 0)} provisions</strong></div>
-            <div><span>Coût simulé</span><strong>{basketTotal.toLocaleString("fr-CH")} 🍪</strong></div>
-            <button disabled={basketTotal === 0}>Acheter avec le backend</button>
-          </div>
-        </>
+            <button
+              className="tb-comp-primary"
+              onClick={buyBasket}
+              disabled={
+                !companionApiConfigured ||
+                busy ||
+                basketTotal <= 0
+              }
+            >
+              🛍️ Acheter
+            </button>
+
+            {!companionApiConfigured && (
+              <p className="tb-comp-preview-note">
+                Le panier est testable localement, mais aucun cookie ni
+                inventaire n'est modifié sans backend.
+              </p>
+            )}
+          </aside>
+        </div>
       )}
     </section>
   );
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("fr-CH").format(value);
 }

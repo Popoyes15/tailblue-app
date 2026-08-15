@@ -1,0 +1,1501 @@
+.world-page {
+  --world-border: rgba(149, 198, 255, 0.16);
+  --world-panel: rgba(7, 17, 31, 0.76);
+  --world-panel-strong: rgba(8, 20, 37, 0.92);
+  --world-text: #eaf5ff;
+  --world-muted: #8ea7bf;
+  --world-blue: #8dc9ff;
+  --world-gold: #f1d78b;
+  color: var(--world-text);
+  padding: 24px 26px 42px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.world-page * {
+  box-sizing: border-box;
+}
+
+.world-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.world-heading h1 {
+  margin: 3px 0 5px;
+  font: 700 clamp(28px, 3vw, 42px)/1.05 Georgia, "Times New Roman", serif;
+  letter-spacing: -0.02em;
+}
+
+.world-heading p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--world-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.world-eyebrow,
+.world-kicker {
+  color: var(--world-blue);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.world-api-pill {
+  flex: 0 0 auto;
+  border: 1px solid var(--world-border);
+  background: rgba(3, 13, 25, 0.7);
+  color: #8197ab;
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.world-api-pill.is-live {
+  color: #b7f7d2;
+  border-color: rgba(94, 218, 155, 0.28);
+  background: rgba(29, 101, 70, 0.16);
+}
+
+.world-tabs,
+.world-segmented {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.world-tabs {
+  margin-bottom: 16px;
+}
+
+.world-tabs button,
+.world-segmented button,
+.world-row-actions button,
+.world-quantity button {
+  border: 1px solid var(--world-border);
+  background: rgba(8, 21, 38, 0.82);
+  color: #b8cbe0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.world-tabs button:hover,
+.world-segmented button:hover,
+.world-tabs button.active,
+.world-segmented button.active {
+  color: #eff8ff;
+  border-color: rgba(119, 195, 255, 0.48);
+  background: rgba(38, 115, 177, 0.23);
+}
+
+.world-message {
+  margin: 0 0 14px;
+  border: 1px solid rgba(125, 193, 255, 0.24);
+  background: rgba(22, 71, 113, 0.18);
+  color: #cfe9ff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 11px;
+}
+
+.world-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--world-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(15, 34, 57, 0.84), rgba(5, 14, 26, 0.82)),
+    var(--world-panel);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+}
+
+.world-two-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.world-image-stage,
+.world-catalog-art,
+.world-market-art,
+.world-modal-image {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: #07101d;
+}
+
+.world-image-stage {
+  min-height: 380px;
+  height: 48vh;
+  max-height: 580px;
+  display: grid;
+  place-items: center;
+}
+
+.world-image-blur {
+  position: absolute;
+  inset: -28px;
+  z-index: -2;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(28px) brightness(0.45) saturate(1.15);
+  opacity: 0.72;
+  transform: scale(1.12);
+}
+
+.world-image-stage::after,
+.world-catalog-art::after,
+.world-market-art::after,
+.world-modal-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at center, transparent 32%, rgba(3, 9, 16, 0.46) 100%);
+  pointer-events: none;
+}
+
+.world-image-stage > img,
+.world-catalog-art > img,
+.world-market-art > img,
+.world-modal-image > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.world-detail-panel {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.world-detail-panel h2,
+.world-catalog-detail h2,
+.world-market-intro h2,
+.world-section-title h2,
+.world-shop-toolbar h2,
+.world-modal-copy h2 {
+  margin: 4px 0 8px;
+  font: 700 24px/1.1 Georgia, "Times New Roman", serif;
+}
+
+.world-detail-panel > p,
+.world-catalog-detail p,
+.world-market-intro > p,
+.world-item-detail p,
+.world-modal-copy p {
+  color: var(--world-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.world-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.world-stat-grid > div {
+  border: 1px solid rgba(141, 201, 255, 0.12);
+  background: rgba(4, 14, 27, 0.55);
+  border-radius: 12px;
+  padding: 10px;
+  min-width: 0;
+}
+
+.world-stat-grid span,
+.world-stat-list small {
+  display: block;
+  color: #7790a8;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.world-stat-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.world-note {
+  border-left: 2px solid rgba(141, 201, 255, 0.5);
+  background: rgba(73, 135, 190, 0.09);
+  border-radius: 0 9px 9px 0;
+  padding: 9px 11px;
+  color: #9eb7cf;
+  font-size: 10px;
+  line-height: 1.55;
+  margin-top: 10px;
+}
+
+.world-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 11px;
+}
+
+.world-house-grid {
+  margin-bottom: 16px;
+}
+
+.world-card-button {
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  border: 1px solid var(--world-border);
+  border-radius: 15px;
+  background: rgba(6, 17, 31, 0.82);
+  color: var(--world-text);
+  cursor: pointer;
+  transition: transform .14s ease, border-color .14s ease, background .14s ease;
+}
+
+.world-card-button:hover,
+.world-card-button.selected {
+  transform: translateY(-2px);
+  border-color: rgba(137, 200, 255, 0.48);
+  background: rgba(17, 46, 74, 0.9);
+}
+
+.world-card-art {
+  height: 118px;
+  overflow: hidden;
+  background: #06111e;
+}
+
+.world-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.world-card-body {
+  padding: 10px;
+  display: grid;
+  gap: 3px;
+}
+
+.world-card-body strong {
+  font-size: 11px;
+}
+
+.world-card-body span,
+.world-card-body em {
+  color: #879eb6;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.world-card-body em {
+  color: #b6dcff;
+  margin-top: 4px;
+}
+
+.world-catalog-detail {
+  display: grid;
+  grid-template-columns: minmax(260px, .95fr) minmax(0, 1.05fr);
+  gap: 18px;
+  padding: 16px;
+  align-items: stretch;
+}
+
+.world-catalog-art {
+  min-height: 300px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+}
+
+.world-inline-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.world-inline-tags span {
+  border: 1px solid rgba(134, 197, 255, 0.13);
+  background: rgba(6, 17, 31, 0.66);
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: #aec7df;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.world-primary-button {
+  width: 100%;
+  border: 1px solid rgba(112, 196, 255, 0.36);
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(38, 130, 200, 0.88), rgba(55, 83, 181, 0.88));
+  color: white;
+  padding: 10px 13px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.world-primary-button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.world-section-title,
+.world-shop-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 18px 18px 8px;
+}
+
+.world-section-title > strong {
+  color: var(--world-blue);
+  font-size: 11px;
+}
+
+.world-small-card {
+  margin: 0;
+  border: 1px solid rgba(141, 201, 255, 0.12);
+  border-radius: 13px;
+  background: rgba(4, 14, 27, 0.56);
+  padding: 12px;
+}
+
+.world-panel > .world-card-grid {
+  padding: 8px 18px 18px;
+}
+
+.world-small-card h3 {
+  margin: 5px 0;
+  font-size: 12px;
+}
+
+.world-small-card p {
+  margin: 0 0 8px;
+  color: #8ea7bf;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.world-small-card small {
+  color: #7e98af;
+  font-size: 9px;
+}
+
+.world-row-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.world-empty {
+  text-align: center;
+  padding: 42px 20px;
+  color: #8199b0;
+}
+
+.world-empty.compact {
+  padding: 22px 20px;
+}
+
+.world-empty > span {
+  display: block;
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+.world-empty h3 {
+  margin: 4px 0;
+  color: #c7d9e9;
+  font-size: 13px;
+}
+
+.world-empty p {
+  max-width: 600px;
+  margin: 5px auto;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.world-empty small {
+  font-size: 9px;
+}
+
+.world-preview-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  padding: 8px;
+  background: rgba(2, 10, 19, .8);
+}
+
+.world-preview-strip button {
+  height: 54px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #081523;
+  cursor: pointer;
+}
+
+.world-preview-strip button.active {
+  border-color: rgba(139, 204, 255, .7);
+}
+
+.world-preview-strip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.world-candidate-list {
+  display: grid;
+  gap: 7px;
+  padding: 8px 18px 18px;
+}
+
+.world-candidate-list > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(141, 201, 255, .12);
+  border-radius: 11px;
+  background: rgba(4, 14, 27, .56);
+  color: #dbeaf7;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.world-candidate-list > button span {
+  display: grid;
+  gap: 2px;
+}
+
+.world-candidate-list small {
+  color: #8099b1;
+  font-size: 9px;
+}
+
+.world-candidate-list strong {
+  color: #9fd1ff;
+  font-size: 10px;
+}
+
+.world-market-hero {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.25fr) minmax(280px, .75fr);
+  margin-bottom: 13px;
+}
+
+.world-market-art {
+  min-height: 300px;
+  max-height: 430px;
+  display: grid;
+  place-items: center;
+}
+
+.world-market-intro {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.world-market-intro blockquote {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(241, 215, 139, .55);
+  background: rgba(241, 215, 139, .05);
+  display: grid;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.world-market-intro blockquote span {
+  color: #9eb3c8;
+  font-style: italic;
+}
+
+.world-market-building-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 13px;
+}
+
+.world-market-building {
+  min-height: 86px;
+  border: 1px solid var(--world-border);
+  border-radius: 12px;
+  background: rgba(5, 16, 29, .78);
+  color: #b8c9da;
+  cursor: pointer;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.world-market-building.active {
+  border-color: rgba(132, 201, 255, .52);
+  background: rgba(26, 76, 116, .38);
+  color: #eff8ff;
+}
+
+.world-market-building > span {
+  font-size: 20px;
+}
+
+.world-market-building b {
+  font-size: 9px;
+}
+
+.world-market-building small {
+  color: #718ba4;
+  font-size: 8px;
+}
+
+.world-market-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 13px;
+}
+
+.world-market-sidebar {
+  padding: 16px;
+  align-self: start;
+}
+
+.world-market-sidebar h3 {
+  margin: 5px 0 12px;
+  font-size: 14px;
+}
+
+.world-stat-list {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.world-stat-list > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(141, 201, 255, .08);
+}
+
+.world-stat-list b {
+  font-size: 10px;
+  text-align: right;
+}
+
+.world-shop-panel {
+  min-width: 0;
+}
+
+.world-shop-toolbar {
+  align-items: center;
+}
+
+.world-shop-toolbar h2 {
+  font-size: 19px;
+}
+
+.world-shop-body {
+  display: grid;
+  grid-template-columns: minmax(260px, .9fr) minmax(260px, 1.1fr);
+  gap: 12px;
+  padding: 8px 18px 18px;
+}
+
+.world-shop-list {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.world-shop-list > button {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(141, 201, 255, .1);
+  border-radius: 10px;
+  background: rgba(4, 14, 27, .56);
+  color: #dceaf7;
+  padding: 8px 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.world-shop-list > button.active {
+  border-color: rgba(132, 201, 255, .45);
+  background: rgba(28, 76, 115, .3);
+}
+
+.world-shop-list > button span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+}
+
+.world-shop-list b {
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.world-shop-list small {
+  color: #7690aa;
+  font-size: 8px;
+}
+
+.world-shop-list strong {
+  color: #d8c786;
+  font-size: 9px;
+}
+
+.world-item-emoji {
+  font-size: 18px;
+}
+
+.world-item-detail {
+  border: 1px solid rgba(141, 201, 255, .1);
+  border-radius: 13px;
+  background: rgba(4, 14, 27, .56);
+  padding: 15px;
+}
+
+.world-item-big-emoji {
+  display: block;
+  font-size: 34px;
+  margin-bottom: 5px;
+}
+
+.world-item-detail h3 {
+  margin: 4px 0;
+  font-size: 16px;
+}
+
+.world-quantity {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 0 8px;
+}
+
+.world-quantity strong {
+  text-align: center;
+  border: 1px solid rgba(141, 201, 255, .12);
+  background: rgba(2, 10, 19, .5);
+  border-radius: 9px;
+  padding: 8px;
+}
+
+.world-reconstruction-track {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+  padding: 8px 18px 18px;
+}
+
+.world-reconstruction-track > div {
+  border: 1px solid rgba(141, 201, 255, .1);
+  border-radius: 12px;
+  background: rgba(4, 14, 27, .56);
+  padding: 11px;
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.world-reconstruction-track > div > span {
+  margin: 0 auto 3px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(100, 137, 168, .16);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.world-reconstruction-track > div.done > span {
+  background: rgba(67, 179, 120, .18);
+  color: #a4edc8;
+}
+
+.world-reconstruction-track b {
+  font-size: 9px;
+}
+
+.world-reconstruction-track small {
+  color: #7089a1;
+  font-size: 8px;
+}
+
+.world-leaderboard {
+  max-width: 900px;
+}
+
+.world-ranking-list {
+  display: grid;
+  gap: 6px;
+  padding: 8px 18px 18px;
+}
+
+.world-ranking-list article {
+  display: grid;
+  grid-template-columns: 46px 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  border: 1px solid rgba(141, 201, 255, .09);
+  border-radius: 12px;
+  background: rgba(4, 14, 27, .56);
+  padding: 8px 12px;
+}
+
+.world-ranking-list article.podium {
+  background:
+    linear-gradient(90deg, rgba(241, 215, 139, .08), transparent 55%),
+    rgba(4, 14, 27, .66);
+}
+
+.world-rank {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.world-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(104, 144, 178, .15);
+}
+
+.world-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.world-ranking-list article > div:nth-child(3) {
+  display: grid;
+  gap: 2px;
+}
+
+.world-ranking-list b {
+  font-size: 11px;
+}
+
+.world-ranking-list small {
+  color: #7892aa;
+  font-size: 8px;
+}
+
+.world-ranking-list article > strong {
+  color: #baddfa;
+  font-size: 10px;
+}
+
+.world-current-rank {
+  margin: 0 18px 14px;
+  border: 1px solid rgba(117, 196, 255, .22);
+  border-radius: 11px;
+  background: rgba(29, 91, 136, .14);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+}
+
+.world-current-rank span {
+  color: #83bceb;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.world-leaderboard > .world-note {
+  margin: 0 18px 18px;
+}
+
+.world-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 11px;
+}
+
+.world-gallery-card {
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  border: 1px solid var(--world-border);
+  border-radius: 15px;
+  background: rgba(6, 17, 31, .82);
+  color: #dbe9f6;
+  cursor: pointer;
+  transition: transform .14s ease, border-color .14s ease;
+}
+
+.world-gallery-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(137, 200, 255, .48);
+}
+
+.world-gallery-card > div {
+  height: 145px;
+  overflow: hidden;
+  background: #07101d;
+}
+
+.world-gallery-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.world-gallery-card > span {
+  display: grid;
+  gap: 3px;
+  padding: 10px 11px;
+}
+
+.world-gallery-card b {
+  font-size: 10px;
+}
+
+.world-gallery-card small {
+  color: #718aa2;
+  font-size: 8px;
+}
+
+.world-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 5, 11, .82);
+  backdrop-filter: blur(9px);
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.world-modal {
+  position: relative;
+  width: min(980px, 94vw);
+  max-height: 90vh;
+  overflow: hidden;
+  border: 1px solid rgba(139, 204, 255, .24);
+  border-radius: 20px;
+  background: #07121f;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .56);
+}
+
+.world-modal-close {
+  position: absolute;
+  z-index: 5;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 50%;
+  background: rgba(3, 10, 18, .78);
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.world-modal-image {
+  height: min(66vh, 650px);
+  display: grid;
+  place-items: center;
+}
+
+.world-modal-copy {
+  padding: 14px 18px 18px;
+}
+
+.world-modal-copy h2 {
+  font-size: 20px;
+}
+
+@media (max-width: 1050px) {
+  .world-market-building-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .world-reconstruction-track {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 850px) {
+  .world-two-columns,
+  .world-catalog-detail,
+  .world-market-hero,
+  .world-market-layout,
+  .world-shop-body {
+    grid-template-columns: 1fr;
+  }
+
+  .world-image-stage {
+    height: 380px;
+  }
+
+  .world-market-sidebar {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 620px) {
+  .world-page {
+    padding: 18px 14px 34px;
+  }
+
+  .world-heading {
+    flex-direction: column;
+  }
+
+  .world-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .world-market-building-row,
+  .world-reconstruction-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .world-preview-strip {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .world-ranking-list article {
+    grid-template-columns: 36px 34px minmax(0, 1fr);
+  }
+
+  .world-ranking-list article > strong {
+    grid-column: 3;
+  }
+}
+
+
+/* ==========================================================
+   TAILBLUE MONDE V1.1 — IMAGES JAMAIS COUPÉES
+   Maison • Musée • Marché • Galerie
+   ========================================================== */
+
+/*
+ * Grandes illustrations.
+ * On ne laisse AUCUN style global de l'application imposer cover.
+ */
+.world-image-stage > img,
+.world-catalog-art > img,
+.world-market-art > img,
+.world-modal-image > img {
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  display: block !important;
+  margin: auto !important;
+}
+
+/* Un peu d'air autour des grandes illustrations. */
+.world-image-stage,
+.world-catalog-art,
+.world-market-art,
+.world-modal-image {
+  box-sizing: border-box;
+  padding: 8px;
+}
+
+/*
+ * Catalogue Maison et autres cartes Monde :
+ * avant = cover => image coupée.
+ */
+.world-card-art {
+  height: 132px;
+  display: grid;
+  place-items: center;
+  padding: 5px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at center, rgba(23, 49, 78, .45), rgba(5, 15, 27, .96));
+}
+
+.world-card-art img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+/*
+ * Musée — bande des différents musées.
+ */
+.world-preview-strip button {
+  height: 62px;
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  box-sizing: border-box;
+}
+
+.world-preview-strip img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+/*
+ * Galerie — toutes les vignettes affichent désormais
+ * l'illustration complète.
+ */
+.world-gallery-card > div {
+  height: 165px;
+  display: grid;
+  place-items: center;
+  padding: 5px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at center, rgba(20, 46, 74, .48), rgba(5, 15, 27, .98));
+}
+
+.world-gallery-card img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+/*
+ * Le Marché utilise une illustration panoramique :
+ * elle reste entièrement visible même dans une fenêtre étroite.
+ */
+.world-market-art {
+  min-height: 300px;
+  height: clamp(300px, 38vw, 430px);
+}
+
+.world-market-art > img {
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+/*
+ * Grande image de Maison / Musée :
+ * conserve un cadre agréable sans rogner l'image.
+ */
+.world-image-stage {
+  min-height: 360px;
+}
+
+@media (max-width: 850px) {
+  .world-image-stage {
+    min-height: 300px;
+    height: 360px;
+  }
+
+  .world-market-art {
+    min-height: 280px;
+    height: 340px;
+  }
+
+  .world-gallery-card > div {
+    height: 150px;
+  }
+}
+
+@media (max-width: 560px) {
+  .world-image-stage {
+    min-height: 260px;
+    height: 300px;
+  }
+
+  .world-market-art {
+    min-height: 240px;
+    height: 280px;
+  }
+}
+
+
+/* ==========================================================
+   TAILBLUE MONDE V1.2 — VRAI RATIO DES ILLUSTRATIONS
+   Plus aucune hauteur fixe sur les grandes images.
+   ========================================================== */
+
+/* Les grilles doivent accepter de rétrécir sans pousser la page. */
+.world-two-columns > *,
+.world-market-hero > *,
+.world-catalog-detail > * {
+  min-width: 0;
+}
+
+/* ----------------------------------------------------------
+   MAISON + MUSÉE
+   L'image décide elle-même de sa hauteur selon son ratio.
+   ---------------------------------------------------------- */
+
+.world-image-stage,
+.world-museum-stage {
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  display: block !important;
+  padding: 0 !important;
+}
+
+.world-image-stage > img,
+.world-museum-stage > img {
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  margin: 0 !important;
+}
+
+/* Le flou reste derrière l'illustration et prend toute sa hauteur réelle. */
+.world-image-stage .world-image-blur,
+.world-museum-stage .world-image-blur {
+  z-index: 0 !important;
+}
+
+/* Le catalogue Maison ne coupe plus non plus l'image sélectionnée. */
+.world-catalog-art {
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  display: block !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.world-catalog-art > img {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 !important;
+}
+
+/* ----------------------------------------------------------
+   MARCHÉ
+   L'illustration prend maintenant TOUTE la largeur.
+   Les informations arrivent dessous, donc rien ne la masque.
+   ---------------------------------------------------------- */
+
+.world-market-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  overflow: hidden !important;
+}
+
+.world-market-art {
+  width: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  display: block !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.world-market-art > img {
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  margin: 0 !important;
+}
+
+.world-market-intro {
+  min-width: 0 !important;
+  padding: 18px 22px 20px !important;
+  border-top: 1px solid rgba(149, 198, 255, 0.12);
+}
+
+.world-market-intro .world-inline-tags {
+  margin-bottom: 0;
+}
+
+/* ----------------------------------------------------------
+   GALERIE
+   Le popup était déjà bon sur la capture.
+   On le sécurise quand même en ratio naturel + scroll vertical
+   si l'image est très haute.
+   ---------------------------------------------------------- */
+
+.world-modal {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.world-modal-image {
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  display: block !important;
+  padding: 0 !important;
+}
+
+.world-modal-image > img {
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  margin: 0 !important;
+}
+
+/* ----------------------------------------------------------
+   RESPONSIVE
+   On neutralise les anciennes hauteurs réintroduites
+   par les media queries du fichier d'origine.
+   ---------------------------------------------------------- */
+
+@media (max-width: 850px) {
+  .world-image-stage,
+  .world-museum-stage,
+  .world-market-art,
+  .world-modal-image {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .world-image-stage,
+  .world-museum-stage,
+  .world-market-art,
+  .world-modal-image {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}
+
+
+/* ==========================================================
+   TAILBLUE MONDE V1.3 — MARCHÉ
+   Grande illustration complète, mais taille maîtrisée.
+   ========================================================== */
+
+/*
+ * Le hero du Marché ne prend plus toute la largeur disponible.
+ * Il reste centré et conserve un rendu "grand embed".
+ */
+.world-market-hero {
+  width: min(1180px, calc(100% - 28px)) !important;
+  max-width: 1180px !important;
+  margin: 0 auto 18px !important;
+
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+
+  overflow: hidden !important;
+
+  /* pas de bord/cadre visuel bizarre */
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  background: transparent !important;
+}
+
+/*
+ * L'image est entièrement contenue.
+ * Aucun crop, aucune hauteur arbitraire.
+ */
+.world-market-art {
+  width: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  overflow: hidden !important;
+
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  background: transparent !important;
+}
+
+.world-market-art > img {
+  position: relative !important;
+  z-index: 1 !important;
+
+  display: block !important;
+
+  width: 100% !important;
+  height: auto !important;
+
+  max-width: 100% !important;
+  max-height: none !important;
+
+  object-fit: contain !important;
+  object-position: center center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/*
+ * Si ImageStage injecte un fond flouté derrière,
+ * on le neutralise pour le Marché : on garde uniquement
+ * l'illustration propre.
+ */
+.world-market-art .world-image-blur,
+.world-market-art > div:not(:has(img)) {
+  display: none !important;
+}
+
+/*
+ * Les informations restent juste dessous, dans un bloc propre,
+ * sans créer un faux gros cadre autour de l'image.
+ */
+.world-market-intro {
+  width: 100% !important;
+  box-sizing: border-box !important;
+
+  margin: 0 !important;
+  padding: 17px 20px 19px !important;
+
+  border: 1px solid rgba(117, 172, 238, 0.10) !important;
+  border-top: none !important;
+  border-radius: 0 0 16px 16px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 27, 52, 0.86),
+      rgba(5, 19, 39, 0.94)
+    ) !important;
+
+  box-shadow: none !important;
+}
+
+/*
+ * L'image, elle, a juste un arrondi propre en haut.
+ * Pas de bord.
+ */
+.world-market-art,
+.world-market-art > img {
+  border-radius: 16px 16px 0 0 !important;
+}
+
+/*
+ * Sur écran très large on évite l'effet "cinéma IMAX".
+ */
+@media (min-width: 1450px) {
+  .world-market-hero {
+    width: min(1080px, calc(100% - 40px)) !important;
+    max-width: 1080px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .world-market-hero {
+    width: min(100%, calc(100% - 18px)) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .world-market-hero {
+    width: 100% !important;
+  }
+
+  .world-market-intro {
+    padding: 14px 15px 16px !important;
+  }
+
+  .world-market-art,
+  .world-market-art > img {
+    border-radius: 13px 13px 0 0 !important;
+  }
+
+  .world-market-intro {
+    border-radius: 0 0 13px 13px !important;
+  }
+}
