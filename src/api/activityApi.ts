@@ -3,6 +3,7 @@ import type {
   ActivityResultDto,
   ActivitySnapshotDto,
 } from "../types/activity";
+import { getDesktopAccessToken } from "./homeApi";
 
 const RAW_API_URL = (import.meta.env.VITE_TAILBLUE_API_URL ?? "").trim();
 const API_URL = RAW_API_URL.replace(/\/+$/, "");
@@ -17,12 +18,26 @@ async function request<T>(
     throw new Error("TAILBLUE_API_NOT_CONFIGURED");
   }
 
+  const headers = new Headers(init?.headers);
+
+  if (!headers.has("Accept")) {
+    headers.set("Accept", "application/json");
+  }
+
+  if (init?.body !== undefined && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const accessToken = getDesktopAccessToken();
+
+  if (accessToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
+    credentials: "omit",
+    headers,
   });
 
   if (!response.ok) {

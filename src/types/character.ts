@@ -60,12 +60,24 @@ export type CharacterActivity = {
   museumPieces: number;
 };
 
+export type CharacterLife = {
+  kingdomRank: string;
+  reputationRank: string;
+  relationship: string;
+  marriage: string;
+  petsOwned: number;
+  petsActive: number;
+  petCapacity: string;
+  successesTotal: number;
+};
+
 export type CharacterSnapshot = {
   generatedAt: string;
   mode: CharacterMode;
   profile: CharacterProfile;
   combat: CharacterStatBlock;
   activity: CharacterActivity;
+  life?: CharacterLife;
   identity: CharacterIdentitySummary[];
 };
 
@@ -95,12 +107,12 @@ export type CharacterRaceDetail = {
   unlockedSkills: CharacterRaceSkill[];
   nextSkillLevel?: number | null;
 
-  /*
-   * Champs de lore préparés pour une future extension du moteur.
-   * Ils restent null si equipment.py ne les fournit pas encore.
-   */
+  /* Lore canonique sérialisé par le backend TailBlue. */
   origin?: string | null;
-  kingdom?: string | null;
+  territory?: string | null;
+  society?: string | null;
+  reputation?: string | null;
+  relations?: string | null;
   history?: string | null;
 
   exclusive?: boolean;
@@ -119,6 +131,7 @@ export type CharacterJobDetail = {
   quote?: string | null;
   salaryMin?: number | null;
   salaryMax?: number | null;
+  salaryLabel?: string | null;
   previewOnly?: boolean;
 };
 

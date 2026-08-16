@@ -6,6 +6,9 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
+import { getCurrent, onOpenUrl } from "@tauri-apps/plugin-deep-link";
+import { openUrl } from "@tauri-apps/plugin-opener";
+ 
 import "./App.css";
 import PetsPage from "./pages/PetsPage";
 import HousePage from "./pages/HousePage";
@@ -18,12 +21,18 @@ import WorkPage from "./pages/WorkPage";
 import HimeControlPage from "./pages/HimeControlPage";
 import HuntPage from "./pages/HuntPage";
 import {
+  clearDesktopAccessToken,
+  exchangeDesktopAuthCode,
+  getDesktopAccessToken,
+  getDiscordDesktopLoginUrl,
   homeApiConfigured,
+  loadAuthenticatedUser,
   loadHomeSnapshot,
   logoutHomeSession,
   markAllHomeNotificationsRead,
   markHomeNotificationRead,
   openHomeStream,
+  type TailBlueAuthUser,
 } from "./api/homeApi";
 import { HOME_PREVIEW_SNAPSHOT } from "./data/homePreviewData";
 import type {
@@ -734,19 +743,23 @@ function CompanionImageViewer({
 
 function AccountModal({
   open,
-  profile,
+  authUser,
   apiEnabled,
+  authenticating,
   loggingOut,
   message,
   onClose,
+  onLogin,
   onLogout,
 }: {
   open: boolean;
-  profile: HomeSnapshot["profile"];
+  authUser: TailBlueAuthUser | null;
   apiEnabled: boolean;
+  authenticating: boolean;
   loggingOut: boolean;
   message: string | null;
   onClose: () => void;
+  onLogin: () => void;
   onLogout: () => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -759,14 +772,17 @@ function AccountModal({
 
   if (!open) return null;
 
+  const authenticated = Boolean(authUser);
+  const displayName =
+    authUser?.displayName?.trim() || "Connexion Discord requise";
   const discordId =
-    profile.id?.trim() || "Connexion backend requise";
+    authUser?.id?.trim() || "Non connecté";
 
   async function copyDiscordId() {
-    if (!profile.id) return;
+    if (!authUser?.id) return;
 
     try {
-      await navigator.clipboard.writeText(profile.id);
+      await navigator.clipboard.writeText(authUser.id);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -796,25 +812,24 @@ function AccountModal({
         <div className="account-modal-hero">
           <div className="account-avatar-wrap">
             <Avatar
-              url={profile.avatarUrl}
-              name={profile.displayName}
+              url={authUser?.avatarUrl}
+              name={displayName}
               className="account-avatar"
             />
           </div>
 
           <div className="account-modal-title">
             <p className="eyebrow">COMPTE DISCORD</p>
-            <h2>{profile.displayName}</h2>
+            <h2>{displayName}</h2>
 
             <div className="account-badges">
-              <span>⭐ Niveau {profile.level}</span>
+              {authenticated ? (
+                <span>🔐 Discord vérifié</span>
+              ) : (
+                <span>🔒 Non connecté</span>
+              )}
 
-              <span>
-                ⚔️ Rang{" "}
-                {profile.adventurerRank?.trim() || "—"}
-              </span>
-
-              {profile.isHime && (
+              {authUser?.isHime && (
                 <span className="royal">
                   👑 Hime Control
                 </span>
@@ -832,9 +847,9 @@ function AccountModal({
 
               <button
                 onClick={() => void copyDiscordId()}
-                disabled={!profile.id}
+                disabled={!authUser?.id}
                 title={
-                  profile.id
+                  authUser?.id
                     ? "Copier l'ID Discord"
                     : "Disponible après connexion Discord"
                 }
@@ -845,21 +860,35 @@ function AccountModal({
           </div>
 
           <div className="account-info-card">
-            <span>PSEUDO</span>
-            <strong>{profile.displayName}</strong>
+            <span>PSEUDO DISCORD</span>
+            <strong>{authUser?.username || "—"}</strong>
           </div>
 
           <div className="account-info-card">
-            <span>NIVEAU</span>
-            <strong>{profile.level}</strong>
+            <span>STATUT</span>
+            <strong>
+              {authUser
+                ? authUser.isHime
+                  ? "👑 Hime-sama"
+                  : "✅ Aventurier vérifié"
+                : "—"}
+            </strong>
           </div>
         </div>
 
         {!apiEnabled && (
           <div className="account-preview-note">
-            🧪 Aperçu local : le vrai pseudo, la PP et l'ID
-            seront fournis par la session Discord quand
-            TailBlue sera connecté.
+            🧪 L'API TailBlue n'est pas configurée sur cette
+            installation.
+          </div>
+        )}
+
+        {apiEnabled && !authenticated && (
+          <div className="account-preview-note">
+            🔐 Connecte ton compte Discord pour que TailBlue
+            récupère ton identité réelle. Le niveau, le rang et
+            les données RPG seront reliés ensuite par
+            <strong> /api/home</strong>.
           </div>
         )}
 
@@ -877,20 +906,33 @@ function AccountModal({
             Fermer
           </button>
 
-          <button
-            className="account-logout-button"
-            onClick={onLogout}
-            disabled={!apiEnabled || loggingOut}
-            title={
-              apiEnabled
-                ? "Se déconnecter de TailBlue"
-                : "Disponible après connexion Discord"
-            }
-          >
-            {loggingOut
-              ? "Déconnexion…"
-              : "↪ Se déconnecter"}
-          </button>
+          {authenticated ? (
+            <button
+              className="account-logout-button"
+              onClick={onLogout}
+              disabled={loggingOut}
+              title="Se déconnecter de TailBlue"
+            >
+              {loggingOut
+                ? "Déconnexion…"
+                : "↪ Se déconnecter"}
+            </button>
+          ) : (
+            <button
+              className="primary-button"
+              onClick={onLogin}
+              disabled={!apiEnabled || authenticating}
+              title={
+                apiEnabled
+                  ? "Se connecter avec Discord"
+                  : "API TailBlue non configurée"
+              }
+            >
+              {authenticating
+                ? "Ouverture de Discord…"
+                : "🔵 Se connecter avec Discord"}
+            </button>
+          )}
         </div>
       </section>
     </div>
@@ -898,6 +940,114 @@ function AccountModal({
 }
 
 function App() {
+  const handledDeepLinksRef = useRef<Set<string>>(new Set());
+  const [authUser, setAuthUser] =
+    useState<TailBlueAuthUser | null>(null);
+  const [authenticating, setAuthenticating] =
+    useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let unlisten: (() => void) | undefined;
+
+    const handleDeepLinks = async (urls: string[] | null) => {
+      if (!urls) return;
+
+      for (const url of urls) {
+        if (!url.startsWith("tailblue://")) continue;
+
+        if (handledDeepLinksRef.current.has(url)) {
+          console.log("↪️ Deep link déjà traité :", url);
+          continue;
+        }
+
+        handledDeepLinksRef.current.add(url);
+
+        console.log("✅ Deep link reçu dans TailBlue :", url);
+
+        const parsedUrl = new URL(url);
+
+        if (
+          parsedUrl.hostname !== "auth" ||
+          parsedUrl.pathname !== "/callback"
+        ) {
+          continue;
+        }
+
+        const code = parsedUrl.searchParams.get("code");
+
+        if (!code) {
+          console.error("❌ Code de connexion TailBlue manquant.");
+          continue;
+        }
+
+        try {
+          setAuthenticating(true);
+
+          const auth = await exchangeDesktopAuthCode(code);
+          const me = await loadAuthenticatedUser();
+
+          setAuthUser(me.user);
+          setAccountMessage(
+            `✅ Connectée avec Discord en tant que ${me.user.displayName}.`,
+          );
+          setAccountOpen(true);
+          setAuthenticating(false);
+
+          console.log(
+            "🔐 Connexion TailBlue Desktop réussie :",
+            auth.user,
+          );
+
+          console.log(
+            "👑 Session TailBlue vérifiée par l'API :",
+            me,
+          );
+        } catch (error) {
+          setAuthenticating(false);
+          setAccountMessage(
+            error instanceof Error
+              ? `❌ ${error.message}`
+              : "❌ Connexion TailBlue Desktop impossible.",
+          );
+          setAccountOpen(true);
+
+          console.error(
+            "❌ Connexion TailBlue Desktop impossible :",
+            error,
+          );
+        }
+      }
+    };
+
+    void getCurrent()
+      .then((urls) => {
+        if (active) {
+          void handleDeepLinks(urls);
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Lecture du deep link impossible :",
+          error,
+        );
+      });
+
+    void onOpenUrl((urls) => {
+      void handleDeepLinks(urls);
+    }).then((stopListening) => {
+      if (active) {
+        unlisten = stopListening;
+      } else {
+        stopListening();
+      }
+    });
+
+    return () => {
+      active = false;
+      unlisten?.();
+    };
+  }, []);
   const [activePage, setActivePage] = useState("Accueil");
 
   const [home, setHome] = useState<HomeSnapshot>(
@@ -917,6 +1067,36 @@ function App() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [accountMessage, setAccountMessage] =
     useState<string | null>(null);
+
+  useEffect(() => {
+    if (!homeApiConfigured || !getDesktopAccessToken()) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void loadAuthenticatedUser()
+      .then((session) => {
+        if (!cancelled) {
+          setAuthUser(session.user);
+        }
+      })
+      .catch((error) => {
+        clearDesktopAccessToken();
+
+        if (!cancelled) {
+          setAuthUser(null);
+          console.warn(
+            "Session Discord locale expirée :",
+            error,
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const { settings } = useTailBlueSettings();
 
@@ -939,10 +1119,32 @@ function App() {
     ),
   );
 
-  const isHime = home.profile.isHime;
+  const isHime = authUser?.isHime === true;
+
+  const shellDisplayName =
+    authUser?.displayName ??
+    (homeApiConfigured
+      ? "Connexion Discord"
+      : home.profile.displayName);
+
+  const shellAvatarUrl =
+    authUser?.avatarUrl ??
+    (homeApiConfigured
+      ? null
+      : home.profile.avatarUrl);
 
   const refreshHome = useCallback(
     async (signal?: AbortSignal) => {
+      if (
+        homeApiConfigured &&
+        !getDesktopAccessToken()
+      ) {
+        if (!signal?.aborted) {
+          setHomeLoading(false);
+        }
+        return;
+      }
+
       try {
         const snapshot = await loadHomeSnapshot(signal);
         setHome(snapshot);
@@ -1156,7 +1358,6 @@ function App() {
 
   const himeIdeas = home.hime?.ideas ?? 0;
   const himeErrors = home.hime?.errors ?? 0;
-  const himeTotal = himeIdeas + himeErrors;
 
   /*
    * Badges de navigation :
@@ -1385,21 +1586,47 @@ function App() {
     );
   }
 
+  async function loginWithDiscord() {
+    if (!homeApiConfigured || authenticating) return;
+
+    setAuthenticating(true);
+    setAccountMessage(
+      "🌐 Ouverture de Discord dans ton navigateur…",
+    );
+
+    try {
+      await openUrl(getDiscordDesktopLoginUrl());
+
+      setAccountMessage(
+        "🔐 Termine la connexion dans Discord. TailBlue se rouvrira automatiquement ensuite.",
+      );
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error
+          ? error.message
+          : "Impossible d'ouvrir Discord.",
+      );
+    } finally {
+      setAuthenticating(false);
+    }
+  }
+
   async function logout() {
-    if (!homeApiConfigured || loggingOut) return;
+    if (!homeApiConfigured || loggingOut || !authUser) return;
 
     setLoggingOut(true);
     setAccountMessage(null);
 
     try {
       await logoutHomeSession();
-      setAccountMessage(
-        "✅ Session Discord déconnectée. Rechargement…",
-      );
 
-      window.setTimeout(() => {
-        window.location.reload();
-      }, 450);
+      setAuthUser(null);
+      setHome(HOME_PREVIEW_SNAPSHOT);
+      setHomeLoading(false);
+      setAccountMessage(
+        "✅ Session Discord déconnectée.",
+      );
+      setLoggingOut(false);
     } catch (error) {
       setAccountMessage(
         error instanceof Error
@@ -1618,20 +1845,22 @@ function App() {
 
           <div className="sidebar-user">
             <Avatar
-              url={home.profile.avatarUrl}
-              name={home.profile.displayName}
+              url={shellAvatarUrl}
+              name={shellDisplayName}
               className="sidebar-avatar"
             />
 
             <div className="sidebar-user-info">
-              <strong>{home.profile.displayName}</strong>
+              <strong>{shellDisplayName}</strong>
 
               <span>
                 {isHime
                   ? "Administratrice TailBlue"
-                  : homeApiConfigured
-                    ? `Niveau ${home.profile.level}`
-                    : "Aperçu local"}
+                  : authUser
+                    ? "Compte Discord connecté"
+                    : homeApiConfigured
+                      ? "Connexion requise"
+                      : "Aperçu local"}
               </span>
             </div>
 
@@ -1703,15 +1932,19 @@ function App() {
               }}
             >
               <Avatar
-                url={home.profile.avatarUrl}
-                name={home.profile.displayName}
+                url={shellAvatarUrl}
+                name={shellDisplayName}
                 className="profile-avatar"
               />
 
               <div>
-                <strong>{home.profile.displayName}</strong>
+                <strong>{shellDisplayName}</strong>
                 <span>
-                  Niveau {home.profile.level}
+                  {authUser
+                    ? "Discord connecté"
+                    : homeApiConfigured
+                      ? "Se connecter"
+                      : `Niveau ${home.profile.level}`}
                   {homeLoading ? " • synchronisation…" : ""}
                 </span>
               </div>
@@ -1761,11 +1994,13 @@ function App() {
 
         <AccountModal
           open={accountOpen}
-          profile={home.profile}
+          authUser={authUser}
           apiEnabled={homeApiConfigured}
+          authenticating={authenticating}
           loggingOut={loggingOut}
           message={accountMessage}
           onClose={() => setAccountOpen(false)}
+          onLogin={() => void loginWithDiscord()}
           onLogout={() => void logout()}
         />
 
@@ -1793,7 +2028,7 @@ function App() {
               </article>
 
               <article className="stat-card">
-                <span className="stat-label">Or</span>
+                <span className="stat-label">Cookies</span>
                 <strong className="stat-value">
                   {formatNumber(home.profile.cookies)}
                 </strong>

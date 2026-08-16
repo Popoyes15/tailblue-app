@@ -1,3 +1,4 @@
+import { getDesktopAccessToken } from "./homeApi";
 import {
   getPreviewRecipe,
   INVENTORY_PREVIEW,
@@ -29,14 +30,16 @@ async function fetchJson<T>(
     throw new Error("API TailBlue non configurée.");
   }
 
+  const token = getDesktopAccessToken();
+  const headers = new Headers(init.headers ?? {});
+  headers.set("Accept", "application/json");
+  headers.set("Content-Type", "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(init.headers ?? {}),
-    },
+    credentials: "omit",
+    headers,
   });
 
   if (!response.ok) {
@@ -125,20 +128,10 @@ export async function craftInventoryItem(
 }
 
 export function openInventoryStream(
-  onChange: () => void,
+  _onChange: () => void,
 ): () => void {
-  if (!API_BASE || typeof EventSource === "undefined") {
-    return () => undefined;
-  }
-
-  const source = new EventSource(
-    `${API_BASE}/api/inventory/stream`,
-    { withCredentials: true },
-  );
-
-  source.addEventListener("inventory", onChange);
-  source.addEventListener("equipment", onChange);
-  source.addEventListener("craft", onChange);
-
-  return () => source.close();
+  // EventSource ne permet pas d'ajouter Authorization: Bearer.
+  // Le rafraîchissement périodique de la page reste actif ; le temps réel
+  // sera branché plus tard via un transport authentifié.
+  return () => undefined;
 }

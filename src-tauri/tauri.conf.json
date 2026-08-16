@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "cd-tailblue-app",
+  "productName": "TailBlue",
   "version": "0.1.0",
-  "identifier": "npm install",
+  "identifier": "com.tailblue.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "cd-tailblue-app",
+        "title": "TailBlue",
         "width": 800,
         "height": 600
       }
@@ -31,5 +31,14 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "tailblue"
+        ]
+      }
+    }
   }
 }

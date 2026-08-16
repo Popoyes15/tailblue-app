@@ -1,3 +1,4 @@
+import { getDesktopAccessToken } from "./homeApi";
 import type {
   HouseSnapshot,
   LeaderboardSnapshot,
@@ -16,13 +17,16 @@ async function request<T>(
     throw new Error("TAILBLUE_API_NOT_CONFIGURED");
   }
 
+  const token = getDesktopAccessToken();
+  const headers = new Headers(init?.headers ?? {});
+  headers.set("Content-Type", "application/json");
+  headers.set("Accept", "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
   const response = await fetch(`${baseUrl}${path}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
     ...init,
+    credentials: "omit",
+    headers,
   });
 
   if (!response.ok) {

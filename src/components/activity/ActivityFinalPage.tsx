@@ -12,6 +12,7 @@ import type {
   ActivitySnapshotDto,
 } from "../../types/activity";
 import "./activityFinal.css";
+import "./activityResultReadability.css";
 
 type LoadState = "loading" | "ready" | "working" | "error";
 
@@ -246,6 +247,7 @@ export default function ActivityFinalPage({
       <div className="tb-activity-main-grid">
         <main className="tb-activity-stage">
           {!currentEvent ? (
+            snapshot.lastResult ? null : (
             <div className="tb-activity-ready">
               <div className="tb-ready-orb">
                 <span>{meta.icon}</span>
@@ -294,6 +296,7 @@ export default function ActivityFinalPage({
                 </small>
               )}
             </div>
+            )
           ) : (
             <EventPanel
               activity={activity}
@@ -352,6 +355,53 @@ export default function ActivityFinalPage({
   );
 }
 
+function cleanActivityPromptText(value: string) {
+  return String(value ?? "")
+    .replace(/<@!?247052020358447104>/g, "Hime-sama")
+    .replace(/<@!?\d+>/g, "un aventurier")
+    .replace(/\*\*/g, "")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/(?:_{6,}|━{6,}|─{6,}|—{6,})/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function activityPromptLines(value: string) {
+  const clean = cleanActivityPromptText(value);
+  if (!clean) return [];
+
+  // Les événements Discord utilisent souvent un long séparateur avant
+  // la question finale. Une fois nettoyé, on garde chaque morceau comme
+  // vrai paragraphe afin que l'app soit lisible sans afficher le Markdown.
+  const lines = clean
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  // Certains anciens événements n'ont pas de vrai saut de ligne avant la
+  // question. On isole les formulations les plus courantes sans changer
+  // le texte canonique du bot.
+  if (lines.length === 1) {
+    const single = lines[0];
+    const match = single.match(
+      /^(.*?)(\s+(?:Quelle|Quel|Que|Comment|Laquelle|Lequel)\b[^?]*\?)\s*$/iu,
+    );
+    if (match && match[1].trim()) {
+      return [match[1].trim(), match[2].trim()];
+    }
+  }
+
+  return lines;
+}
+
+function isActivityQuestion(line: string) {
+  return /^(?:Quelle|Quel|Que|Comment|Laquelle|Lequel)\b.*\?$/iu.test(
+    line.trim(),
+  );
+}
+
 function EventPanel({
   activity,
   event,
@@ -387,7 +437,20 @@ function EventPanel({
 
       <div className="tb-event-story">
         <div className="tb-story-mark">“</div>
-        <p>{event.description}</p>
+        <div className="tb-event-story-copy">
+          {activityPromptLines(event.description).map((line, index) => (
+            <p
+              key={`${index}-${line.slice(0, 28)}`}
+              className={
+                isActivityQuestion(line)
+                  ? "tb-event-story-question"
+                  : undefined
+              }
+            >
+              {line}
+            </p>
+          ))}
+        </div>
       </div>
 
       <div className="tb-event-choice-heading">
@@ -416,8 +479,10 @@ function EventPanel({
               {choice.emoji ?? index + 1}
             </div>
             <div>
-              <strong>{choice.label}</strong>
-              {choice.description && <p>{choice.description}</p>}
+              <strong>{cleanActivityPromptText(choice.label)}</strong>
+              {choice.description && (
+                <p>{cleanActivityPromptText(choice.description)}</p>
+              )}
             </div>
             <span className="tb-choice-arrow">→</span>
           </button>
@@ -690,6 +755,93 @@ function StatsPanel({
   );
 }
 
+function cleanDiscordResultText(value: string) {
+  return String(value ?? "")
+    .replace(/<@!?247052020358447104>/g, "Hime-sama")
+    .replace(/<@!?\d+>/g, "un aventurier")
+    .replace(/\*\*/g, "")
+    .replace(/_{8,}/g, "\n")
+    .replace(/\s+🏰\s+/g, "\n🏰 ")
+    .replace(/\s+🎁\s+/g, "\n🎁 ")
+    .replace(/\s+🏠\s+/g, "\n🏠 ")
+    .replace(/\s+🛋️?\s+/g, "\n🛋️ ")
+    .replace(/\s+🛠️?\s+/g, "\n🛠️ ")
+    .replace(/\s+🎒\s+/g, "\n🎒 ")
+    .replace(/\s+✨\s+BONUS/g, "\n✨ BONUS")
+    .replace(/\s+🌟\s+/g, "\n🌟 ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function resultNarrativeLines(value: string, title: string) {
+  let clean = cleanDiscordResultText(value);
+  const cleanTitle = cleanDiscordResultText(title).trim();
+
+  if (cleanTitle && clean.toLowerCase().startsWith(cleanTitle.toLowerCase())) {
+    clean = clean.slice(cleanTitle.length).replace(/^\s*[!—:•-]*\s*/, "");
+  }
+
+  return clean
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function isResultDetailLine(line: string) {
+  return /^(🏰|🎁|🏠|🛋️|🛠️|🎒|✨ BONUS|🌟)/u.test(line);
+}
+
+
+type ActivitySpecialEventDto = {
+  id: string;
+  kind: string;
+  icon?: string;
+  label?: string;
+  title?: string;
+  narrative: string;
+};
+
+function specialEventNarrativeLines(value: string, title?: string) {
+  let clean = cleanDiscordResultText(value);
+  const cleanTitle = cleanDiscordResultText(title ?? "").trim();
+
+  if (cleanTitle && clean.toLowerCase().startsWith(cleanTitle.toLowerCase())) {
+    clean = clean.slice(cleanTitle.length).replace(/^\s*[!—:•-]*\s*/, "");
+  }
+
+  return clean
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function SpecialActivityEventCard({
+  event,
+}: {
+  event: ActivitySpecialEventDto;
+}) {
+  return (
+    <section className={`tb-special-activity-event is-${event.kind || "special"}`}>
+      <div className="tb-special-event-icon" aria-hidden="true">
+        {event.icon ?? "✨"}
+      </div>
+
+      <div className="tb-special-event-body">
+        <p className="tb-mini-label">{event.label ?? "ÉVÉNEMENT SPÉCIAL"}</p>
+        <h3>{cleanDiscordResultText(event.title ?? "Événement spécial")}</h3>
+
+        <div className="tb-special-event-story">
+          {specialEventNarrativeLines(event.narrative, event.title).map(
+            (line, index) => (
+              <p key={`${event.id}-${index}-${line.slice(0, 18)}`}>{line}</p>
+            ),
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ResultPanel({
   activity,
   result,
@@ -697,6 +849,13 @@ function ResultPanel({
   activity: ActivityKind;
   result: ActivityResultDto;
 }) {
+  const specialEvents =
+    (
+      result as ActivityResultDto & {
+        specialEvents?: ActivitySpecialEventDto[];
+      }
+    ).specialEvents ?? [];
+
   return (
     <article
       className={`tb-result-panel ${
@@ -713,26 +872,60 @@ function ResultPanel({
         </div>
       </div>
 
-      <p className="tb-result-narrative">{result.narrative}</p>
+      <div className="tb-result-narrative">
+        {resultNarrativeLines(result.narrative, result.title).map(
+          (line, index) => (
+            <p
+              key={`${index}-${line.slice(0, 24)}`}
+              className={
+                isResultDetailLine(line)
+                  ? "tb-result-narrative-line is-detail"
+                  : "tb-result-narrative-line"
+              }
+            >
+              {line}
+            </p>
+          ),
+        )}
+      </div>
+
+      {specialEvents.length > 0 && (
+        <div className="tb-special-events-list">
+          {specialEvents.map((event) => (
+            <SpecialActivityEventCard key={event.id} event={event} />
+          ))}
+        </div>
+      )}
 
       <div className="tb-result-rewards">
-        <RewardPill icon="🍪" label="Cookies" value={`+${result.cookies}`} />
-        <RewardPill icon="✨" label="XP" value={`+${result.xp}`} />
+        <RewardPill icon="🍪" label="Cookies" value={`${result.cookies >= 0 ? "+" : ""}${result.cookies}`} />
+        <RewardPill icon="✨" label="XP" value={`${result.xp >= 0 ? "+" : ""}${result.xp}`} />
         <RewardPill
           icon="👑"
           label="Réputation"
-          value={`+${result.reputation}`}
+          value={`${result.reputation >= 0 ? "+" : ""}${result.reputation}`}
         />
       </div>
 
       {result.loot && result.loot.length > 0 && (
         <div className="tb-result-loot">
-          <p className="tb-mini-label">BUTIN</p>
-          <div>
+          <div className="tb-result-loot-heading">
+            <p className="tb-mini-label">BUTIN AJOUTÉ À TES INVENTAIRES</p>
+            <strong>{result.loot.length} type(s) d'objet obtenu(s)</strong>
+          </div>
+          <div className="tb-result-loot-grid">
             {result.loot.map((loot, index) => (
-              <span key={`${loot.id ?? loot.name}-${index}`}>
-                🎁 {loot.name} ×{loot.quantity}
-              </span>
+              <article
+                className="tb-result-loot-card"
+                key={`${loot.id ?? loot.name}-${index}`}
+              >
+                <span className="tb-result-loot-icon">🎁</span>
+                <div>
+                  <strong>{loot.name}</strong>
+                  <small>Quantité obtenue</small>
+                </div>
+                <b>×{loot.quantity}</b>
+              </article>
             ))}
           </div>
         </div>

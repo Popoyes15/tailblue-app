@@ -49,6 +49,12 @@ const STAT_NAMES: Record<string, string> = {
   dodge: "Esquive",
   luck: "Chance",
   accuracy: "Précision",
+  pv: "PV",
+  attaque: "Attaque",
+  vitesse: "Vitesse",
+  critique: "Critique",
+  esquive: "Esquive",
+  precision: "Précision",
 };
 
 const ELEMENT_LABELS: Record<string, string> = {
@@ -119,15 +125,19 @@ function DetailArtwork({
   imageUrl,
   emoji,
   alt,
+  variant,
 }: {
   imageUrl?: string | null;
   emoji?: string | null;
   alt: string;
+  variant?: "race" | "job" | "guild" | "residence" | "companion";
 }) {
   if (!imageUrl && !emoji) return null;
 
   return (
-    <div className="tb-character-detail-art">
+    <div
+      className={`tb-character-detail-art${variant ? ` tb-character-detail-art--${variant}` : ""}`}
+    >
       {imageUrl && (
         <div
           className="tb-character-detail-art-blur"
@@ -155,9 +165,9 @@ function PreviewNotice() {
       <div>
         <strong>Aperçu local</strong>
         <p>
-          Cette fiche sert à tester l'interface.
-          Les valeurs personnelles seront remplacées par
-          les données du compte Discord connecté.
+          Cette fiche sert uniquement quand l'API n'est pas configurée.
+          En mode connecté, les valeurs viennent directement
+          du backend TailBlue.
         </p>
       </div>
     </div>
@@ -227,8 +237,14 @@ function RaceDetail({
   detail: Extract<CharacterDetail, { kind: "race" }>;
 }) {
   const bonuses = Object.entries(detail.statBonuses);
-  const loreMissing =
-    !detail.origin && !detail.kingdom && !detail.history;
+  const hasLore = Boolean(
+    detail.origin ||
+      detail.territory ||
+      detail.society ||
+      detail.reputation ||
+      detail.relations ||
+      detail.history,
+  );
 
   return (
     <>
@@ -236,6 +252,7 @@ function RaceDetail({
         imageUrl={detail.imageUrl}
         emoji={detail.emoji}
         alt={detail.name}
+        variant="race"
       />
 
       <div className="tb-character-detail-title">
@@ -320,41 +337,30 @@ function RaceDetail({
 
         {detail.nextSkillLevel != null && (
           <div className="tb-character-next-skill">
-            ✨ Prochain choix de compétence au niveau de
-            combat <strong>{detail.nextSkillLevel}</strong>.
+            ✨ Prochain palier racial au niveau de combat{" "}
+            <strong>{detail.nextSkillLevel}</strong>.
           </div>
         )}
 
         <div className="tb-character-skills-grid">
-          {detail.unlockedSkills.map((skill) => (
-            <RaceSkillCard key={skill.id} skill={skill} />
-          ))}
+          {detail.unlockedSkills.length ? (
+            detail.unlockedSkills.map((skill) => (
+              <RaceSkillCard key={skill.id} skill={skill} />
+            ))
+          ) : (
+            <p className="tb-muted">
+              Aucune compétence raciale active.
+            </p>
+          )}
         </div>
       </section>
 
       <section className="tb-character-detail-section">
         <p className="eyebrow">ARCHIVES DU ROYAUME</p>
-        <h3>Origines & histoire</h3>
+        <h3>Origines, peuple & histoire</h3>
 
-        {loreMissing ? (
-          <div className="tb-character-lore-missing">
-            <span>📚</span>
-            <div>
-              <strong>
-                Le moteur est prêt à accueillir ce lore.
-              </strong>
-              <p>
-                Le `RaceDefinition` actuel possède déjà la
-                description, l'archétype, les éléments, les
-                armes et les compétences, mais pas encore
-                des champs séparés `origin`, `kingdom` et
-                `history`. Ils restent donc vides au lieu
-                d'être inventés.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="tb-character-lore-grid">
+        {hasLore ? (
+          <div className="tb-character-lore-grid rich">
             {detail.origin && (
               <div>
                 <span>🌱 Origine</span>
@@ -362,20 +368,45 @@ function RaceDetail({
               </div>
             )}
 
-            {detail.kingdom && (
+            {detail.territory && (
               <div>
-                <span>🏰 Royaume</span>
-                <p>{detail.kingdom}</p>
+                <span>🗺️ Territoire</span>
+                <p>{detail.territory}</p>
+              </div>
+            )}
+
+            {detail.society && (
+              <div>
+                <span>🏛️ Société</span>
+                <p>{detail.society}</p>
+              </div>
+            )}
+
+            {detail.reputation && (
+              <div>
+                <span>👁️ Réputation</span>
+                <p>{detail.reputation}</p>
+              </div>
+            )}
+
+            {detail.relations && (
+              <div className="wide">
+                <span>🤝 Relations avec les peuples</span>
+                <p>{detail.relations}</p>
               </div>
             )}
 
             {detail.history && (
-              <div className="wide">
-                <span>📖 Histoire</span>
+              <div className="wide history">
+                <span>📖 Grande histoire</span>
                 <p>{detail.history}</p>
               </div>
             )}
           </div>
+        ) : (
+          <p className="tb-muted">
+            Aucune archive raciale n'est enregistrée pour cette race.
+          </p>
         )}
       </section>
     </>
@@ -393,6 +424,7 @@ function JobDetail({
         imageUrl={detail.imageUrl}
         emoji={detail.emoji ?? "💼"}
         alt={detail.name}
+        variant="job"
       />
 
       <div className="tb-character-detail-title">
@@ -429,12 +461,12 @@ function JobDetail({
             🍪 Salaire de référence
           </span>
           <p>
-            {detail.salaryMin != null &&
-            detail.salaryMax != null
+            {detail.salaryLabel ||
+            (detail.salaryMin != null && detail.salaryMax != null
               ? `${formatNumber(detail.salaryMin)} à ${formatNumber(
                   detail.salaryMax,
                 )} cookies`
-              : "Non renseigné"}
+              : "Non renseigné")}
           </p>
         </section>
       </div>
@@ -446,9 +478,8 @@ function JobDetail({
       )}
 
       <div className="tb-character-source-note">
-        📖 Les textes de cette fiche sont prévus pour être
-        sérialisés directement depuis `JOBS` et
-        `CODEX_METIERS`.
+        📖 Description, spécialité, citation et salaire sont lus
+        dans les données métier du backend TailBlue.
       </div>
     </>
   );
@@ -467,6 +498,7 @@ function GuildDetail({
         imageUrl={detail.imageUrl}
         emoji="🏰"
         alt={detail.name}
+        variant="guild"
       />
 
       <div className="tb-character-detail-title">
@@ -607,6 +639,7 @@ function ResidenceDetail({
         imageUrl={detail.imageUrl}
         emoji="🏠"
         alt={detail.name}
+        variant="residence"
       />
 
       <div className="tb-character-detail-title">
@@ -639,10 +672,8 @@ function ResidenceDetail({
       </section>
 
       <div className="tb-character-source-note">
-        🏠 L'image, le nom et les bonus sont prévus pour
-        provenir directement de `HOUSES` /
-        `MAISON_EFFETS` et du logement effectif calculé
-        côté serveur.
+        🏠 Nom, image et effets sont lus depuis la résidence
+        effective enregistrée par le backend TailBlue.
       </div>
     </>
   );
@@ -662,6 +693,7 @@ function CompanionDetail({
         imageUrl={detail.imageUrl}
         emoji={detail.emoji ?? "🐾"}
         alt={detail.displayName}
+        variant="companion"
       />
 
       <div className="tb-character-detail-title">
@@ -783,10 +815,8 @@ function RankDetail({
       )}
 
       <div className="tb-character-source-note">
-        ⚔️ Le rang n'est jamais déduit ni modifié par
-        React. Le serveur appelle
-        `_sync_adventurer_rank(...)` puis sérialise la
-        valeur enregistrée.
+        ⚔️ React ne calcule jamais ce rang. L'API affiche uniquement
+        une valeur déjà synchronisée par le moteur TailBlue ; sinon elle affiche —.
       </div>
     </>
   );
@@ -1163,7 +1193,7 @@ export default function CharacterPage() {
               ? "Synchronisation…"
               : snapshot.mode === "api"
                 ? "Synchronisé avec TailBlue"
-                : "Aperçu local • API future"}
+                : "Aperçu local • API non configurée"}
           </span>
         </div>
       </header>
@@ -1304,7 +1334,7 @@ export default function CharacterPage() {
               <span>Progression du niveau</span>
               <strong>
                 {snapshot.mode === "preview"
-                  ? "Synchronisation future"
+                  ? "Aperçu local"
                   : `${formatNumber(
                       snapshot.profile.xpCurrent,
                     )} / ${formatNumber(
@@ -1384,6 +1414,46 @@ export default function CharacterPage() {
             </div>
           </section>
 
+          {snapshot.life && (
+            <section className="tb-character-panel">
+              <div className="tb-character-panel-heading">
+                <div>
+                  <p className="eyebrow">STATUT</p>
+                  <h3>Vie personnelle</h3>
+                </div>
+              </div>
+
+              <div className="tb-character-life-grid">
+                <article>
+                  <span>🏅 Rang du Royaume</span>
+                  <strong>{snapshot.life.kingdomRank}</strong>
+                </article>
+                <article>
+                  <span>👑 Réputation</span>
+                  <strong>{snapshot.life.reputationRank}</strong>
+                </article>
+                <article>
+                  <span>💞 Couple</span>
+                  <strong>{snapshot.life.relationship}</strong>
+                </article>
+                <article>
+                  <span>💍 Mariage</span>
+                  <strong>{snapshot.life.marriage}</strong>
+                </article>
+                <article>
+                  <span>🐾 Compagnons</span>
+                  <strong>
+                    {snapshot.life.petsActive} actif(s) • {snapshot.life.petsOwned} possédé(s)
+                  </strong>
+                </article>
+                <article>
+                  <span>🏠 Capacité du chenil</span>
+                  <strong>{snapshot.life.petCapacity}</strong>
+                </article>
+              </div>
+            </section>
+          )}
+
           <section className="tb-character-panel">
             <div className="tb-character-panel-heading">
               <div>
@@ -1413,15 +1483,13 @@ export default function CharacterPage() {
         <span>🔗</span>
         <div>
           <strong>
-            Fiche préparée pour la structure réelle de
-            TailBlue.
+            Fiche reliée au personnage réel de TailBlue.
           </strong>
           <p>
-            Discord, rang, race, métier, guilde, maison,
-            compagnons, équipement et statistiques seront
-            lus côté serveur. Un changement dans le bot
-            pourra actualiser cette page sans redémarrer
-            l'application.
+            Discord, race, histoire, métier, guilde, résidence,
+            compagnon, équipement, statistiques et activité sont lus
+            côté serveur. La page se resynchronise automatiquement
+            pendant que l'application reste ouverte.
           </p>
         </div>
       </footer>

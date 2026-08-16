@@ -7,6 +7,7 @@ import type {
   CharacterDetailKind,
   CharacterSnapshot,
 } from "../types/character";
+import { getDesktopAccessToken } from "./homeApi";
 
 type Env = Record<string, string | boolean | undefined>;
 const ENV = (import.meta as ImportMeta & { env?: Env }).env ?? {};
@@ -19,6 +20,34 @@ const API_BASE = RAW_API_BASE.replace(/\/+$/, "");
 
 export const characterApiConfigured = Boolean(API_BASE);
 
+function resolveApiAssets<T>(value: T): T {
+  if (!API_BASE) return value;
+
+  if (
+    typeof value === "string" &&
+    value.startsWith("/api/assets/game/")
+  ) {
+    return `${API_BASE}${value}` as T;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveApiAssets(item)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    const source = value as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+
+    for (const [key, item] of Object.entries(source)) {
+      result[key] = resolveApiAssets(item);
+    }
+
+    return result as T;
+  }
+
+  return value;
+}
+
 async function fetchJson<T>(
   path: string,
   init: RequestInit = {},
@@ -27,13 +56,20 @@ async function fetchJson<T>(
     throw new Error("API TailBlue non configurée.");
   }
 
+  const headers = new Headers(init.headers);
+  if (!headers.has("Accept")) {
+    headers.set("Accept", "application/json");
+  }
+
+  const accessToken = getDesktopAccessToken();
+  if (accessToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-      ...(init.headers ?? {}),
-    },
+    credentials: "omit",
+    headers,
   });
 
   if (!response.ok) {
@@ -47,7 +83,8 @@ async function fetchJson<T>(
     throw new Error(detail);
   }
 
-  return response.json() as Promise<T>;
+  const payload = (await response.json()) as T;
+  return resolveApiAssets(payload);
 }
 
 export async function loadCharacterSnapshot(
@@ -82,23 +119,13 @@ export async function loadCharacterDetail(
   );
 }
 
+/*
+ * EventSource natif ne permet pas d'envoyer Authorization: Bearer.
+ * On garde donc le polling sécurisé tant que le flux temps réel authentifié
+ * (WebSocket / fetch-SSE / ticket court) n'est pas branché.
+ */
 export function openCharacterStream(
-  onChange: () => void,
+  _onChange: () => void,
 ): () => void {
-  if (!API_BASE || typeof EventSource === "undefined") {
-    return () => undefined;
-  }
-
-  const source = new EventSource(
-    `${API_BASE}/api/character/stream`,
-    { withCredentials: true },
-  );
-
-  source.addEventListener("character", onChange);
-  source.addEventListener("profile", onChange);
-  source.addEventListener("equipment", onChange);
-  source.addEventListener("guild", onChange);
-  source.addEventListener("companion", onChange);
-
-  return () => source.close();
+  return () => undefined;
 }

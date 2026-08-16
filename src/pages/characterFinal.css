@@ -679,10 +679,29 @@
 }
 
 .tb-character-detail-art {
-  height: 280px;
-  display: grid;
-  place-items: center;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 15px;
+  padding: 10px;
+}
+
+.tb-character-detail-art--race {
+  min-height: 340px;
+}
+
+.tb-character-detail-art--residence {
+  min-height: 320px;
+}
+
+.tb-character-detail-art--companion {
+  min-height: 320px;
+}
+
+.tb-character-detail-art--guild,
+.tb-character-detail-art--job {
+  min-height: 280px;
 }
 
 .tb-character-detail-art-blur {
@@ -698,11 +717,13 @@
 .tb-character-detail-art > img {
   position: relative;
   z-index: 1;
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
   display: block;
   object-fit: contain;
-  padding: 7px;
+  padding: 4px;
 }
 
 .tb-character-detail-art-emoji {
@@ -712,13 +733,19 @@
 }
 
 .tb-character-inline-art {
-  height: 210px;
+  min-height: 210px;
   margin-top: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tb-character-inline-art img {
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 
@@ -1275,116 +1302,440 @@
   }
 }
 
+/* ============================================================
+   PERSONNAGE V4.3 — lore canonique & vie personnelle
+   ============================================================ */
 
-/* =========================================================
-   PERSONNAGE — FIX IMAGES DÉTAIL V2.1
-   Image entière, jamais recadrée / zoomée.
-   ========================================================= */
-
-.tb-character-detail-art {
-  position: relative !important;
-  width: 100% !important;
-  height: 300px !important;
-  min-height: 300px !important;
-  max-height: 300px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-  padding: 10px !important;
-  border-radius: 16px !important;
-  background: rgba(4, 18, 35, .94) !important;
+.tb-character-life-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
 }
 
-/* Fond décoratif flouté */
-.tb-character-detail-art-blur {
-  position: absolute !important;
-  inset: -35px !important;
-  z-index: 0 !important;
-  background-position: center !important;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-  filter: blur(30px) brightness(.28) saturate(.85) !important;
-  transform: scale(1.12) !important;
-  opacity: .72 !important;
-  pointer-events: none !important;
+.tb-character-life-grid article {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(74, 139, 216, .08);
+  border-radius: 9px;
+  background: rgba(15, 51, 88, .62);
 }
 
-/* L'IMAGE RÉELLE : TOUJOURS ENTIÈRE */
-.tb-character-detail-art > img {
-  position: relative !important;
-  z-index: 2 !important;
-
-  width: auto !important;
-  height: auto !important;
-
-  max-width: 100% !important;
-  max-height: 280px !important;
-
-  object-fit: contain !important;
-  object-position: center center !important;
-
-  display: block !important;
-  padding: 0 !important;
-  margin: auto !important;
-
-  border-radius: 10px !important;
+.tb-character-life-grid span {
+  display: block;
+  color: #6683a0;
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
 }
 
-/* Emoji fallback */
-.tb-character-detail-art-emoji {
-  position: relative !important;
-  z-index: 2 !important;
+.tb-character-life-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: #dcecff;
+  font-size: 9px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
-/* Hall / image secondaire : idem, jamais coupée */
-.tb-character-inline-art {
-  position: relative !important;
-  width: 100% !important;
-  height: 240px !important;
-  min-height: 240px !important;
-  max-height: 240px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-  padding: 8px !important;
-  background: rgba(4, 18, 35, .94) !important;
+.tb-character-lore-grid.rich > div {
+  border: 1px solid rgba(81, 145, 218, .07);
 }
 
-.tb-character-inline-art img {
-  width: auto !important;
-  height: auto !important;
-  max-width: 100% !important;
-  max-height: 224px !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  display: block !important;
+.tb-character-lore-grid.rich > div.history {
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(20, 58, 96, .62), rgba(11, 37, 65, .55));
 }
 
-/* Évite qu'une règle générique img du projet reprenne le dessus */
-.tb-character-drawer img {
-  object-position: center !important;
+.tb-character-lore-grid.rich p {
+  white-space: pre-line;
+}
+
+.tb-character-lore-grid.rich > div.history p {
+  color: #829db8;
+  line-height: 1.7;
 }
 
 @media (max-width: 720px) {
-  .tb-character-detail-art {
-    height: 250px !important;
-    min-height: 250px !important;
-    max-height: 250px !important;
+  .tb-character-life-grid,
+  .tb-character-lore-grid {
+    grid-template-columns: 1fr;
   }
 
-  .tb-character-detail-art > img {
-    max-height: 230px !important;
+  .tb-character-lore-grid > div.wide {
+    grid-column: auto;
+  }
+}
+
+
+/* =========================================================
+   V4.3.2 — MODE LISIBLE / GRAND FORMAT DES FICHES PERSONNAGE
+   L'utilisateur a demandé une hausse franche : textes, labels,
+   lore, stats, cartes et drawer sont volontairement agrandis.
+   ========================================================= */
+
+.tb-character-drawer {
+  width: min(1120px, 98vw);
+}
+
+.tb-character-drawer-header {
+  min-height: 88px;
+  padding: 18px 28px;
+}
+
+.tb-character-drawer-header > div > span {
+  margin-bottom: 5px;
+  font-size: 14px !important;
+  letter-spacing: .12em;
+}
+
+.tb-character-drawer-header > div > strong {
+  font-size: 24px !important;
+}
+
+.tb-character-drawer-header > button {
+  width: 54px;
+  height: 54px;
+  flex-basis: 54px;
+  font-size: 28px;
+}
+
+.tb-character-drawer-content {
+  padding: 28px 32px 42px;
+}
+
+.tb-character-drawer .eyebrow {
+  font-size: 15px !important;
+  line-height: 1.35;
+  letter-spacing: .12em;
+}
+
+.tb-character-detail-title {
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.tb-character-detail-title > span:first-child {
+  width: 62px;
+  height: 62px;
+  flex-basis: 62px;
+  border-radius: 15px;
+  font-size: 29px;
+}
+
+.tb-character-detail-title h2 {
+  margin: 4px 0 6px;
+  font-size: clamp(30px, 3vw, 42px) !important;
+  line-height: 1.08;
+}
+
+.tb-character-detail-title > div > span {
+  font-size: 17px !important;
+  line-height: 1.45;
+}
+
+.tb-character-detail-lead,
+.tb-character-detail-lead.small {
+  margin-bottom: 22px;
+  font-size: 18px !important;
+  line-height: 1.78 !important;
+}
+
+.tb-character-detail-grid {
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.tb-character-detail-grid > section {
+  padding: 18px 20px;
+}
+
+.tb-character-detail-grid > section > p {
+  margin-top: 10px;
+  font-size: 17px !important;
+  line-height: 1.7 !important;
+}
+
+.tb-character-detail-label {
+  margin-bottom: 12px;
+  font-size: 14px !important;
+  line-height: 1.4;
+}
+
+.tb-character-detail-section {
+  margin-bottom: 18px;
+  padding: 20px 22px;
+}
+
+.tb-character-panel-heading h3,
+.tb-character-section-heading h3,
+.tb-character-detail-section h3 {
+  font-size: 25px !important;
+  line-height: 1.25;
+}
+
+.tb-character-mini-pill {
+  padding: 8px 12px;
+  font-size: 14px !important;
+}
+
+.tb-character-chip-row {
+  gap: 9px;
+}
+
+.tb-character-chip {
+  padding: 8px 12px;
+  font-size: 15px !important;
+  line-height: 1.35;
+}
+
+.tb-muted {
+  font-size: 16px !important;
+  line-height: 1.65;
+}
+
+.tb-character-bonus-grid {
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.tb-character-bonus-grid > div {
+  min-height: 78px;
+  padding: 14px 16px;
+}
+
+.tb-character-bonus-grid span {
+  margin-bottom: 7px;
+  font-size: 14px !important;
+  line-height: 1.35;
+}
+
+.tb-character-bonus-grid strong {
+  font-size: 22px !important;
+}
+
+.tb-character-next-skill {
+  margin: 12px 0 15px;
+  padding: 13px 15px;
+  font-size: 16px !important;
+  line-height: 1.55;
+}
+
+.tb-character-skills-grid {
+  gap: 12px;
+}
+
+.tb-character-skill-card {
+  min-height: 190px;
+  padding: 17px 18px;
+}
+
+.tb-character-skill-top {
+  font-size: 14px !important;
+  line-height: 1.4;
+}
+
+.tb-character-skill-card h4 {
+  margin: 13px 0 8px;
+  font-size: 21px !important;
+  line-height: 1.25;
+}
+
+.tb-character-skill-card p {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+
+.tb-character-skill-meta {
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.tb-character-skill-meta span {
+  padding: 7px 10px;
+  font-size: 14px !important;
+}
+
+.tb-character-lore-missing strong {
+  font-size: 17px !important;
+}
+
+.tb-character-lore-missing p {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+
+.tb-character-lore-grid {
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.tb-character-lore-grid > div {
+  padding: 17px 18px;
+}
+
+.tb-character-lore-grid span {
+  font-size: 16px !important;
+  line-height: 1.4;
+}
+
+.tb-character-lore-grid p {
+  margin-top: 9px;
+  font-size: 18px !important;
+  line-height: 1.82 !important;
+}
+
+.tb-character-lore-grid .history p {
+  font-size: 19px !important;
+  line-height: 1.88 !important;
+}
+
+.tb-character-quote {
+  margin: 18px 0;
+  padding: 18px 22px;
+  font-size: 19px !important;
+  line-height: 1.75 !important;
+}
+
+.tb-character-source-note {
+  margin: 18px 0 3px;
+  padding: 14px 16px;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+.tb-character-guild-kpis {
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.tb-character-guild-kpis > div {
+  padding: 16px 18px;
+}
+
+.tb-character-guild-kpis span {
+  margin-bottom: 7px;
+  font-size: 14px !important;
+}
+
+.tb-character-guild-kpis strong {
+  font-size: 22px !important;
+}
+
+.tb-character-member-list {
+  gap: 10px;
+}
+
+.tb-character-member-list img,
+.tb-character-member-list > div > span {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+}
+
+.tb-character-member-list strong {
+  font-size: 16px !important;
+  line-height: 1.4;
+}
+
+.tb-character-progress-title {
+  margin: 8px 0 10px;
+  font-size: 15px !important;
+}
+
+.tb-character-rank-hero > span,
+.tb-character-rank-hero > small {
+  font-size: 15px !important;
+}
+
+.tb-character-rank-ladder span {
+  min-height: 48px;
+  font-size: 15px !important;
+}
+
+.tb-character-equipment-grid {
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.tb-character-equipment-grid article {
+  min-height: 90px;
+  padding: 14px;
+}
+
+.tb-character-equipment-icon {
+  width: 54px;
+  height: 54px;
+  flex-basis: 54px;
+  font-size: 23px;
+}
+
+.tb-character-equipment-grid span {
+  margin-bottom: 5px;
+  font-size: 14px !important;
+}
+
+.tb-character-equipment-grid strong {
+  font-size: 17px !important;
+  line-height: 1.4;
+}
+
+.tb-character-preview-notice strong {
+  font-size: 16px !important;
+}
+
+.tb-character-preview-notice p {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+.tb-character-detail-loading strong,
+.tb-character-detail-error strong {
+  font-size: 20px !important;
+}
+
+.tb-character-detail-loading span,
+.tb-character-detail-error p {
+  max-width: 560px;
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+
+/* Les illustrations gagnent aussi de la place avec le drawer agrandi. */
+.tb-character-detail-art--race {
+  min-height: 430px;
+}
+
+.tb-character-detail-art--residence,
+.tb-character-detail-art--companion,
+.tb-character-detail-art--guild {
+  min-height: 390px;
+}
+
+.tb-character-inline-art {
+  min-height: 300px;
+}
+
+@media (max-width: 760px) {
+  .tb-character-drawer {
+    width: 100vw;
   }
 
-  .tb-character-inline-art {
-    height: 210px !important;
-    min-height: 210px !important;
-    max-height: 210px !important;
+  .tb-character-drawer-content {
+    padding: 20px 16px 34px;
   }
 
-  .tb-character-inline-art img {
-    max-height: 194px !important;
+  .tb-character-detail-grid.two,
+  .tb-character-skills-grid,
+  .tb-character-lore-grid,
+  .tb-character-bonus-grid,
+  .tb-character-guild-kpis,
+  .tb-character-equipment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-character-lore-grid > div.wide {
+    grid-column: auto;
   }
 }

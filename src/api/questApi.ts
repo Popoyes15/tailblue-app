@@ -1,34 +1,38 @@
+import { getDesktopAccessToken } from "./homeApi";
 import type {
   QuestAcceptRequest,
   QuestBoardSnapshotDto,
   QuestClaimResultDto,
 } from "../types/quest";
 
-const RAW_API_URL = (import.meta.env.VITE_TAILBLUE_API_URL ?? "").trim();
+type Env = Record<string, string | boolean | undefined>;
+const ENV = (import.meta as ImportMeta & { env?: Env }).env ?? {};
+
+const RAW_API_URL = String(
+  ENV.VITE_TAILBLUE_API_URL ?? "",
+).trim();
 const API_URL = RAW_API_URL.replace(/\/+$/, "");
 
 export const questApiConfigured = Boolean(API_URL);
 
 async function request<T>(
   path: string,
-  init?: RequestInit,
+  init: RequestInit = {},
 ): Promise<T> {
   if (!API_URL) {
     throw new Error("TAILBLUE_API_NOT_CONFIGURED");
   }
 
+  const token = getDesktopAccessToken();
+  const headers = new Headers(init.headers ?? {});
+  headers.set("Accept", "application/json");
+  headers.set("Content-Type", "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    /**
-     * Si l’hébergement choisit une session/cookie HttpOnly,
-     * cette ligne permet au navigateur d’envoyer l’authentification.
-     * Avec un Bearer token, le header Authorization pourra être injecté ici.
-     */
-    credentials: "include",
+    headers,
+    credentials: "omit",
   });
 
   if (!response.ok) {
@@ -49,19 +53,15 @@ async function request<T>(
 }
 
 /**
- * Contrat frontend prêt pour l’hébergement TailBlue.
+ * Tableau des quêtes TailBlue réellement connecté.
  *
- * GET  /api/quests
- * POST /api/quests/accept   { questId }
- * POST /api/quests/claim
- *
- * Le backend :
- * - identifie le joueur via l’auth réelle ;
- * - génère/rafraîchit les 3 offres ;
- * - vérifie que questId fait partie des offres du joueur ;
- * - calcule progression / expiration / récompense ;
- * - applique le bonus Chat Royal ;
- * - sauvegarde stats_tailblue.json ou la future DB.
+ * Le backend est la seule autorité sur :
+ * - l'identité Discord ;
+ * - les trois offres ;
+ * - la progression ;
+ * - les 24 heures ;
+ * - les récompenses ;
+ * - le bonus Chat Royal.
  */
 export const questApi = {
   getSnapshot(): Promise<QuestBoardSnapshotDto> {

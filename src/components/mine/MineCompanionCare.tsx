@@ -1,179 +1,96 @@
-import { useMemo, useState } from "react";
-import type { MineSnapshotDto } from "../../types/backend";
-import "./mineInteractions.css";
+import React, { useMemo, useState } from "react";
+import type { MineCompanion, MineResult } from "../../types/mine";
+import { cleanMineText } from "../../data/mineText";
+import MinePetPortrait from "./MinePetPortrait";
+import "./mineUltra.css";
 
 type Props = {
   open: boolean;
-  companion: MineSnapshotDto["companion"];
+  companion?: MineCompanion | null;
   busy?: boolean;
   onClose: () => void;
   onFeed: (foodId: string) => void | Promise<void>;
   onCuddle: () => void | Promise<void>;
+  feedback?: MineResult | null;
 };
 
-export default function MineCompanionCare({
-  open,
-  companion,
-  busy = false,
-  onClose,
-  onFeed,
-  onCuddle,
-}: Props) {
+function Bar({ value, max, className }: { value: number; max: number; className: string }) {
+  const pct = Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100));
+  return <div className={`tm-mini-bar ${className}`}><i style={{ width: `${pct}%` }} /></div>;
+}
+
+export default function MineCompanionCare({ open, companion, busy, onClose, onFeed, onCuddle, feedback }: Props) {
   const foods = companion?.availableFoods ?? [];
-
-  const [selectedFood, setSelectedFood] = useState("");
-
-  const effectiveFood = useMemo(() => {
-    if (
-      selectedFood &&
-      foods.some((food) => food.id === selectedFood)
-    ) {
-      return selectedFood;
-    }
-
-    return foods[0]?.id ?? "";
-  }, [foods, selectedFood]);
-
+  const [foodId, setFoodId] = useState("");
+  const selected = useMemo(
+    () => foods.some((food) => food.id === foodId) ? foodId : foods[0]?.id ?? "",
+    [foodId, foods],
+  );
   if (!open || !companion) return null;
 
   return (
-    <div className="mine-overlay">
-      <article className="mine-sheet mine-pet-care-sheet">
-        <button
-          className="mine-sheet-close"
-          onClick={onClose}
-          aria-label="Fermer"
-        >
-          ×
-        </button>
-
-        <header className="mine-pet-care-header">
-          <div className="mine-pet-care-avatar">
-            {companion.image ? (
-              <img src={companion.image} alt={companion.name} />
-            ) : (
-              <span>{companion.emoji ?? "🐾"}</span>
-            )}
+    <div className="tm-overlay" onMouseDown={onClose}>
+      <article className="tm-sheet tm-pet-sheet" onMouseDown={(event: React.MouseEvent) => event.stopPropagation()}>
+        <button className="tm-close" onClick={onClose}>×</button>
+        <header className="tm-pet-head">
+          <div className="tm-pet-portrait">
+            <MinePetPortrait pet={companion} />
           </div>
-
           <div>
-            <p className="eyebrow">COMPAGNON D'EXPÉDITION</p>
-            <h2>{companion.name}</h2>
-            {companion.trustLabel && (
-              <p>{companion.trustLabel}</p>
-            )}
+            <p className="tm-kicker">COMPAGNON D'EXPÉDITION</p>
+            <h2>{cleanMineText(companion.name)}</h2>
+            <p>Niv. {companion.level} · {cleanMineText(companion.role || "compagnon")} · confiance {companion.trust}</p>
           </div>
         </header>
 
-        <div className="mine-pet-vitals">
-          <Vital
-            icon="❤️"
-            label="PV"
-            value={companion.hp}
-            max={companion.maxHp}
-          />
-          <Vital
-            icon="⚡"
-            label="Énergie"
-            value={companion.energy}
-            max={companion.maxEnergy}
-          />
+        {feedback && (
+          <div className="tm-inline-feedback companion">
+            <span>{feedback.emoji || "💜"}</span>
+            <div>
+              <small>RÉACTION DE TON COMPAGNON</small>
+              <strong>{cleanMineText(feedback.title)}</strong>
+              <p>{cleanMineText(feedback.message)}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="tm-pet-vitals">
+          <div><span>❤️ PV</span><strong>{companion.hp}/{companion.maxHp}</strong><Bar value={companion.hp} max={companion.maxHp} className="hp" /></div>
+          <div><span>⚡ Énergie</span><strong>{companion.energy}/{companion.maxEnergy}</strong><Bar value={companion.energy} max={companion.maxEnergy} className="energy" /></div>
         </div>
 
-        <section className="mine-pet-care-section">
-          <p className="eyebrow">🍖 NOURRIR</p>
-          <h3>Provisions disponibles</h3>
+        <div className="tm-pet-stats">
+          <span>⚔️ {companion.attack}</span><span>🛡️ {companion.defense}</span><span>💨 {companion.speed}</span><span>🎯 {companion.crit}%</span><span>🌫️ {companion.dodge}%</span>
+        </div>
 
-          {foods.length === 0 ? (
-            <div className="mine-pet-care-empty">
-              Aucune provision disponible dans le sac.
+        {companion.abilities.length > 0 && (
+          <section className="tm-pet-section">
+            <p className="tm-kicker">CAPACITÉS</p>
+            <div className="tm-ability-list">
+              {companion.abilities.map((ability) => (
+                <div key={ability.id}><b>{cleanMineText(ability.name)}</b><span>⚡ {ability.energyCost}</span><p>{cleanMineText(ability.description)}</p></div>
+              ))}
             </div>
-          ) : (
-            <>
-              <select
-                value={effectiveFood}
-                onChange={(event) =>
-                  setSelectedFood(event.target.value)
-                }
-              >
-                {foods.map((food) => (
-                  <option key={food.id} value={food.id}>
-                    {food.name} ×{food.quantity} • ❤️ +{food.heal} •
-                    ⚡ +{food.energy}
-                    {food.preference
-                      ? ` • ${food.preference}`
-                      : ""}
-                  </option>
-                ))}
-              </select>
+          </section>
+        )}
 
-              <button
-                className="mine-pet-care-primary"
-                disabled={busy || !effectiveFood}
-                onClick={() => onFeed(effectiveFood)}
-              >
-                🍖 Nourrir {companion.name}
-              </button>
-            </>
+        <section className="tm-pet-section">
+          <p className="tm-kicker">🍖 NOURRIR</p>
+          {foods.length === 0 ? <p className="tm-muted">Aucune provision pour compagnon dans ton sac.</p> : (
+            <div className="tm-feed-row">
+              <select value={selected} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFoodId(e.target.value)}>
+                {foods.map((food) => <option value={food.id} key={food.id}>{cleanMineText(food.name)} ×{food.quantity} · ❤️ {food.heal} · ⚡ {food.energy}{food.preference ? ` · ${cleanMineText(food.preference)}` : ""}</option>)}
+              </select>
+              <button disabled={busy || !selected} onClick={() => onFeed(selected)}>🍖 Nourrir</button>
+            </div>
           )}
         </section>
 
-        <section className="mine-pet-care-section">
-          <p className="eyebrow">💜 LIEN</p>
-          <h3>Papouiller</h3>
-          <p className="mine-pet-care-copy">
-            La vraie récupération d'énergie, la confiance et le cooldown
-            sont calculés par <code>pets.py</code>.
-          </p>
-
-          <button
-            className="mine-pet-care-secondary"
-            disabled={busy || companion.canPet === false}
-            onClick={onCuddle}
-          >
-            💜 Papouiller
-          </button>
+        <section className="tm-pet-section tm-cuddle">
+          <div><p className="tm-kicker">💜 LIEN</p><h3>Papouiller {cleanMineText(companion.name)}</h3><p>Énergie, affection et cooldown sont calculés par pets.py.</p></div>
+          <button disabled={busy || companion.canPet === false} onClick={onCuddle}>💜 Papouiller</button>
         </section>
-
-        <p className="mine-pet-care-note">
-          Nourrir ou papouiller ne permet jamais de quitter un combat
-          actif ni de contourner le moteur de la Mine.
-        </p>
       </article>
-    </div>
-  );
-}
-
-function Vital({
-  icon,
-  label,
-  value,
-  max,
-}: {
-  icon: string;
-  label: string;
-  value?: number;
-  max?: number;
-}) {
-  const known = value != null && max != null;
-  const pct = known
-    ? Math.max(
-        0,
-        Math.min(100, (value / Math.max(1, max)) * 100),
-      )
-    : 0;
-
-  return (
-    <div>
-      <div>
-        <span>{icon} {label}</span>
-        <strong>
-          {known ? `${value}/${max}` : "—"}
-        </strong>
-      </div>
-      <div className="mine-pet-vital-track">
-        <i style={{ width: `${pct}%` }} />
-      </div>
     </div>
   );
 }

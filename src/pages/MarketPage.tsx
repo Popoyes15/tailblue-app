@@ -4,15 +4,54 @@ import {
   MARKET_BUILDINGS,
   MARKET_BUILDING_BY_ID,
   MARKET_STAGE_IMAGES,
-  MAX_MARKET_WORKSHOP_LEVEL,
 } from "../data/worldData";
 import type { MarketItemDto, MarketSnapshot } from "../types/world";
 import "./worldFinal.css";
 
 type Mode = "buy" | "sell";
+type OwnershipFilter = "all" | "owned" | "unowned";
+type SortMode = "name" | "price-asc" | "price-desc" | "owned-desc";
+
+const MARKET_CATEGORY_LABELS: Record<string, string> = {
+  equipment: "⚔️ Équipement",
+  material: "🧱 Matériaux",
+  consumable: "🧪 Consommables",
+  plan: "📜 Plans",
+  quest: "🗝️ Quête",
+  relic: "🏺 Reliques",
+};
+
+function normalizeSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("fr-CH")
+    .trim();
+}
 
 function formatCookies(value: number) {
   return value.toLocaleString("fr-CH");
+}
+
+const MARKET_STAT_META = {
+  hp: ["❤️", "PV"],
+  attack: ["⚔️", "Attaque"],
+  defense: ["🛡️", "Défense"],
+  crit: ["🎯", "Critique"],
+  dodge: ["💨", "Esquive"],
+  luck: ["🍀", "Chance"],
+} as const;
+
+function visibleMarketStats(item: MarketItemDto) {
+  if (!item.stats) return [];
+  return Object.entries(MARKET_STAT_META)
+    .map(([key, [emoji, label]]) => ({
+      key,
+      emoji,
+      label,
+      value: Number(item.stats?.[key as keyof typeof item.stats] ?? 0),
+    }))
+    .filter((entry) => entry.value !== 0);
 }
 
 export default function MarketPage() {
@@ -21,6 +60,11 @@ export default function MarketPage() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("buy");
   const [quantity, setQuantity] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [rarityFilter, setRarityFilter] = useState("all");
+  const [ownershipFilter, setOwnershipFilter] = useState<OwnershipFilter>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("name");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -55,7 +99,8 @@ export default function MarketPage() {
       : selectedBuilding.interiorImage ?? MARKET_STAGE_IMAGES[stage] ?? MARKET_STAGE_IMAGES[0];
 
   const shopItems = snapshot?.shops?.[selectedBuilding.id] ?? [];
-  const visibleItems = useMemo(
+
+  const modeItems = useMemo(
     () =>
       mode === "buy"
         ? shopItems.filter((item) => item.buyPrice > 0)
@@ -64,6 +109,94 @@ export default function MarketPage() {
           ),
     [mode, shopItems],
   );
+
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(
+        new Set<string>(
+          modeItems
+            .map((item) => item.category?.trim())
+            .filter((value): value is string => Boolean(value)),
+        ),
+      ).sort((a, b) =>
+        (MARKET_CATEGORY_LABELS[a] ?? a).localeCompare(
+          MARKET_CATEGORY_LABELS[b] ?? b,
+          "fr-CH",
+        ),
+      ),
+    [modeItems],
+  );
+
+  const rarityOptions = useMemo(
+    () =>
+      Array.from(
+        new Map<string, string>(
+          modeItems
+            .filter((item) => item.rarityId || item.rarity)
+            .map((item) => [item.rarityId ?? item.rarity ?? "", item.rarity ?? item.rarityId ?? ""]),
+        ).entries(),
+      ),
+    [modeItems],
+  );
+
+  const visibleItems = useMemo(() => {
+    const query = normalizeSearch(searchQuery);
+    const priceFor = (item: MarketItemDto) =>
+      mode === "buy" ? item.buyPrice : item.sellPrice;
+
+    return modeItems
+      .filter((item) => {
+        if (categoryFilter !== "all" && item.category !== categoryFilter) {
+          return false;
+        }
+        if (
+          rarityFilter !== "all" &&
+          (item.rarityId ?? item.rarity ?? "") !== rarityFilter
+        ) {
+          return false;
+        }
+        if (ownershipFilter === "owned" && item.ownedQuantity <= 0) {
+          return false;
+        }
+        if (ownershipFilter === "unowned" && item.ownedQuantity > 0) {
+          return false;
+        }
+        if (!query) return true;
+
+        const haystack = normalizeSearch(
+          [
+            item.id,
+            item.name,
+            item.description,
+            item.category,
+            item.rarity,
+            item.slotLabel,
+            item.family,
+            item.element,
+            item.workshopLabel,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        );
+        return haystack.includes(query);
+      })
+      .sort((a, b) => {
+        if (sortMode === "price-asc") return priceFor(a) - priceFor(b);
+        if (sortMode === "price-desc") return priceFor(b) - priceFor(a);
+        if (sortMode === "owned-desc") {
+          return b.ownedQuantity - a.ownedQuantity || a.name.localeCompare(b.name, "fr-CH");
+        }
+        return a.name.localeCompare(b.name, "fr-CH");
+      });
+  }, [
+    categoryFilter,
+    mode,
+    modeItems,
+    ownershipFilter,
+    rarityFilter,
+    searchQuery,
+    sortMode,
+  ]);
 
   const selectedItem =
     visibleItems.find((item) => item.id === selectedItemId) ??
@@ -74,6 +207,18 @@ export default function MarketPage() {
     setSelectedItemId(null);
     setQuantity(1);
   }, [selectedBuildingId, mode]);
+
+  useEffect(() => {
+    setSearchQuery("");
+    setCategoryFilter("all");
+    setRarityFilter("all");
+    setOwnershipFilter("all");
+    setSortMode("name");
+  }, [selectedBuildingId]);
+
+  useEffect(() => {
+    setOwnershipFilter("all");
+  }, [mode]);
 
   async function apply(
     action:
@@ -121,8 +266,8 @@ export default function MarketPage() {
           <span className="world-eyebrow">MONDE • ÉCONOMIE</span>
           <h1>🏘️ Marché</h1>
           <p>
-            Reconstruction séquentielle, ateliers niveau 1 à 6, achat et vente
-            directement reliés à l’inventaire RPG.
+            Reconstruction séquentielle, ateliers évolutifs selon leurs vraies
+            recettes, achat et vente directement reliés à l’inventaire RPG.
           </p>
         </div>
         <div className={`world-api-pill ${snapshot ? "is-live" : ""}`}>
@@ -144,7 +289,7 @@ export default function MarketPage() {
           <span className="world-kicker">
             {selectedBuilding.id === "commons"
               ? "PLACE DU MARCHÉ"
-              : `ATELIER • ${buildingState?.level ?? "—"}/${MAX_MARKET_WORKSHOP_LEVEL}`}
+              : `ATELIER • ${buildingState?.level ?? "—"}/${buildingState?.maxLevel ?? "—"}`}
           </span>
           <h2>
             {selectedBuilding.emoji} {selectedBuilding.name}
@@ -190,7 +335,7 @@ export default function MarketPage() {
                 {building.overviewOnly
                   ? "Toujours ouverte"
                   : state?.owned
-                    ? `Niveau ${state.level}/${MAX_MARKET_WORKSHOP_LEVEL}`
+                    ? `Niveau ${state.level}/${state.maxLevel}`
                     : isNext
                       ? `${formatCookies(building.unlockCost)} 🍪`
                       : "À reconstruire"}
@@ -217,7 +362,7 @@ export default function MarketPage() {
                 <small>Niveau</small>
                 <b>
                   {buildingState?.owned
-                    ? `${buildingState.level}/${MAX_MARKET_WORKSHOP_LEVEL}`
+                    ? `${buildingState.level}/${buildingState.maxLevel}`
                     : "—"}
                 </b>
               </span>
@@ -258,7 +403,7 @@ export default function MarketPage() {
                 disabled={
                   busy ||
                   !worldApi.configured ||
-                  buildingState.level >= MAX_MARKET_WORKSHOP_LEVEL ||
+                  buildingState.level >= buildingState.maxLevel ||
                   buildingState.canUpgrade === false
                 }
                 onClick={() =>
@@ -268,7 +413,7 @@ export default function MarketPage() {
                   })
                 }
               >
-                {buildingState.level >= MAX_MARKET_WORKSHOP_LEVEL
+                {buildingState.level >= buildingState.maxLevel
                   ? "Atelier au maximum"
                   : `Améliorer au niveau ${buildingState.level + 1}`}
               </button>
@@ -301,6 +446,113 @@ export default function MarketPage() {
               </div>
             </div>
 
+            {snapshot && buildingState?.owned && (
+              <div className="world-shop-filters">
+                <label className="world-market-search">
+                  <span>🔎</span>
+                  <input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Rechercher un objet, une arme, un matériau…"
+                    aria-label="Rechercher dans la boutique"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      aria-label="Effacer la recherche"
+                    >
+                      ×
+                    </button>
+                  )}
+                </label>
+
+                <div className="world-market-filter-row">
+                  <label>
+                    <span>Catégorie</span>
+                    <select
+                      value={categoryFilter}
+                      onChange={(event) => setCategoryFilter(event.target.value)}
+                    >
+                      <option value="all">Toutes</option>
+                      {categoryOptions.map((category) => (
+                        <option key={category} value={category}>
+                          {MARKET_CATEGORY_LABELS[category] ?? category}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Rareté</span>
+                    <select
+                      value={rarityFilter}
+                      onChange={(event) => setRarityFilter(event.target.value)}
+                    >
+                      <option value="all">Toutes</option>
+                      {rarityOptions.map(([id, label]) => (
+                        <option key={id} value={id}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Possession</span>
+                    <select
+                      value={ownershipFilter}
+                      onChange={(event) =>
+                        setOwnershipFilter(event.target.value as OwnershipFilter)
+                      }
+                    >
+                      <option value="all">Tous</option>
+                      <option value="owned">Déjà possédés</option>
+                      {mode === "buy" && <option value="unowned">Non possédés</option>}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Trier</span>
+                    <select
+                      value={sortMode}
+                      onChange={(event) => setSortMode(event.target.value as SortMode)}
+                    >
+                      <option value="name">Nom A → Z</option>
+                      <option value="price-asc">Prix croissant</option>
+                      <option value="price-desc">Prix décroissant</option>
+                      <option value="owned-desc">Quantité possédée</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div className="world-market-filter-summary">
+                  <span>
+                    <b>{visibleItems.length}</b> résultat{visibleItems.length > 1 ? "s" : ""}
+                    {modeItems.length !== visibleItems.length ? ` sur ${modeItems.length}` : ""}
+                  </span>
+                  {(searchQuery ||
+                    categoryFilter !== "all" ||
+                    rarityFilter !== "all" ||
+                    ownershipFilter !== "all" ||
+                    sortMode !== "name") && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setCategoryFilter("all");
+                        setRarityFilter("all");
+                        setOwnershipFilter("all");
+                        setSortMode("name");
+                      }}
+                    >
+                      Réinitialiser les filtres
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {!snapshot ? (
               <div className="world-empty">
                 <span>📦</span>
@@ -322,9 +574,11 @@ export default function MarketPage() {
                 <span>📭</span>
                 <h3>Aucun objet dans ce mode</h3>
                 <p>
-                  {mode === "buy"
-                    ? "Aucun article achetable à ce niveau."
-                    : "Tu n’as actuellement rien à vendre ici."}
+                  {modeItems.length > 0
+                    ? "Aucun article ne correspond à ta recherche ou à tes filtres."
+                    : mode === "buy"
+                      ? "Aucun article achetable à ce niveau."
+                      : "Tu n’as actuellement rien à vendre ici."}
                 </p>
               </div>
             ) : (
@@ -379,7 +633,53 @@ export default function MarketPage() {
                       <span>
                         Vente : {formatCookies(selectedItem.sellPrice)} 🍪
                       </span>
+                      {selectedItem.slotLabel && (
+                        <span>{selectedItem.slotLabel}</span>
+                      )}
+                      {selectedItem.levelRequired != null && (
+                        <span>Niveau joueur {selectedItem.levelRequired}</span>
+                      )}
+                      {(selectedItem.marketLevelRequired ?? 0) > 0 && (
+                        <span>
+                          {selectedItem.workshopLabel ?? selectedBuilding.name} niv. {selectedItem.marketLevelRequired}
+                        </span>
+                      )}
+                      {selectedItem.family && (
+                        <span>Famille : {selectedItem.family}</span>
+                      )}
+                      {selectedItem.element && (
+                        <span>Élément : {selectedItem.element}</span>
+                      )}
                     </div>
+
+                    {visibleMarketStats(selectedItem).length > 0 && (
+                      <>
+                        <span className="world-kicker">STATISTIQUES RÉELLES</span>
+                        <div className="world-inline-tags">
+                          {visibleMarketStats(selectedItem).map((stat) => (
+                            <span key={stat.key}>
+                              {stat.emoji} {stat.label} {stat.value > 0 ? "+" : ""}{stat.value}
+                              {stat.key === "crit" || stat.key === "dodge" ? "%" : ""}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {!!selectedItem.effects?.length && (
+                      <div className="world-inline-tags">
+                        {selectedItem.effects.map((effect) => (
+                          <span key={effect}>✨ {effect}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedBuilding.id === "forge" && (
+                      <p>
+                        🔥 Les niveaux de cette Forge débloquent automatiquement
+                        les recettes correspondantes dans <b>Inventaire → Artisanat</b>.
+                      </p>
+                    )}
 
                     <div className="world-quantity">
                       <button

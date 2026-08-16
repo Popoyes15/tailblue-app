@@ -88,6 +88,7 @@ export interface MarketBuildingStateDto {
   id: string;
   owned: boolean;
   level: number;
+  maxLevel: number;
   upgradeCost?: number | null;
   canPurchase?: boolean;
   canUpgrade?: boolean;
@@ -99,12 +100,29 @@ export interface MarketItemDto {
   name: string;
   emoji?: string;
   rarity?: string;
+  rarityId?: string;
   description?: string;
   buyPrice: number;
   sellPrice: number;
   ownedQuantity: number;
   category?: string;
   levelRequired?: number | null;
+  slot?: string | null;
+  slotLabel?: string | null;
+  stats?: Partial<{
+    hp: number;
+    attack: number;
+    defense: number;
+    crit: number;
+    dodge: number;
+    luck: number;
+  }> | null;
+  effects?: string[];
+  element?: string | null;
+  family?: string | null;
+  marketLevelRequired?: number;
+  workshop?: string | null;
+  workshopLabel?: string | null;
 }
 
 export interface MarketSnapshot {

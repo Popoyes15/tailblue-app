@@ -619,7 +619,6 @@ function EquipmentSection({
 
                   <div className="tb-owned-equipment-stats">
                     {nonZeroStats(item.stats)
-                      .slice(0, 4)
                       .map(([key, value]) => (
                         <span key={key}>
                           {STAT_LABELS[key] || key}{" "}
@@ -1067,7 +1066,7 @@ function CraftSection({
     <div className="tb-craft-section">
       <div className="tb-craft-top-grid">
         <div className="tb-craft-intro">
-          <p className="eyebrow">!CRAFT V5</p>
+          <p className="eyebrow">!CRAFT • LIVE</p>
           <h2>Atelier de fabrication</h2>
           <p>
             Même inventaire canonique que Discord :

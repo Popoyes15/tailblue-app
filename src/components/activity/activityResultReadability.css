@@ -1,0 +1,560 @@
+/* ============================================================
+   TailBlue — Résultats Work / Hunt V4.4.2
+   Patch volontairement généreux : le résultat doit être lisible sans zoom.
+   Ce fichier est chargé APRES activityFinal.css et n'écrase pas les autres pages.
+   ============================================================ */
+
+.tb-result-panel {
+  padding: 30px 34px !important;
+  border-radius: 24px !important;
+}
+
+.tb-result-heading {
+  gap: 18px !important;
+  align-items: center !important;
+  margin-bottom: 22px !important;
+}
+
+.tb-result-heading > span:first-child {
+  font-size: 42px !important;
+  line-height: 1 !important;
+}
+
+.tb-result-heading .tb-mini-label {
+  font-size: 17px !important;
+  letter-spacing: .13em !important;
+  margin-bottom: 8px !important;
+}
+
+.tb-result-heading h2 {
+  font-size: clamp(30px, 2.5vw, 42px) !important;
+  line-height: 1.12 !important;
+  margin: 0 !important;
+}
+
+.tb-result-narrative {
+  display: grid !important;
+  gap: 12px !important;
+  margin: 22px 0 26px !important;
+  color: #d8e6f6 !important;
+  font-size: 20px !important;
+  line-height: 1.72 !important;
+  white-space: normal !important;
+}
+
+.tb-result-narrative-line {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #d8e6f6 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  overflow-wrap: anywhere;
+}
+
+.tb-result-narrative-line.is-detail {
+  padding: 13px 16px !important;
+  border: 1px solid rgba(104, 171, 234, .16) !important;
+  border-radius: 13px !important;
+  background: rgba(12, 43, 77, .52) !important;
+  color: #eaf4ff !important;
+  font-size: 18px !important;
+  line-height: 1.55 !important;
+}
+
+.tb-result-rewards {
+  gap: 16px !important;
+  margin: 24px 0 28px !important;
+}
+
+.tb-result-rewards > * {
+  min-height: 100px !important;
+  padding: 18px 22px !important;
+  border-radius: 17px !important;
+}
+
+.tb-result-rewards span,
+.tb-result-rewards small,
+.tb-result-rewards label {
+  font-size: 16px !important;
+}
+
+.tb-result-rewards strong,
+.tb-result-rewards b {
+  font-size: 24px !important;
+}
+
+.tb-result-loot {
+  margin-top: 28px !important;
+  padding-top: 24px !important;
+  border-top: 1px solid rgba(115, 190, 246, .18) !important;
+}
+
+.tb-result-loot-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.tb-result-loot-heading .tb-mini-label {
+  margin: 0 !important;
+  font-size: 17px !important;
+  letter-spacing: .11em !important;
+}
+
+.tb-result-loot-heading > strong {
+  color: #8eaac7;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.tb-result-loot-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 14px !important;
+}
+
+.tb-result-loot-card {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 88px;
+  padding: 16px 18px;
+  border: 1px solid rgba(106, 177, 236, .18);
+  border-radius: 16px;
+  background: rgba(13, 49, 87, .62);
+}
+
+.tb-result-loot-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: rgba(30, 88, 141, .58);
+  font-size: 25px;
+}
+
+.tb-result-loot-card > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.tb-result-loot-card strong {
+  color: #f0f7ff;
+  font-size: 18px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.tb-result-loot-card small {
+  color: #7896b4;
+  font-size: 14px;
+}
+
+.tb-result-loot-card > b {
+  color: #ffffff;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+@media (max-width: 800px) {
+  .tb-result-panel {
+    padding: 22px 18px !important;
+  }
+
+  .tb-result-narrative {
+    font-size: 18px !important;
+  }
+
+  .tb-result-narrative-line.is-detail {
+    font-size: 17px !important;
+  }
+
+  .tb-result-loot-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* ============================================================
+   TailBlue — Choix Work / Hunt V4.4.4
+   Lisibilité renforcée AVANT la résolution + suppression du
+   panneau "repos" tant que le résultat fraîchement choisi est affiché.
+   ============================================================ */
+
+.tb-event-panel {
+  padding: 30px 34px !important;
+  border-radius: 24px !important;
+}
+
+.tb-event-topline {
+  gap: 22px !important;
+  margin-bottom: 24px !important;
+}
+
+.tb-event-topline .tb-mini-label {
+  font-size: 16px !important;
+  letter-spacing: .13em !important;
+}
+
+.tb-event-topline h2 {
+  margin-top: 8px !important;
+  font-size: clamp(30px, 2.5vw, 42px) !important;
+  line-height: 1.12 !important;
+}
+
+.tb-event-live {
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  letter-spacing: .08em !important;
+}
+
+.tb-event-story {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: 42px 1fr !important;
+  gap: 18px !important;
+  align-items: start !important;
+  margin: 0 0 32px !important;
+  padding: 26px 30px !important;
+  border-radius: 20px !important;
+}
+
+.tb-story-mark {
+  font-size: 54px !important;
+  line-height: .95 !important;
+}
+
+.tb-event-story-copy {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.tb-event-story-copy p,
+.tb-event-story > p {
+  margin: 0 !important;
+  color: #d9e8f8 !important;
+  font-size: 20px !important;
+  line-height: 1.72 !important;
+  font-weight: 500 !important;
+  overflow-wrap: anywhere;
+}
+
+.tb-event-story-copy .tb-event-story-question {
+  margin-top: 4px !important;
+  padding: 16px 18px !important;
+  border: 1px solid rgba(80, 179, 255, .22) !important;
+  border-radius: 14px !important;
+  background: rgba(13, 56, 98, .56) !important;
+  color: #f0f8ff !important;
+  font-size: 22px !important;
+  line-height: 1.45 !important;
+  font-weight: 800 !important;
+}
+
+.tb-event-choice-heading {
+  gap: 20px !important;
+  align-items: end !important;
+  margin: 26px 0 18px !important;
+}
+
+.tb-event-choice-heading .tb-mini-label {
+  font-size: 16px !important;
+  letter-spacing: .13em !important;
+}
+
+.tb-event-choice-heading h3 {
+  margin-top: 6px !important;
+  font-size: clamp(28px, 2.1vw, 36px) !important;
+  line-height: 1.15 !important;
+}
+
+.tb-event-choice-heading > span {
+  max-width: 430px !important;
+  color: #88a8c7 !important;
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+}
+
+.tb-event-choices {
+  display: grid !important;
+  gap: 14px !important;
+}
+
+.tb-choice-card {
+  grid-template-columns: 58px 1fr 40px !important;
+  gap: 18px !important;
+  min-height: 112px !important;
+  padding: 20px 24px !important;
+  border-radius: 18px !important;
+}
+
+.tb-choice-number {
+  width: 52px !important;
+  height: 52px !important;
+  font-size: 25px !important;
+  border-radius: 14px !important;
+}
+
+.tb-choice-card > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+}
+
+.tb-choice-card strong {
+  color: #f0f7ff !important;
+  font-size: 21px !important;
+  line-height: 1.3 !important;
+  font-weight: 800 !important;
+  overflow-wrap: anywhere;
+}
+
+.tb-choice-card p {
+  margin: 0 !important;
+  color: #9bb4cd !important;
+  font-size: 17px !important;
+  line-height: 1.55 !important;
+  overflow-wrap: anywhere;
+}
+
+.tb-choice-arrow {
+  font-size: 27px !important;
+}
+
+@media (max-width: 800px) {
+  .tb-event-panel {
+    padding: 22px 18px !important;
+  }
+
+  .tb-event-story {
+    grid-template-columns: 30px 1fr !important;
+    gap: 12px !important;
+    padding: 20px 18px !important;
+  }
+
+  .tb-story-mark {
+    font-size: 42px !important;
+  }
+
+  .tb-event-story-copy p,
+  .tb-event-story > p {
+    font-size: 18px !important;
+  }
+
+  .tb-event-story-copy .tb-event-story-question {
+    font-size: 20px !important;
+  }
+
+  .tb-event-choice-heading {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .tb-choice-card {
+    grid-template-columns: 48px 1fr 28px !important;
+    padding: 18px 16px !important;
+  }
+
+  .tb-choice-number {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .tb-choice-card strong {
+    font-size: 19px !important;
+  }
+
+  .tb-choice-card p {
+    font-size: 16px !important;
+  }
+}
+
+
+/* ============================================================
+   TailBlue — V4.4.5
+   FIX : le récit de choix Work/Hunt ne doit JAMAIS se réduire
+   à une colonne de quelques pixels.
+   On passe ce bloc en flex explicite et on annule les anciennes
+   contraintes de largeur/min-content héritées du CSS historique.
+   ============================================================ */
+
+.tb-event-story {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.tb-event-story .tb-story-mark {
+  flex: 0 0 42px !important;
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+}
+
+.tb-event-story .tb-event-story-copy {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+}
+
+.tb-event-story .tb-event-story-copy > p,
+.tb-event-story > p {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  hyphens: none !important;
+}
+
+.tb-event-story .tb-event-story-question {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+@media (max-width: 800px) {
+  .tb-event-story {
+    display: flex !important;
+    flex-direction: row !important;
+  }
+
+  .tb-event-story .tb-story-mark {
+    flex-basis: 30px !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+  }
+}
+
+
+/* ============================================================
+   TailBlue V4.6.2 — événement spécial Ryūjin dans Work
+   ============================================================ */
+
+.tb-special-events-list {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0 26px;
+}
+
+.tb-special-activity-event {
+  position: relative;
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 20px;
+  align-items: start;
+  overflow: hidden;
+  padding: 22px 24px;
+  border: 1px solid rgba(126, 162, 255, .28);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(117, 97, 255, .18), transparent 32%),
+    linear-gradient(135deg, rgba(19, 39, 79, .92), rgba(9, 27, 56, .88));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.tb-special-activity-event::after {
+  content: "";
+  position: absolute;
+  inset: auto -50px -90px auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(108, 82, 255, .08);
+  pointer-events: none;
+}
+
+.tb-special-event-icon {
+  position: relative;
+  z-index: 1;
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(160, 184, 255, .25);
+  border-radius: 18px;
+  background: rgba(31, 60, 112, .72);
+  font-size: 36px;
+  line-height: 1;
+}
+
+.tb-special-event-body {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.tb-special-event-body .tb-mini-label {
+  margin: 0 0 7px !important;
+  color: #9bb8ff !important;
+  font-size: 14px !important;
+  letter-spacing: .14em !important;
+  font-weight: 900 !important;
+}
+
+.tb-special-event-body h3 {
+  margin: 0 0 14px !important;
+  color: #f4f7ff !important;
+  font-size: clamp(23px, 1.7vw, 30px) !important;
+  line-height: 1.2 !important;
+}
+
+.tb-special-event-story {
+  display: grid;
+  gap: 8px;
+}
+
+.tb-special-event-story p {
+  margin: 0 !important;
+  color: #cddcf2 !important;
+  font-size: 18px !important;
+  line-height: 1.58 !important;
+  font-weight: 500 !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+.tb-special-activity-event.is-ryujin {
+  border-color: rgba(137, 121, 255, .34);
+}
+
+@media (max-width: 800px) {
+  .tb-special-activity-event {
+    grid-template-columns: 58px 1fr;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .tb-special-event-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 15px;
+    font-size: 29px;
+  }
+
+  .tb-special-event-body h3 {
+    font-size: 22px !important;
+  }
+
+  .tb-special-event-story p {
+    font-size: 17px !important;
+  }
+}

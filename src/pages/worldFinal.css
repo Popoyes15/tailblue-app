@@ -1499,3 +1499,144 @@
     border-radius: 0 0 13px 13px !important;
   }
 }
+
+
+/* =========================================================
+   MARKET V4.4.1 — RECHERCHE + FILTRES
+   ========================================================= */
+.world-shop-filters {
+  margin: 0 18px 12px;
+  padding: 12px;
+  border: 1px solid rgba(141, 201, 255, .12);
+  border-radius: 13px;
+  background: rgba(3, 15, 29, .62);
+  display: grid;
+  gap: 10px;
+}
+
+.world-market-search {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid rgba(141, 201, 255, .18);
+  border-radius: 11px;
+  background: rgba(1, 10, 20, .72);
+}
+
+.world-market-search > span {
+  font-size: 16px;
+}
+
+.world-market-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #eef7ff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.world-market-search input::placeholder {
+  color: #607d99;
+}
+
+.world-market-search button,
+.world-market-filter-summary button {
+  border: 1px solid rgba(141, 201, 255, .16);
+  border-radius: 8px;
+  background: rgba(24, 66, 100, .38);
+  color: #bcd9f2;
+  cursor: pointer;
+}
+
+.world-market-search button {
+  width: 28px;
+  height: 28px;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.world-market-filter-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.world-market-filter-row label {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.world-market-filter-row label > span {
+  color: #6f8ca8;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.world-market-filter-row select {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 9px;
+  border: 1px solid rgba(141, 201, 255, .14);
+  border-radius: 9px;
+  outline: 0;
+  background: #07192b;
+  color: #dceaf7;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.world-market-filter-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 24px;
+  color: #7894ad;
+  font-size: 9px;
+}
+
+.world-market-filter-summary b {
+  color: #dceaf7;
+}
+
+.world-market-filter-summary button {
+  padding: 6px 9px;
+  font-size: 8px;
+}
+
+.world-market-filter-summary button:hover,
+.world-market-search button:hover {
+  border-color: rgba(141, 201, 255, .34);
+  background: rgba(36, 89, 131, .52);
+}
+
+@media (max-width: 1050px) {
+  .world-market-filter-row {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .world-shop-filters {
+    margin-inline: 12px;
+  }
+
+  .world-market-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .world-market-filter-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

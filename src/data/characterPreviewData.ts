@@ -77,7 +77,7 @@ export const CHARACTER_PREVIEW: CharacterSnapshot = {
       icon: "🏰",
       label: "Guilde",
       value: "Aperçu de guilde royale",
-      subtitle: "La vraie appartenance viendra du backend",
+      subtitle: "La vraie appartenance vient du backend en mode connecté",
       imageUrl: "/ImagesGuildes/guilde_Hime.png",
       available: true,
       previewOnly: true,
@@ -95,8 +95,8 @@ export const CHARACTER_PREVIEW: CharacterSnapshot = {
       kind: "companion",
       icon: "🐾",
       label: "Compagnon",
-      value: "Synchronisation future",
-      subtitle: "Le compagnon actif réel viendra de pets.py",
+      value: "Aperçu local",
+      subtitle: "Le compagnon actif réel vient du backend",
       available: false,
       previewOnly: true,
     },
@@ -113,7 +113,7 @@ export const CHARACTER_PREVIEW: CharacterSnapshot = {
       kind: "equipment",
       icon: "🧰",
       label: "Équipement",
-      value: "Synchronisation future",
+      value: "Aperçu local",
       subtitle: "8 emplacements pris en charge",
       available: true,
       previewOnly: true,
@@ -168,12 +168,11 @@ const PREVIEW_DETAILS: Record<
     ],
     nextSkillLevel: null,
 
-    /*
-     * equipment.py ne possède actuellement pas ces champs séparés.
-     * On les laisse volontairement vides.
-     */
     origin: null,
-    kingdom: null,
+    territory: null,
+    society: null,
+    reputation: null,
+    relations: null,
     history: null,
 
     exclusive: true,
@@ -189,7 +188,7 @@ const PREVIEW_DETAILS: Record<
     description:
       "Métier spécial utilisé par Hime-sama dans le système Work.",
     specialty:
-      "La fiche finale reprendra les textes de CODEX_METIERS côté serveur.",
+      "Le backend connecté fournit les textes métier réels.",
     quote: null,
     salaryMin: null,
     salaryMax: null,
@@ -202,7 +201,7 @@ const PREVIEW_DETAILS: Record<
     name: "Aperçu de guilde royale",
     imageUrl: "/ImagesGuildes/guilde_Hime.png",
     founderId: null,
-    founderName: "Synchronisation future",
+    founderName: "Aperçu local",
     level: 0,
     xp: 0,
     xpNeeded: 0,
@@ -269,7 +268,7 @@ const PREVIEW_DETAILS: Record<
       { slot: "amulet", icon: "📿", label: "Amulette" },
     ],
     ownedEquipmentCount: 0,
-    affinityText: "Synchronisation future",
+    affinityText: "Aperçu local",
     activeStats: CHARACTER_PREVIEW.combat,
     previewOnly: true,
   },
