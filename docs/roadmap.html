@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#087ddd" />
+  <title>TailBlue — Roadmap</title>
+  <meta name="description" content="Suis l'évolution de TailBlue, des fondations aux prochaines fonctionnalités." />
+  <link rel="icon" type="image/png" href="./assets/favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/favicon.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./pages.css" />
+</head>
+<body class="inner-page" data-roadmap-source="./roadmap.json">
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="world-vignette" aria-hidden="true"></div>
+  <div class="magic-haze haze-a" aria-hidden="true"></div>
+  <div class="magic-haze haze-b" aria-hidden="true"></div>
+
+
+  <header class="site-header">
+    <a class="brand" href="./index.html" aria-label="TailBlue — Accueil">
+      <img src="./assets/favicon.png" alt="" draggable="false" />
+      <span>TAILBLUE</span>
+    </a>
+
+    <nav class="top-nav" aria-label="Navigation principale">
+      <a href="./index.html"><span>⌂</span> Accueil</a><a href="./royaume.html"><span>✦</span> Royaume</a><a href="./fonctionnalites.html"><span>◇</span> Fonctionnalités</a><a class="active" href="./roadmap.html"><span>⚑</span> Roadmap</a>
+    </nav>
+
+    
+  </header>
+
+
+  <main class="page-main">
+    <section class="page-hero">
+      <div class="page-hero-copy reveal">
+        <p class="page-kicker">ÉVOLUTION DU PROJET</p>
+        <h1>Le royaume <span>grandit.</span></h1>
+        <p class="page-lead">
+          Cette roadmap montre les grandes étapes de TailBlue. Elle distingue ce
+          qui est déjà disponible, ce qui est en développement et ce qui viendra
+          ensuite.
+        </p>
+      </div>
+
+      <div class="page-sigil reveal" aria-hidden="true">
+        <div class="page-sigil-core">⚑</div>
+      </div>
+    </section>
+
+    <section class="section-shell reveal">
+      <div class="roadmap-summary">
+        <div>
+          <p class="page-kicker">PROGRESSION GLOBALE</p>
+          <h2>De l'Alpha au royaume complet.</h2>
+          <p class="page-lead" style="margin-top:10px;font-size:12px">
+            La progression est calculée automatiquement à partir des éléments
+            marqués comme terminés ou en cours dans les données de la roadmap.
+          </p>
+
+          <div class="progress-track">
+            <div id="roadmapOverallFill" class="progress-fill"></div>
+          </div>
+
+          <div class="roadmap-source">
+            Données chargées depuis <strong>roadmap.json</strong>.
+          </div>
+        </div>
+
+        <div id="roadmapOverallValue" class="roadmap-overall">
+          0%
+          <small>PROGRESSION INDICATIVE</small>
+        </div>
+      </div>
+
+      <div class="api-ready-box">
+        <i>⌁</i>
+        <div>
+          <strong>Prête à être reliée directement à TailBlue.</strong>
+          <p>
+            Aujourd'hui cette page lit un fichier local. Plus tard, il suffira de
+            remplacer la source par une route publique de l'API TailBlue pour que
+            la roadmap se mette à jour automatiquement.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-shell reveal">
+      <div class="section-heading">
+        <div>
+          <small>LES ÉTAPES</small>
+          <h2>Ce qui est fait, en cours et à venir.</h2>
+        </div>
+        <span class="section-chip">Roadmap dynamique</span>
+      </div>
+
+      <div id="roadmapTimeline" class="timeline">
+        <div class="phase-card">
+          <h3>Chargement de la roadmap…</h3>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <footer>
+    <span>© TailBlue</span>
+    <i>✦</i>
+    <span>Un royaume à découvrir</span>
+  </footer>
+
+  <script src="./script.js"></script>
+  <script src="./pages.js"></script>
+</body>
+</html>

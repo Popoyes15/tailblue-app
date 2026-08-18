@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#087ddd" />
+  <title>TailBlue — Le Royaume</title>
+  <meta name="description" content="Découvre le monde, les zones et les aventures de TailBlue." />
+  <link rel="icon" type="image/png" href="./assets/favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/favicon.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./pages.css" />
+</head>
+<body class="inner-page" >
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="world-vignette" aria-hidden="true"></div>
+  <div class="magic-haze haze-a" aria-hidden="true"></div>
+  <div class="magic-haze haze-b" aria-hidden="true"></div>
+
+
+  <header class="site-header">
+    <a class="brand" href="./index.html" aria-label="TailBlue — Accueil">
+      <img src="./assets/favicon.png" alt="" draggable="false" />
+      <span>TAILBLUE</span>
+    </a>
+
+    <nav class="top-nav" aria-label="Navigation principale">
+      <a href="./index.html"><span>⌂</span> Accueil</a><a class="active" href="./royaume.html"><span>✦</span> Royaume</a><a href="./fonctionnalites.html"><span>◇</span> Fonctionnalités</a><a href="./roadmap.html"><span>⚑</span> Roadmap</a>
+    </nav>
+
+    
+  </header>
+
+
+  <main class="page-main">
+    <section class="page-hero">
+      <div class="page-hero-copy reveal">
+        <p class="page-kicker">LE MONDE DE TAILBLUE</p>
+        <h1>Un royaume à <span>explorer.</span></h1>
+        <p class="page-lead">
+          TailBlue est un monde vivant où chaque système rejoint la même aventure :
+          explorer, progresser, collectionner, combattre et construire votre propre
+          histoire avec vos compagnons.
+        </p>
+      </div>
+
+      <div class="page-sigil reveal" aria-hidden="true">
+        <div class="page-sigil-core">♕</div>
+      </div>
+    </section>
+
+    <section class="section-shell reveal">
+      <div class="section-heading">
+        <div>
+          <small>LES GRANDES ZONES</small>
+          <h2>Votre aventure ne se limite pas à un seul écran.</h2>
+          <p>
+            Chaque partie du royaume possède sa propre identité, ses mécaniques et
+            ses raisons d'y revenir.
+          </p>
+        </div>
+        <span class="section-chip">Monde vivant</span>
+      </div>
+
+      <div class="realm-grid">
+        <article class="realm-card">
+          <div class="realm-icon">⛏</div>
+          <h3>La Mine</h3>
+          <p>
+            Explorez des salles inconnues, découvrez des ressources, affrontez des
+            ennemis et progressez toujours plus profondément.
+          </p>
+          <div class="realm-tags">
+            <span>Exploration</span><span>Combat</span><span>Découverte</span>
+          </div>
+        </article>
+
+        <article class="realm-card">
+          <div class="realm-icon">🐾</div>
+          <h3>Les Compagnons</h3>
+          <p>
+            Collectionnez vos pets, développez leur confiance, équipez-les et
+            emmenez-les avec vous dans vos aventures.
+          </p>
+          <div class="realm-tags">
+            <span>Pets</span><span>Chenil</span><span>Progression</span>
+          </div>
+        </article>
+
+        <article class="realm-card">
+          <div class="realm-icon">⌂</div>
+          <h3>Votre Maison</h3>
+          <p>
+            Une résidence qui évolue avec votre histoire : maison, collections,
+            musée et espaces personnels.
+          </p>
+          <div class="realm-tags">
+            <span>Résidence</span><span>Musée</span><span>Collection</span>
+          </div>
+        </article>
+
+        <article class="realm-card">
+          <div class="realm-icon">⚔</div>
+          <h3>Les Combats</h3>
+          <p>
+            Votre personnage et votre compagnon unissent leurs forces avec des
+            animations, des compétences et des décisions tactiques.
+          </p>
+          <div class="realm-tags">
+            <span>PV</span><span>Énergie</span><span>Compétences</span>
+          </div>
+        </article>
+
+        <article class="realm-card">
+          <div class="realm-icon">◇</div>
+          <h3>Le Marché</h3>
+          <p>
+            Découvrez les objets disponibles, gérez vos possessions et faites
+            vivre l'économie du royaume.
+          </p>
+          <div class="realm-tags">
+            <span>Objets</span><span>Économie</span><span>Échanges</span>
+          </div>
+        </article>
+
+        <article class="realm-card">
+          <div class="realm-icon">✦</div>
+          <h3>Quêtes & Événements</h3>
+          <p>
+            Des objectifs, découvertes et événements donnent régulièrement une
+            nouvelle raison de revenir dans TailBlue.
+          </p>
+          <div class="realm-tags">
+            <span>Quêtes</span><span>Événements</span><span>Secrets</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-shell reveal">
+      <div class="section-heading">
+        <div>
+          <small>UNE BOUCLE D'AVENTURE</small>
+          <h2>Explorer. Progresser. Revenir plus fort.</h2>
+        </div>
+        <span class="section-chip">Votre rythme</span>
+      </div>
+
+      <div class="realm-path">
+        <div class="realm-step">
+          <i>1</i><strong>Explorer</strong><span>Découvrez le monde</span>
+        </div>
+        <div class="realm-step">
+          <i>2</i><strong>Combattre</strong><span>Affrontez ses dangers</span>
+        </div>
+        <div class="realm-step">
+          <i>3</i><strong>Développer</strong><span>Personnage & compagnons</span>
+        </div>
+        <div class="realm-step">
+          <i>4</i><strong>Construire</strong><span>Votre propre histoire</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <footer>
+    <span>© TailBlue</span>
+    <i>✦</i>
+    <span>Un royaume à découvrir</span>
+  </footer>
+
+  <script src="./script.js"></script>
+  <script src="./pages.js"></script>
+</body>
+</html>

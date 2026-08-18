@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#087ddd" />
+
+  <title>TailBlue — Entre dans le royaume</title>
+  <meta
+    name="description"
+    content="Entre dans le royaume de TailBlue et découvre l'application desktop."
+  />
+
+  <link rel="icon" type="image/png" href="./assets/favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/favicon.png" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="world-vignette" aria-hidden="true"></div>
+  <div class="magic-haze haze-a" aria-hidden="true"></div>
+  <div class="magic-haze haze-b" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#accueil" aria-label="TailBlue — Accueil">
+      <img src="./assets/favicon.png" alt="" draggable="false" />
+      <span>TAILBLUE</span>
+    </a>
+
+    <nav class="top-nav" aria-label="Navigation principale">
+      <a class="active" href="#accueil"><span>⌂</span> Accueil</a>
+      <a href="./royaume.html"><span>✦</span> Royaume</a>
+      <a href="./fonctionnalites.html"><span>◇</span> Fonctionnalités</a>
+      <a href="./roadmap.html"><span>⚑</span> Roadmap</a>
+    </nav>
+
+    
+  </header>
+
+  <main id="accueil">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="hero-mini-logo">
+          <img src="./assets/tailblue-logo.png" alt="" draggable="false" />
+        </div>
+
+        <p class="eyebrow">UN ROYAUME VOUS ATTEND</p>
+
+        <h1>
+          TAIL<span>BLUE</span>
+        </h1>
+
+        <h2>Ton aventure. Ton royaume.</h2>
+
+        <p class="hero-description">
+          Explore un monde vivant, combats dans les profondeurs, développe ton
+          personnage et pars à l'aventure avec tes compagnons.
+        </p>
+
+        <div class="hero-actions">
+          <a
+            id="enterKingdom"
+            class="kingdom-button"
+            href="./download.html"
+          >
+            <i aria-hidden="true">✦</i>
+            <span>Entrer dans le royaume</span>
+            <strong aria-hidden="true">→</strong>
+            <b class="button-shine" aria-hidden="true"></b>
+          </a>
+
+          <a class="ghost-button" href="./fonctionnalites.html">
+            Découvrir TailBlue
+          </a>
+        </div>
+
+        <div class="alpha-line">
+          <span class="live-dot"></span>
+          TailBlue Desktop · Alpha
+        </div>
+      </div>
+
+      <div class="showcase-column" id="royaume">
+        <div class="app-stage" id="appStage">
+          <article class="app-window tb-real-mock" id="appWindow">
+            <div class="tb-real-shell">
+              <aside class="tb-real-sidebar">
+                <div class="tb-real-logo">
+                  <img src="./assets/favicon.png" alt="" draggable="false" />
+                  <div>
+                    <strong>TAILBLUE</strong>
+                    <span>VOTRE AVENTURE</span>
+                  </div>
+                </div>
+
+                <nav class="tb-real-nav">
+                  <button class="active"><span>🏠</span> Accueil</button>
+                  <button><span>👤</span> Personnage</button>
+                  <button><span>🎒</span> Inventaire</button>
+
+                  <div class="tb-real-nav-group">
+                    <div class="tb-real-group-title">
+                      <span>⚔</span>
+                      <b>AVENTURE</b>
+                      <em>2</em>
+                    </div>
+
+                    <button class="sub"><span>📜</span> Quêtes <i>2</i></button>
+                    <button class="sub"><span>⛏</span> Mine</button>
+                    <button class="sub"><span>🏹</span> Hunt</button>
+                    <button class="sub"><span>🛠</span> Work</button>
+                    <button class="sub"><span>🗺</span> Conquêtes</button>
+                  </div>
+
+                  <div class="tb-real-section-link">
+                    <span>🐾</span>
+                    <b>COMPAGNONS</b>
+                    <i>›</i>
+                  </div>
+
+                  <div class="tb-real-section-link">
+                    <span>🌍</span>
+                    <b>MONDE</b>
+                    <i>›</i>
+                  </div>
+
+                  <div class="tb-real-section-link">
+                    <span>📚</span>
+                    <b>INFORMATIONS</b>
+                    <small>NEW</small>
+                    <i>›</i>
+                  </div>
+                </nav>
+
+                <div class="tb-real-sidebar-bottom">
+                  <button><span>⚙</span> Paramètres</button>
+
+                  <div class="tb-real-discord-mini parallax-card" data-depth="6">
+                    <div class="tb-real-discord-avatar">D</div>
+                    <div>
+                      <strong>Discord lié</strong>
+                      <span>Compte de démonstration</span>
+                    </div>
+                    <b>•••</b>
+                  </div>
+                </div>
+              </aside>
+
+              <section class="tb-real-content">
+                <div class="tb-real-top-actions">
+                  <button aria-label="Recherche">⌕</button>
+                  <button class="tb-real-bell" aria-label="Notifications">
+                    🔔
+                    <i>4</i>
+                  </button>
+
+                  <div class="tb-real-connect parallax-card" data-depth="7">
+                    <div class="tb-real-connect-icon">D</div>
+                    <div>
+                      <strong>Connexion Discord</strong>
+                      <span>Mode démonstration</span>
+                    </div>
+                    <b>›</b>
+                  </div>
+                </div>
+
+                <div class="tb-real-stats">
+                  <article class="tb-real-stat parallax-card" data-depth="10">
+                    <small>Niveau</small>
+                    <strong>31</strong>
+                    <span>✨ 1 840 / 3 100 XP</span>
+                  </article>
+
+                  <article class="tb-real-stat parallax-card" data-depth="13">
+                    <small>Cookies</small>
+                    <strong>8 720</strong>
+                    <span>🍪 Cookies TailBlue</span>
+                  </article>
+
+                  <article class="tb-real-stat parallax-card" data-depth="16">
+                    <small>Rang d'aventurier</small>
+                    <strong>B</strong>
+                    <span>⚔ Rang confirmé</span>
+                  </article>
+
+                  <article class="tb-real-stat parallax-card" data-depth="11">
+                    <small>Quêtes disponibles</small>
+                    <strong>5</strong>
+                    <span>📜 Tableau des quêtes</span>
+                  </article>
+                </div>
+
+                <div class="tb-real-middle">
+                  <article class="tb-real-journal parallax-card" data-depth="8">
+                    <div class="tb-real-card-title">
+                      <div>
+                        <small>JOURNAL</small>
+                        <h3>Activité récente</h3>
+                      </div>
+                      <button>Voir tout</button>
+                    </div>
+
+                    <div class="tb-real-activity">
+                      <div class="tb-real-activity-icon">⛏</div>
+                      <div>
+                        <strong>Expédition minière terminée</strong>
+                        <span>Une veine de cristal a été découverte.</span>
+                      </div>
+                      <time>il y a 6 min</time>
+                    </div>
+
+                    <div class="tb-real-activity">
+                      <div class="tb-real-activity-icon">🐉</div>
+                      <div>
+                        <strong>Compagnon entraîné</strong>
+                        <span>Nyx gagne 12 points d'affection.</span>
+                      </div>
+                      <time>il y a 24 min</time>
+                    </div>
+
+                    <div class="tb-real-activity">
+                      <div class="tb-real-activity-icon">📜</div>
+                      <div>
+                        <strong>Quête accomplie</strong>
+                        <span>« Le chant des ruines » est terminée.</span>
+                      </div>
+                      <time>il y a 2 h</time>
+                    </div>
+                  </article>
+
+                  <article class="tb-real-companion parallax-card" data-depth="15">
+                    <small>COMPAGNON ACTUEL</small>
+                    <h3>Nyx</h3>
+
+                    <div class="tb-real-pet-portrait">
+                      <div class="tb-real-pet-art" aria-hidden="true">🐉</div>
+                    </div>
+
+                    <div class="tb-real-pet-stats">
+                      <div><span>Niveau</span><strong>12</strong></div>
+                      <div><span>Affection</span><strong>74%</strong></div>
+                      <div><span>Dégâts</span><strong>34</strong></div>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="tb-real-lower">
+                  <article class="tb-real-bars parallax-card" data-depth="9">
+                    <div class="tb-real-bar">
+                      <div><span>❤️ Points de vie</span><strong>680 / 680</strong></div>
+                      <i><em style="width:100%"></em></i>
+                    </div>
+
+                    <div class="tb-real-bar">
+                      <div><span>⚡ Énergie</span><strong>72%</strong></div>
+                      <i><em style="width:72%"></em></i>
+                    </div>
+
+                    <div class="tb-real-bar">
+                      <div><span>✨ Expérience</span><strong>59%</strong></div>
+                      <i><em style="width:59%"></em></i>
+                    </div>
+                  </article>
+
+                  <article class="tb-real-quick parallax-card" data-depth="12">
+                    <small>ACCÈS RAPIDE</small>
+                    <h3>Continuer l'aventure</h3>
+
+                    <div class="tb-real-quick-grid">
+                      <button>⛏ Aller à la mine</button>
+                      <button>📜 Voir les quêtes</button>
+                      <button>🐾 Mes compagnons</button>
+                      <button>🏰 Ma résidence</button>
+                    </div>
+                  </article>
+                </div>
+
+                <article class="tb-real-suggestion parallax-card" data-depth="7">
+                  <div class="tb-real-bulb">💡</div>
+                  <div>
+                    <small>COMMUNAUTÉ</small>
+                    <h3>Une idée pour TailBlue ?</h3>
+                    <p>
+                      Une fonctionnalité, une amélioration ou une idée folle ?
+                      Faites-la voyager jusqu'au royaume.
+                    </p>
+                  </div>
+
+                  <button>💡 Faire une suggestion</button>
+                </article>
+              </section>
+            </div>
+          </article>
+        </div>
+
+        <p class="tilt-hint">
+          <span>↔</span>
+          Passe ta souris sur l'application
+        </p>
+      </div>
+    </section>
+
+    <section id="fonctionnalites" class="feature-strip">
+      <article class="feature-card" data-glow>
+        <div class="feature-icon">⚔</div>
+        <div>
+          <strong>Aventure</strong>
+          <p>Mine, combats, quêtes et exploration.</p>
+        </div>
+      </article>
+
+      <article class="feature-card" data-glow>
+        <div class="feature-icon">🐾</div>
+        <div>
+          <strong>Compagnons</strong>
+          <p>Pets, chenil, progression et liens.</p>
+        </div>
+      </article>
+
+      <article class="feature-card" data-glow>
+        <div class="feature-icon">⌂</div>
+        <div>
+          <strong>Ton monde</strong>
+          <p>Maison, musée, marché et galerie.</p>
+        </div>
+      </article>
+
+      <article class="feature-card" data-glow>
+        <div class="feature-icon">✦</div>
+        <div>
+          <strong>Univers vivant</strong>
+          <p>Événements, secrets et nouveautés.</p>
+        </div>
+      </article>
+
+      <article class="feature-card" data-glow>
+        <div class="feature-icon">♢</div>
+        <div>
+          <strong>TailBlue Desktop</strong>
+          <p>Une vraie application pensée pour le jeu.</p>
+        </div>
+      </article>
+    </section>
+
+    <section id="roadmap" class="kingdom-panel">
+      <div>
+        <p class="panel-kicker">LE ROYAUME GRANDIT</p>
+        <h2>Une aventure qui évolue avec sa communauté.</h2>
+        <p>
+          TailBlue est encore en Alpha. De nouvelles zones, fonctionnalités,
+          compagnons et aventures rejoindront progressivement le royaume.
+        </p>
+      </div>
+
+      <div class="roadmap-rune" aria-hidden="true">
+        <span>✦</span>
+        <i></i>
+        <b>∞</b>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© TailBlue</span>
+    <i>✦</i>
+    <span>Un royaume à découvrir</span>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>

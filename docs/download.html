@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#087ddd" />
+
+  <title>TailBlue — Télécharger</title>
+  <meta
+    name="description"
+    content="Télécharge TailBlue Desktop et entre dans le royaume."
+  />
+
+  <link rel="icon" type="image/png" href="./assets/favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/favicon.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./download.css" />
+</head>
+
+<body class="download-page">
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="world-vignette" aria-hidden="true"></div>
+  <div class="magic-haze haze-a" aria-hidden="true"></div>
+  <div class="magic-haze haze-b" aria-hidden="true"></div>
+
+  <a class="download-back" href="./index.html">
+    <span>←</span> Retour au royaume
+  </a>
+
+  <main class="download-main">
+    <section class="download-card">
+      <div class="download-logo-wrap">
+        <img src="./assets/tailblue-logo.png" alt="TailBlue" draggable="false" />
+      </div>
+
+      <p class="download-kicker">TAILBLUE DESKTOP · ALPHA</p>
+      <h1>Prête à entrer<br />dans le royaume ?</h1>
+
+      <p class="download-copy">
+        Télécharge TailBlue sur ton Mac et retrouve ton personnage,
+        tes compagnons et toutes tes aventures.
+      </p>
+
+      <div class="download-platform">
+        <div class="platform-icon"></div>
+        <div>
+          <strong>TailBlue pour macOS</strong>
+          <span>Version Alpha · Apple Silicon / macOS</span>
+        </div>
+      </div>
+
+      <a
+        class="direct-download-button"
+        href="https://github.com/Popoyes15/tailblue-app/releases/latest/download/TailBlue-macOS.zip"
+      >
+        <span class="download-spark">✦</span>
+        <div>
+          <strong>Télécharger TailBlue</strong>
+          <small>Téléchargement direct</small>
+        </div>
+        <b>↓</b>
+        <i aria-hidden="true"></i>
+      </a>
+
+      <p class="download-help">
+        Version de test Alpha · Les prochaines versions pourront être mises à jour progressivement.
+      </p>
+    </section>
+  </main>
+
+
+  <footer>
+    <span>© TailBlue</span>
+    <i>✦</i>
+    <span>Un royaume à découvrir</span>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>

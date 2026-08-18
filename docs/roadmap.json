@@ -1,0 +1,120 @@
+{
+  "updated": "2026-08",
+  "phases": [
+    {
+      "icon": "✦",
+      "title": "Fondations de TailBlue",
+      "description": "La base de l'expérience desktop et l'identité visuelle du royaume.",
+      "items": [
+        {
+          "label": "Application desktop Tauri / React",
+          "status": "done"
+        },
+        {
+          "label": "Connexion Discord et identité joueur",
+          "status": "done"
+        },
+        {
+          "label": "Navigation, profils et interface principale",
+          "status": "done"
+        },
+        {
+          "label": "Site de présentation et page de téléchargement",
+          "status": "doing"
+        }
+      ]
+    },
+    {
+      "icon": "⚔",
+      "title": "Aventure & combat",
+      "description": "Exploration, Mine et boucles de jeu qui donnent vie à l'aventure.",
+      "items": [
+        {
+          "label": "Exploration de la Mine",
+          "status": "done"
+        },
+        {
+          "label": "Combats et effets visuels",
+          "status": "done"
+        },
+        {
+          "label": "Compagnons en combat",
+          "status": "done"
+        },
+        {
+          "label": "Découverte progressive et nouvelles zones",
+          "status": "doing"
+        }
+      ]
+    },
+    {
+      "icon": "⌁",
+      "title": "Backend réel",
+      "description": "Brancher progressivement l'application sur toutes les données et actions réelles de TailBlue.",
+      "items": [
+        {
+          "label": "API TailBlue publique sécurisée",
+          "status": "doing"
+        },
+        {
+          "label": "Pets, équipement, craft et maisons",
+          "status": "doing"
+        },
+        {
+          "label": "Guildes, quêtes et marché",
+          "status": "todo"
+        },
+        {
+          "label": "Temps réel SSE / WebSocket",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "icon": "⇧",
+      "title": "Distribution",
+      "description": "Rendre TailBlue simple à installer, conserver sa session et recevoir les nouvelles versions.",
+      "items": [
+        {
+          "label": "Téléchargement Alpha macOS",
+          "status": "doing"
+        },
+        {
+          "label": "Session Discord persistante",
+          "status": "todo"
+        },
+        {
+          "label": "Mises à jour automatiques",
+          "status": "todo"
+        },
+        {
+          "label": "Builds Windows et distribution élargie",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "icon": "♕",
+      "title": "Le royaume grandit",
+      "description": "Les systèmes et contenus qui viendront enrichir TailBlue après les fondations.",
+      "items": [
+        {
+          "label": "Nouvelles quêtes et événements",
+          "status": "todo"
+        },
+        {
+          "label": "Mariage et résidence royale",
+          "status": "todo"
+        },
+        {
+          "label": "Conquêtes et nouvelles zones",
+          "status": "todo"
+        },
+        {
+          "label": "Évolution communautaire du royaume",
+          "status": "todo"
+        }
+      ]
+    }
+  ]
+}

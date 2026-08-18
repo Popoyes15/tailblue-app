@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#087ddd" />
+  <title>TailBlue — Fonctionnalités</title>
+  <meta name="description" content="Découvre les fonctionnalités présentes et futures de TailBlue Desktop." />
+  <link rel="icon" type="image/png" href="./assets/favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/favicon.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./pages.css" />
+</head>
+<body class="inner-page" >
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="world-vignette" aria-hidden="true"></div>
+  <div class="magic-haze haze-a" aria-hidden="true"></div>
+  <div class="magic-haze haze-b" aria-hidden="true"></div>
+
+
+  <header class="site-header">
+    <a class="brand" href="./index.html" aria-label="TailBlue — Accueil">
+      <img src="./assets/favicon.png" alt="" draggable="false" />
+      <span>TAILBLUE</span>
+    </a>
+
+    <nav class="top-nav" aria-label="Navigation principale">
+      <a href="./index.html"><span>⌂</span> Accueil</a><a href="./royaume.html"><span>✦</span> Royaume</a><a class="active" href="./fonctionnalites.html"><span>◇</span> Fonctionnalités</a><a href="./roadmap.html"><span>⚑</span> Roadmap</a>
+    </nav>
+
+    
+  </header>
+
+
+  <main class="page-main">
+    <section class="page-hero">
+      <div class="page-hero-copy reveal">
+        <p class="page-kicker">TAILBLUE DESKTOP</p>
+        <h1>Tout le royaume, <span>dans une app.</span></h1>
+        <p class="page-lead">
+          TailBlue rassemble les systèmes du RPG dans une expérience desktop :
+          votre personnage, vos compagnons, votre inventaire, le monde et toutes
+          les actions importantes au même endroit.
+        </p>
+      </div>
+
+      <div class="page-sigil reveal" aria-hidden="true">
+        <div class="page-sigil-core">◇</div>
+      </div>
+    </section>
+
+    <section class="section-shell reveal">
+      <div class="section-heading">
+        <div>
+          <small>MODULES TAILBLUE</small>
+          <h2>Une application modulaire qui grandit avec le jeu.</h2>
+          <p>
+            Filtrez les fonctionnalités pour voir rapidement ce qui concerne
+            l'aventure, votre personnage ou le monde.
+          </p>
+        </div>
+        <span class="section-chip">Interactif</span>
+      </div>
+
+      <div class="feature-filter-bar">
+        <button class="feature-filter active" data-filter="all">Tout</button>
+        <button class="feature-filter" data-filter="aventure">Aventure</button>
+        <button class="feature-filter" data-filter="joueur">Personnage</button>
+        <button class="feature-filter" data-filter="monde">Monde</button>
+        <button class="feature-filter" data-filter="systeme">Système</button>
+      </div>
+
+      <div class="modules-grid">
+        <article class="module-card" data-group="aventure">
+          <div class="module-head">
+            <div class="module-icon">⛏</div>
+            <div><h3>Mine</h3><small>Exploration & découverte</small></div>
+            <span class="status-badge status-live">Disponible</span>
+          </div>
+          <p>
+            Carte progressive, salles inconnues, ressources, rencontres et
+            combats directement intégrés à l'exploration.
+          </p>
+          <div class="module-list">
+            <span>Fog of war</span><span>Zoom & déplacement</span>
+            <span>Journal</span><span>Rencontres</span>
+          </div>
+        </article>
+
+        <article class="module-card" data-group="aventure">
+          <div class="module-head">
+            <div class="module-icon">⚔</div>
+            <div><h3>Combat</h3><small>Joueur + compagnon</small></div>
+            <span class="status-badge status-live">Disponible</span>
+          </div>
+          <p>
+            Interface de combat dédiée avec statistiques, effets d'attaque,
+            potions, endurance du pet et musiques adaptées.
+          </p>
+          <div class="module-list">
+            <span>Animations</span><span>Potions</span>
+            <span>Fuite</span><span>Audio dynamique</span>
+          </div>
+        </article>
+
+        <article class="module-card" data-group="joueur">
+          <div class="module-head">
+            <div class="module-icon">♙</div>
+            <div><h3>Personnage</h3><small>Votre identité TailBlue</small></div>
+            <span class="status-badge status-progress">Évolution</span>
+          </div>
+          <p>
+            Retrouvez votre identité Discord, votre progression, vos statistiques,
+            votre équipement et les éléments liés à votre aventure.
+          </p>
+          <div class="module-list">
+            <span>Profil</span><span>Niveau</span>
+            <span>Équipement</span><span>Progression</span>
+          </div>
+        </article>
+
+        <article class="module-card" data-group="joueur">
+          <div class="module-head">
+            <div class="module-icon">🐾</div>
+            <div><h3>Compagnons</h3><small>Pets & chenil</small></div>
+            <span class="status-badge status-progress">Évolution</span>
+          </div>
+          <p>
+            Consultez vos compagnons, leurs caractéristiques, leur endurance et
+            les systèmes du chenil depuis l'application.
+          </p>
+          <div class="module-list">
+            <span>Collection</span><span>Équipement</span>
+            <span>Chenil</span><span>Combat</span>
+          </div>
+        </article>
+
+        <article class="module-card" data-group="monde">
+          <div class="module-head">
+            <div class="module-icon">⌂</div>
+            <div><h3>Maison</h3><small>Résidence & collections</small></div>
+            <span class="status-badge status-progress">En cours</span>
+          </div>
+          <p>
+            Votre résidence devient un vrai espace du royaume : maison, château,
+            musée, collections et informations contextuelles.
+          </p>
+          <div class="module-list">
+            <span>Résidence</span><span>Musée</span>
+            <span>Collections</span><span>Thèmes</span>
+          </div>
+        </article>
+
+        <article class="module-card" data-group="monde">
+          <div class="module-head">
+            <div class="module-icon">◇</div>
+            <div><h3>Marché</h3><small>Économie du royaume</small></div>
+            <span class="status-badge status-planned">Prévu</span>
+          </div>
+          <p>
+            Un espace pour consulter les objets et offres du royaume avec les
+            filtres personnels et globaux directement dans l'application.
+          </p>
+          <div class="module-list">
+            <span>Mon marché</span><span>Tous</span>
+            <span>Filtres</span><span>Objets</span>
+          </div>
+        </article>
+
+        <article class="module-card" data-group="systeme">
+          <div class="module-head">
+            <div class="module-icon">☁</div>
+            <div><h3>Connexion TailBlue</h3><small>Discord & données réelles</small></div>
+            <span class="status-badge status-progress">En cours</span>
+          </div>
+          <p>
+            L'application est conçue pour utiliser l'identité Discord résolue par
+            le serveur et les données réelles du backend TailBlue.
+          </p>
+          <div class="module-list">
+            <span>OAuth Discord</span><span>API</span>
+            <span>Sécurité serveur</span><span>Temps réel</span>
+          </div>
+        </article>
+
+        <article class="module-card" data-group="systeme">
+          <div class="module-head">
+            <div class="module-icon">⇧</div>
+            <div><h3>Mises à jour</h3><small>Distribution desktop</small></div>
+            <span class="status-badge status-planned">Prévu</span>
+          </div>
+          <p>
+            À terme, TailBlue pourra proposer les nouvelles versions directement
+            depuis l'application sans refaire une installation manuelle.
+          </p>
+          <div class="module-list">
+            <span>Updater</span><span>Versions</span>
+            <span>Release</span><span>Installation</span>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+
+  <footer>
+    <span>© TailBlue</span>
+    <i>✦</i>
+    <span>Un royaume à découvrir</span>
+  </footer>
+
+  <script src="./script.js"></script>
+  <script src="./pages.js"></script>
+</body>
+</html>
