@@ -1,0 +1,63 @@
+name: TailBlue — Site & Roadmap
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "scripts/build-roadmap.mjs"
+      - ".github/workflows/pages.yml"
+
+  issues:
+    types:
+      - opened
+      - edited
+      - deleted
+      - closed
+      - reopened
+      - labeled
+      - unlabeled
+      - milestoned
+      - demilestoned
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "tailblue-pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v6
+
+      - name: Générer la Roadmap depuis les Issues TailBlue
+        run: node scripts/build-roadmap.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Configurer GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Préparer le site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+      - name: Publier TailBlue
+        id: deployment
+        uses: actions/deploy-pages@v4
