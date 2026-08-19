@@ -1,0 +1,82 @@
+name: TailBlue Windows
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Récupérer TailBlue
+        uses: actions/checkout@v4
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Installer Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Compiler TailBlue pour Windows
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npm run tauri build -- --bundles nsis
+
+      - name: Préparer le téléchargement public
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem `
+            "src-tauri\target\release\bundle\nsis\*-setup.exe" |
+            Select-Object -First 1
+
+          if (-not $exe) {
+            throw "Installateur NSIS TailBlue introuvable."
+          }
+
+          Copy-Item `
+            $exe.FullName `
+            "TailBlue-Windows-Setup.exe"
+
+          $sig = "$($exe.FullName).sig"
+
+          if (Test-Path $sig) {
+            Copy-Item `
+              $sig `
+              "TailBlue-Windows-Setup.exe.sig"
+          }
+
+      - name: Trouver la Release actuelle
+        id: release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = gh release view --json tagName --jq .tagName
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Publier l'installateur Windows
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload `
+            "${{ steps.release.outputs.tag }}" `
+            "TailBlue-Windows-Setup.exe" `
+            --clobber
+
+          if (Test-Path "TailBlue-Windows-Setup.exe.sig") {
+            gh release upload `
+              "${{ steps.release.outputs.tag }}" `
+              "TailBlue-Windows-Setup.exe.sig" `
+              --clobber
+          }
