@@ -521,3 +521,38 @@
     }
   );
 })();
+/* =========================================================
+   TAILBLUE — ROYAUME VIVANT
+   Ajoute automatiquement les calques sur toutes les pages.
+   ========================================================= */
+
+(() => {
+  if (
+    document.querySelector(
+      ".kingdom-motion-layer"
+    )
+  ) {
+    return;
+  }
+
+  const layers = [
+    "leaves",
+    "water",
+    "waterfalls",
+  ];
+
+  layers.forEach((name) => {
+    const layer =
+      document.createElement("div");
+
+    layer.className =
+      `kingdom-motion-layer kingdom-motion-${name}`;
+
+    layer.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+
+    document.body.prepend(layer);
+  });
+})();

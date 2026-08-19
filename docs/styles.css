@@ -1811,3 +1811,172 @@ footer i {
   border-radius: 13px;
   object-fit: cover;
 }
+/* =========================================================
+   TAILBLUE — ROYAUME VIVANT
+   Le château/fond reste fixe.
+   Seuls les overlays bougent.
+   ========================================================= */
+
+.kingdom-motion-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  will-change: transform, opacity, filter;
+}
+
+
+/* 🌿 FEUILLES */
+
+.kingdom-motion-leaves {
+  background-image:
+    url("./assets/kingdom-leaves.png");
+
+  opacity: 0.37;
+
+  transform-origin: 20% 10%;
+
+  animation:
+    tailblueLeaves 4s
+    ease-in-out
+    infinite alternate;
+}
+
+
+/* 🌊 LAC / REFLETS */
+
+.kingdom-motion-water {
+  background-image:
+    url("./assets/kingdom-water.png");
+
+  opacity: 0.20;
+
+  animation:
+    tailblueWater 5s
+    ease-in-out
+    infinite alternate;
+}
+
+
+/* 💦 CASCADES */
+
+.kingdom-motion-waterfalls {
+  position: fixed;
+
+  left: auto !important;
+  top: auto !important;
+  right: 13vw !important;
+  bottom: 14vh !important;
+
+  width: 46vw;
+  height: 78vh;
+
+  z-index: 0;
+  pointer-events: none;
+
+  background-image: url("./assets/kingdom-waterfalls.png");
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  background-size: contain;
+
+  opacity: 0.20;
+  mix-blend-mode: screen;
+
+  animation: tailblueWaterfallsFloat 4.5s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* -------------------------
+   ANIMATIONS
+   ------------------------- */
+
+@keyframes tailblueLeaves {
+
+  0% {
+    transform:
+      translate3d(-1px, 0, 0)
+      rotate(-0.12deg)
+      scale(1.006);
+  }
+
+  50% {
+    transform:
+      translate3d(2px, 1px, 0)
+      rotate(0.10deg)
+      scale(1.009);
+  }
+
+  100% {
+    transform:
+      translate3d(-1px, 2px, 0)
+      rotate(-0.06deg)
+      scale(1.006);
+  }
+}
+
+
+@keyframes tailblueWater {
+
+  0% {
+    opacity: 0.15;
+
+    transform:
+      translate3d(-2px, 1px, 0)
+      scale(1.004);
+
+    filter:
+      brightness(0.95);
+  }
+
+  50% {
+    opacity: 0.24;
+
+    transform:
+      translate3d(2px, -1px, 0)
+      scale(1.007);
+
+    filter:
+      brightness(1.12);
+  }
+
+  100% {
+    opacity: 0.17;
+
+    transform:
+      translate3d(-1px, 1px, 0)
+      scale(1.004);
+
+    filter:
+      brightness(1);
+  }
+}
+
+
+@keyframes tailblueWaterfallsFloat {
+  0% {
+    transform: translateY(0px) scaleY(1);
+    opacity: 0.24;
+  }
+
+  50% {
+    transform: translateY(8px) scaleY(1.015);
+    opacity: 0.31;
+  }
+
+  100% {
+    transform: translateY(14px) scaleY(1.03);
+    opacity: 0.27;
+  }
+}
+
+/* Accessibilité */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .kingdom-motion-layer {
+    animation: none !important;
+  }
+}
