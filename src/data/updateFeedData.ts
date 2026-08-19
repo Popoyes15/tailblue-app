@@ -109,7 +109,9 @@ export async function loadTailBlueUpdates(): Promise<TailBlueUpdateArticle[]> {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     const rawItems = Array.isArray(payload) ? payload : Array.isArray(payload?.updates) ? payload.updates : [];
-    const items = rawItems.map((item) => normalizeArticle(item, base)).filter((item): item is TailBlueUpdateArticle => Boolean(item));
+    const items = rawItems
+      .map((item: unknown) => normalizeArticle(item, base))
+      .filter((item: TailBlueUpdateArticle | null): item is TailBlueUpdateArticle => Boolean(item));
 
     return items.length ? items : LOCAL_UPDATE_ARTICLES;
   } catch (error) {

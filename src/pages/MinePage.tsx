@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { mineApi } from "../api/mineApi";
 import CombatPanel from "../components/mine/CombatPanel";
 import MineCompanionCare from "../components/mine/MineCompanionCare";
@@ -8,7 +9,14 @@ import MinePetPortrait from "../components/mine/MinePetPortrait";
 import PotionMenu from "../components/mine/PotionMenu";
 import { cleanMineText } from "../data/mineText";
 import { resolveMonsterImage } from "../data/monsterVisuals";
-import { playMineSfx, setMineMusic } from "../services/mineAudioService";
+import { setMineAudioFocus } from "../services/mineAudioFocus";
+import {
+  getMineAudioDebugInfo,
+  installMineAudioUnlock,
+  playMineSfx,
+  playMineAudioTest,
+  setMineMusic,
+} from "../services/mineAudioService";
 import type {
   MineCombat,
   MineCombatSummary,
@@ -67,7 +75,7 @@ function actionSound(action: string) {
 
 function ResultCinematic({ result, onClose }: { result: MineResult; onClose: () => void }) {
   return (
-    <div className={`tm-result tm-result-v48 ${result.success ? "success" : "failure"}`}>
+    <div className={`tm-result tm-result-v48 tm-result-v52 ${result.success ? "success" : "failure"}`}>
       <button onClick={onClose} aria-label="Masquer">×</button>
       <div className="tm-result-symbol">{result.emoji || "✨"}</div>
       <div className="tm-result-body">
@@ -80,7 +88,7 @@ function ResultCinematic({ result, onClose }: { result: MineResult; onClose: () 
           {result.playerXp !== 0 && <span>✨ +{result.playerXp} XP</span>}
           {result.healing > 0 && <span>❤️ +{result.healing}</span>}
           {Object.entries(result.items).map(([id, quantity]) => (
-            <span key={id}>🎒 {quantity > 0 ? "+" : ""}{quantity} {cleanMineText(id.replaceAll("_", " "))}</span>
+            <span key={id}>🎒 {quantity > 0 ? "+" : ""}{quantity} {cleanMineText(id.replace(/_/g, " "))}</span>
           ))}
         </div>
       </div>
@@ -172,6 +180,11 @@ function CombatSummaryCard({ summary }: { summary: MineCombatSummary }) {
 }
 
 export default function MinePage() {
+  useEffect(() => {
+    setMineAudioFocus(true);
+    return () => setMineAudioFocus(false);
+  }, []);
+
   const [snapshot, setSnapshot] = useState<MineSnapshot | null>(null);
   const [combatResolution, setCombatResolution] = useState<MineCombat | null>(null);
   const [loading, setLoading] = useState(true);
@@ -181,6 +194,7 @@ export default function MinePage() {
   const [careOpen, setCareOpen] = useState(false);
   const [selectedCompanion, setSelectedCompanion] = useState<string>("");
   const [result, setResult] = useState<MineResult | null>(null);
+  const [audioDiag, setAudioDiag] = useState("🔊 TEST SON");
 
   const applySnapshot = useCallback((next: MineSnapshot) => {
     setSnapshot(next);
@@ -205,6 +219,12 @@ export default function MinePage() {
     void refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    const cleanup = installMineAudioUnlock();
+    console.info("[TailBlue Mine Audio] État initial", getMineAudioDebugInfo());
+    return cleanup;
+  }, []);
+
   const combatForDisplay = snapshot?.combat?.active ? snapshot.combat : combatResolution;
 
   useEffect(() => {
@@ -221,7 +241,7 @@ export default function MinePage() {
 
   useEffect(() => {
     const events = combatForDisplay?.events ?? [];
-    if (!events.length || combatResolution) return;
+    if (!events.length) return;
     const recent = events.slice(-4);
     if (recent.some((event) => event.visualTarget === "enemy" && event.amount > 0)) void playMineSfx("hit");
     if (recent.some((event) => event.visualTarget === "player" && event.amount > 0)) void playMineSfx("hurt");
@@ -413,7 +433,40 @@ export default function MinePage() {
       </header>
 
       {error && <div className="tm-inline-error">⚠️ {cleanMineText(error)}</div>}
-      {result && !combatResolution && <ResultCinematic result={result} onClose={() => setResult(null)} />}
+
+      {/* V5.6 : portail directement dans document.body. La popup n'a plus
+          aucun parent commun avec la grille Mine et ne peut donc pas la pousser. */}
+      {result && !combatResolution && createPortal(
+        <div
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            zIndex: 10000,
+            top: 18,
+            left: "50%",
+            width: "min(760px, calc(100vw - 44px))",
+            transform: "translateX(-50%)",
+            pointerEvents: "none",
+            contain: "layout paint style",
+          }}
+        >
+          <div style={{ pointerEvents: "auto", height: 118, minHeight: 118, maxHeight: 118, overflow: "hidden" }}>
+            <ResultCinematic result={result} onClose={() => setResult(null)} />
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {/* Marqueur volontairement visible : s'il n'est pas affiché, ce n'est
+          PAS le build V5.6 qui tourne. Le bouton teste un vrai fichier audio. */}
+      <div style={{ position: "fixed", right: 14, bottom: 14, zIndex: 10001, display: "flex", gap: 8, alignItems: "center" }}>
+        <span style={{ padding: "7px 10px", borderRadius: 999, background: "rgba(21,92,128,.94)", border: "1px solid rgba(116,213,255,.35)", color: "#dff6ff", fontSize: 10, fontWeight: 900, letterSpacing: ".08em", boxShadow: "0 8px 24px rgba(0,0,0,.28)" }}>MINE FX 5.6 LIVE</span>
+        <button
+          type="button"
+          onClick={async () => setAudioDiag(await playMineAudioTest())}
+          style={{ padding: "7px 10px", borderRadius: 999, border: "1px solid rgba(116,213,255,.35)", color: "#dff6ff", background: "rgba(8,39,60,.96)", cursor: "pointer", fontSize: 10, fontWeight: 800 }}
+        >{audioDiag}</button>
+      </div>
 
       <div className="tm-explore-grid tm-explore-grid-v48">
         <MineMap

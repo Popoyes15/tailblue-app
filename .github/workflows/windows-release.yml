@@ -30,6 +30,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_TAILBLUE_API_URL: https://tailblue-api.apps.bot-hosting.cloud
         run: npm run tauri build -- --bundles nsis
 
       - name: Préparer le téléchargement public

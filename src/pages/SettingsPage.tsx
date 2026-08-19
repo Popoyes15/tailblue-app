@@ -5,7 +5,6 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import {
-  DEFAULT_TAILBLUE_SETTINGS,
   type NotificationLevelSetting,
   useTailBlueSettings,
 } from "../settings/tailblueSettings";

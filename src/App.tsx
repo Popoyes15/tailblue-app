@@ -27,6 +27,7 @@ import {
   getDiscordDesktopLoginUrl,
   homeApiConfigured,
   loadAuthenticatedUser,
+  restoreDesktopAccessToken,
   loadHomeSnapshot,
   logoutHomeSession,
   markAllHomeNotificationsRead,
@@ -946,6 +947,9 @@ function App() {
   const [authenticating, setAuthenticating] =
     useState(false);
 
+  const [authResolved, setAuthResolved] =
+    useState(!homeApiConfigured);
+
   useEffect(() => {
     let active = true;
     let unlisten: (() => void) | undefined;
@@ -988,6 +992,7 @@ function App() {
           const me = await loadAuthenticatedUser();
 
           setAuthUser(me.user);
+          setAuthResolved(true);
           setAccountMessage(
             `✅ Connectée avec Discord en tant que ${me.user.displayName}.`,
           );
@@ -1069,33 +1074,76 @@ function App() {
     useState<string | null>(null);
 
   useEffect(() => {
-    if (!homeApiConfigured || !getDesktopAccessToken()) {
+
+    if (!homeApiConfigured) {
       return;
     }
 
     let cancelled = false;
 
-    void loadAuthenticatedUser()
-      .then((session) => {
-        if (!cancelled) {
-          setAuthUser(session.user);
+    void restoreDesktopAccessToken()
+      .then(async (token) => {
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!token) {
+          setAuthResolved(true);
+          return;
+        }
+
+        try {
+
+          const session =
+            await loadAuthenticatedUser();
+
+          if (!cancelled) {
+
+            setAuthUser(
+              session.user,
+            );
+
+            setAuthResolved(true);
+
+            console.log(
+              "🔐 Session Discord restaurée depuis le coffre sécurisé.",
+            );
+          }
+
+        } catch (error) {
+
+          clearDesktopAccessToken();
+
+          if (!cancelled) {
+
+            setAuthUser(null);
+            setAuthResolved(true);
+
+            console.warn(
+              "Session Discord persistante expirée :",
+              error,
+            );
+          }
         }
       })
       .catch((error) => {
-        clearDesktopAccessToken();
 
         if (!cancelled) {
-          setAuthUser(null);
-          console.warn(
-            "Session Discord locale expirée :",
+
+          console.error(
+            "Impossible de lire le coffre sécurisé TailBlue :",
             error,
           );
+
+          setAuthResolved(true);
         }
       });
 
     return () => {
       cancelled = true;
     };
+
   }, []);
 
   const { settings } = useTailBlueSettings();
@@ -1160,6 +1208,9 @@ function App() {
 
   useEffect(() => {
     const controller = new AbortController();
+    if (homeApiConfigured && authUser) {
+      setHomeLoading(true);
+    }
     void refreshHome(controller.signal);
 
     if (!homeApiConfigured) {
@@ -1168,7 +1219,7 @@ function App() {
 
     const interval = window.setInterval(
       () => void refreshHome(),
-      30_000,
+      12_000,
     );
 
     const closeStream = openHomeStream(
@@ -1180,7 +1231,7 @@ function App() {
       window.clearInterval(interval);
       closeStream();
     };
-  }, [refreshHome]);
+  }, [refreshHome, authUser?.id]);
 
   useEffect(() => {
     applySettingsToDocument(settings);
@@ -1612,30 +1663,39 @@ function App() {
   }
 
   async function logout() {
-    if (!homeApiConfigured || loggingOut || !authUser) return;
+  if (!homeApiConfigured || loggingOut || !authUser) return;
 
-    setLoggingOut(true);
-    setAccountMessage(null);
+  setLoggingOut(true);
+  setAccountMessage(null);
 
-    try {
-      await logoutHomeSession();
+  let logoutError: unknown = null;
 
-      setAuthUser(null);
-      setHome(HOME_PREVIEW_SNAPSHOT);
-      setHomeLoading(false);
-      setAccountMessage(
-        "✅ Session Discord déconnectée.",
-      );
-      setLoggingOut(false);
-    } catch (error) {
-      setAccountMessage(
-        error instanceof Error
-          ? error.message
-          : "Impossible de se déconnecter.",
-      );
-      setLoggingOut(false);
-    }
+  try {
+    await logoutHomeSession();
+  } catch (error) {
+    logoutError = error;
+    console.warn(
+      "Déconnexion serveur TailBlue incomplète :",
+      error,
+    );
+  } finally {
+    /*
+     * Pour l'utilisateur, la déconnexion locale
+     * doit TOUJOURS être immédiate.
+     */
+    setAuthUser(null);
+    setHome(HOME_PREVIEW_SNAPSHOT);
+    setHomeLoading(false);
+    setAccountOpen(false);
+    setLoggingOut(false);
   }
+
+  if (logoutError) {
+    console.warn(
+      "La session locale a tout de même été supprimée.",
+    );
+  }
+}
 
   const navButton = (
     icon: string,
@@ -1669,6 +1729,90 @@ function App() {
       <Badge badge={badge} />
     </button>
   );
+
+
+  /* TAILBLUE_LOGIN_GATE_V1 */
+  if (homeApiConfigured && !authResolved) {
+    return (
+      <div className="tb-login-gate tb-login-gate-loading">
+        <div className="tb-login-ambient tb-login-ambient-a" />
+        <div className="tb-login-ambient tb-login-ambient-b" />
+
+        <section className="tb-login-card" aria-live="polite">
+          <div className="tb-login-logo-wrap">
+            <img src="/icone-appli.png" alt="TailBlue" />
+          </div>
+
+          <p className="tb-login-kicker">TAILBLUE DESKTOP</p>
+          <h1>Connexion au royaume…</h1>
+          <p className="tb-login-copy">
+            Vérification de votre session et chargement de votre identité.
+          </p>
+
+          <div className="tb-login-loader" aria-hidden="true">
+            <span />
+          </div>
+
+          <p className="tb-login-foot">✦ Quelques instants</p>
+        </section>
+      </div>
+    );
+  }
+
+  if (homeApiConfigured && authResolved && !authUser) {
+    return (
+      <div className="tb-login-gate">
+        <div className="tb-login-ambient tb-login-ambient-a" />
+        <div className="tb-login-ambient tb-login-ambient-b" />
+
+        <section className="tb-login-card">
+          <div className="tb-login-logo-wrap">
+            <img src="/icone-appli.png" alt="TailBlue" />
+          </div>
+
+          <p className="tb-login-kicker">TAILBLUE DESKTOP</p>
+          <h1>Bienvenue dans TailBlue</h1>
+
+          <p className="tb-login-copy">
+            Connectez-vous à votre compte Discord pour retrouver votre personnage,
+            vos compagnons et votre progression dans le royaume.
+          </p>
+
+          <button
+            className="tb-login-discord"
+            type="button"
+            onClick={() => void loginWithDiscord()}
+            disabled={authenticating}
+          >
+            <span className="tb-login-discord-icon">◉</span>
+            <span>
+              <strong>
+                {authenticating
+                  ? "Ouverture de Discord…"
+                  : "Continuer avec Discord"}
+              </strong>
+              <small>Connexion sécurisée via votre compte Discord</small>
+            </span>
+            <b>›</b>
+          </button>
+
+          {accountMessage && (
+            <p className="tb-login-message">{accountMessage}</p>
+          )}
+
+          <div className="tb-login-security">
+            <span>🔐</span>
+            <p>
+              Votre identité est vérifiée par TailBlue. Les droits spéciaux ne
+              sont jamais décidés uniquement par l'interface.
+            </p>
+          </div>
+
+          <p className="tb-login-foot">✦ Un royaume à découvrir</p>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">

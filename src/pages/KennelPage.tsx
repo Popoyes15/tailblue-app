@@ -112,6 +112,7 @@ export default function KennelPage() {
     () => new Map(companions.owned.map((pet) => [pet.id, pet])),
     [companions.owned],
   );
+  void ownedMap;
 
   const catalogMap = useMemo(
     () => new Map(companions.catalog.map((pet) => [pet.id, pet])),

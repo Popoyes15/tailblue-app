@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "TailBlue",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "identifier": "com.tailblue.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -10,11 +10,28 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
+        "label": "main",
         "title": "TailBlue",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "visible": false
+      },
+      {
+        "label": "updater",
+        "title": "TailBlue",
+        "url": "updater.html",
+        "width": 440,
+        "height": 285,
+        "center": true,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "visible": true
       }
     ],
     "security": {
@@ -24,6 +41,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -39,6 +57,12 @@
           "tailblue"
         ]
       }
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVDRTJCNDU5N0VDNUVEQkYKUldTLzdjVitXYlRpN1AvMFpDZDhmazcrMkRsODdkOC85UG5PS0ZuZDIvV3ZOeUpaSzRIUkg2NU8K",
+      "endpoints": [
+        "https://github.com/Popoyes15/tailblue-app/releases/latest/download/latest.json"
+      ]
     }
   }
 }

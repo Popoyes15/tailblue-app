@@ -141,8 +141,8 @@ export default function MineMap({ map, exits, disabled, onMove }: Props) {
   );
 
   const geometry = useMemo(() => {
-    // Carte complète : des cartes un peu plus compactes permettent de garder
-    // les 7–19 salles d'un étage lisibles dès le premier affichage.
+    // Carte de découverte : les cartes restent compactes afin de garder toute
+    // la zone réellement explorée lisible, sans révéler le reste de l'étage.
     const stepX = 210;
     const stepY = 124;
     const cardW = 168;
@@ -277,7 +277,7 @@ export default function MineMap({ map, exits, disabled, onMove }: Props) {
       </div>
 
       <p className="tm-map-help">
-        Clique directement sur une salle reliée pour avancer · molette pour zoomer · maintiens le clic dans le vide pour déplacer la carte.
+        Les portes aperçues restent en ??? jusqu'à ta première visite · clique sur une sortie actuelle pour avancer · molette pour zoomer · clic maintenu pour déplacer.
       </p>
 
       <div className={`tm-map-stage tm-map-stage-v50 ${dragging ? "is-dragging" : ""}`}>
@@ -332,12 +332,12 @@ export default function MineMap({ map, exits, disabled, onMove }: Props) {
               const subtitle = node.current
                 ? "Tu es ici"
                 : exit
-                  ? (node.known ? "Accessible" : "Inexplorée")
+                  ? (node.known ? "Déjà visitée" : "À explorer")
                   : node.cleared
                     ? "Nettoyée"
                     : node.known
-                      ? "Découverte"
-                      : "Inconnue";
+                      ? "Visitée"
+                      : "Porte repérée";
 
               return (
                 <foreignObject

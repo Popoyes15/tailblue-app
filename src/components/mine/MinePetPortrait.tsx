@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { resolveMinePetImage } from "../../data/petVisuals";
 import type { MineCompanion } from "../../types/mine";
 

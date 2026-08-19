@@ -186,6 +186,7 @@ export type Combatant = {
   name: string;
   image?: string | null;
   emoji?: string;
+  race?: string;
   monsterId?: string;
   family?: string;
   boss?: boolean;

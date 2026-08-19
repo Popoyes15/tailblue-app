@@ -1,20 +1,29 @@
 import { HOME_PREVIEW_SNAPSHOT } from "../data/homePreviewData";
 import type { HomeSnapshot } from "../types/home";
 
+import {
+  clearPersistedDesktopRefreshToken,
+  persistDesktopRefreshToken,
+  readPersistedDesktopRefreshToken,
+} from "./desktopSecureSession";
+
 type Env = Record<string, string | boolean | undefined>;
 
-const ENV = (import.meta as ImportMeta & { env?: Env }).env ?? {};
+const ENV =
+  (import.meta as ImportMeta & { env?: Env }).env ?? {};
 
 const RAW_API_BASE = String(
   ENV.VITE_TAILBLUE_API_URL ?? "",
 ).trim();
 
-const API_BASE = RAW_API_BASE.replace(/\/+$/, "");
+const API_BASE =
+  RAW_API_BASE.replace(/\/+$/, "");
 
 const ACCESS_TOKEN_KEY =
   "tailblue-desktop-access-token";
 
-export const homeApiConfigured = Boolean(API_BASE);
+export const homeApiConfigured =
+  Boolean(API_BASE);
 
 export type TailBlueAuthUser = {
   id: string;
@@ -27,8 +36,10 @@ export type TailBlueAuthUser = {
 export type TailBlueDesktopSession = {
   authenticated: true;
   accessToken: string;
+  refreshToken: string;
   tokenType: "Bearer";
   expiresIn: number;
+  refreshExpiresIn: number;
   user: TailBlueAuthUser;
 };
 
@@ -37,7 +48,14 @@ export type TailBlueAuthenticatedUser = {
   user: TailBlueAuthUser;
 };
 
-export function getDesktopAccessToken(): string | null {
+let refreshPromise:
+  Promise<TailBlueDesktopSession | null> | null =
+    null;
+
+
+export function getDesktopAccessToken():
+  string | null {
+
   if (typeof window === "undefined") {
     return null;
   }
@@ -47,14 +65,17 @@ export function getDesktopAccessToken(): string | null {
   );
 }
 
+
 export function saveDesktopAccessToken(
   token: string,
 ): void {
+
   if (typeof window === "undefined") {
     return;
   }
 
-  const cleanToken = String(token ?? "").trim();
+  const cleanToken =
+    String(token ?? "").trim();
 
   if (!cleanToken) {
     return;
@@ -66,7 +87,10 @@ export function saveDesktopAccessToken(
   );
 }
 
-export function clearDesktopAccessToken(): void {
+
+export function clearDesktopAccessToken():
+  void {
+
   if (typeof window === "undefined") {
     return;
   }
@@ -76,7 +100,10 @@ export function clearDesktopAccessToken(): void {
   );
 }
 
-export function getDiscordDesktopLoginUrl(): string {
+
+export function getDiscordDesktopLoginUrl():
+  string {
+
   if (!API_BASE) {
     throw new Error(
       "API TailBlue non configurée.",
@@ -89,17 +116,161 @@ export function getDiscordDesktopLoginUrl(): string {
   );
 }
 
+
+async function responseError(
+  response: Response,
+): Promise<Error> {
+
+  let detail =
+    `Erreur TailBlue ${response.status}`;
+
+  try {
+    const payload =
+      await response.json();
+
+    if (payload?.detail) {
+      detail =
+        String(payload.detail);
+    }
+  } catch {
+    // Réponse non JSON.
+  }
+
+  return new Error(detail);
+}
+
+
+async function performDesktopSessionRefresh():
+  Promise<TailBlueDesktopSession | null> {
+
+  if (!API_BASE) {
+    return null;
+  }
+
+  const refreshToken =
+    await readPersistedDesktopRefreshToken();
+
+  if (!refreshToken) {
+    return null;
+  }
+
+  const response = await fetch(
+    `${API_BASE}/api/auth/desktop/refresh`,
+    {
+      method: "POST",
+
+      credentials: "omit",
+
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        refreshToken,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    if (
+      response.status === 400 ||
+      response.status === 401
+    ) {
+      clearDesktopAccessToken();
+
+      await clearPersistedDesktopRefreshToken();
+    }
+
+    throw await responseError(
+      response,
+    );
+  }
+
+  const session =
+    (await response.json()) as TailBlueDesktopSession;
+
+  if (
+    !session.accessToken ||
+    !session.refreshToken
+  ) {
+    clearDesktopAccessToken();
+
+    await clearPersistedDesktopRefreshToken();
+
+    throw new Error(
+      "Session TailBlue renouvelée invalide.",
+    );
+  }
+
+  saveDesktopAccessToken(
+    session.accessToken,
+  );
+
+  await persistDesktopRefreshToken(
+    session.refreshToken,
+  );
+
+  console.log(
+    "🔄 Session TailBlue renouvelée automatiquement.",
+  );
+
+  return session;
+}
+
+
+export async function refreshDesktopSession():
+  Promise<TailBlueDesktopSession | null> {
+
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise =
+    performDesktopSessionRefresh();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
+
+export async function restoreDesktopAccessToken():
+  Promise<string | null> {
+
+  const current =
+    getDesktopAccessToken();
+
+  if (current) {
+    return current;
+  }
+
+  const session =
+    await refreshDesktopSession();
+
+  return (
+    session?.accessToken ??
+    null
+  );
+}
+
+
 async function fetchJson<T>(
   path: string,
   init: RequestInit = {},
+  allowRefresh = true,
 ): Promise<T> {
+
   if (!API_BASE) {
     throw new Error(
       "API TailBlue non configurée.",
     );
   }
 
-  const headers = new Headers(init.headers);
+  const headers =
+    new Headers(init.headers);
 
   if (!headers.has("Accept")) {
     headers.set(
@@ -131,35 +302,75 @@ async function fetchJson<T>(
     );
   }
 
-  const response = await fetch(
+  let response = await fetch(
     `${API_BASE}${path}`,
     {
       ...init,
-
-      // L'application Desktop utilise désormais
-      // Authorization: Bearer ...
-      // et non le cookie du navigateur.
       credentials: "omit",
-
       headers,
     },
   );
 
-  if (!response.ok) {
-    let detail =
-      `Erreur TailBlue ${response.status}`;
-
+  /*
+   * Si l'access token de 30 minutes
+   * vient d'expirer, on utilise UNE FOIS
+   * le refresh token du Trousseau.
+   */
+  if (
+    response.status === 401 &&
+    allowRefresh
+  ) {
     try {
-      const payload = await response.json();
+      const refreshed =
+        await refreshDesktopSession();
 
-      if (payload?.detail) {
-        detail = String(payload.detail);
+      if (refreshed?.accessToken) {
+        const retryHeaders =
+          new Headers(init.headers);
+
+        if (!retryHeaders.has("Accept")) {
+          retryHeaders.set(
+            "Accept",
+            "application/json",
+          );
+        }
+
+        if (
+          init.body !== undefined &&
+          !retryHeaders.has("Content-Type")
+        ) {
+          retryHeaders.set(
+            "Content-Type",
+            "application/json",
+          );
+        }
+
+        retryHeaders.set(
+          "Authorization",
+          `Bearer ${refreshed.accessToken}`,
+        );
+
+        response = await fetch(
+          `${API_BASE}${path}`,
+          {
+            ...init,
+            credentials: "omit",
+            headers: retryHeaders,
+          },
+        );
       }
-    } catch {
-      // Réponse non JSON.
+    } catch (error) {
+      console.warn(
+        "Renouvellement automatique impossible :",
+        error,
+      );
     }
+  }
 
-    throw new Error(detail);
+  if (!response.ok) {
+    throw await responseError(
+      response,
+    );
   }
 
   if (response.status === 204) {
@@ -169,10 +380,13 @@ async function fetchJson<T>(
   return response.json() as Promise<T>;
 }
 
+
 export async function exchangeDesktopAuthCode(
   code: string,
 ): Promise<TailBlueDesktopSession> {
-  const cleanCode = String(code ?? "").trim();
+
+  const cleanCode =
+    String(code ?? "").trim();
 
   if (!cleanCode) {
     throw new Error(
@@ -185,27 +399,47 @@ export async function exchangeDesktopAuthCode(
       "/api/auth/desktop/exchange",
       {
         method: "POST",
+
         body: JSON.stringify({
           code: cleanCode,
         }),
       },
+
+      false,
     );
 
-  if (!session.accessToken) {
+  if (
+    !session.accessToken ||
+    !session.refreshToken
+  ) {
     throw new Error(
-      "L'API n'a renvoyé aucun token de session.",
+      "L'API n'a pas renvoyé une session Desktop complète.",
     );
   }
 
+  /*
+   * Access token :
+   * uniquement dans la session WebView.
+   */
   saveDesktopAccessToken(
     session.accessToken,
+  );
+
+  /*
+   * Refresh token :
+   * uniquement dans le coffre système.
+   */
+  await persistDesktopRefreshToken(
+    session.refreshToken,
   );
 
   return session;
 }
 
+
 export async function loadAuthenticatedUser():
   Promise<TailBlueAuthenticatedUser> {
+
   return fetchJson<TailBlueAuthenticatedUser>(
     "/api/auth/me",
     {
@@ -214,9 +448,11 @@ export async function loadAuthenticatedUser():
   );
 }
 
+
 export async function loadHomeSnapshot(
   signal?: AbortSignal,
 ): Promise<HomeSnapshot> {
+
   if (!API_BASE) {
     return {
       ...HOME_PREVIEW_SNAPSHOT,
@@ -245,10 +481,14 @@ export async function loadHomeSnapshot(
   );
 }
 
+
 export async function markHomeNotificationRead(
   notificationId: string,
 ): Promise<void> {
-  if (!API_BASE) return;
+
+  if (!API_BASE) {
+    return;
+  }
 
   await fetchJson<void>(
     `/api/home/notifications/${encodeURIComponent(
@@ -260,9 +500,13 @@ export async function markHomeNotificationRead(
   );
 }
 
+
 export async function markAllHomeNotificationsRead():
   Promise<void> {
-  if (!API_BASE) return;
+
+  if (!API_BASE) {
+    return;
+  }
 
   await fetchJson<void>(
     "/api/home/notifications/read-all",
@@ -272,40 +516,87 @@ export async function markAllHomeNotificationsRead():
   );
 }
 
+
 export async function logoutHomeSession():
   Promise<void> {
+
   if (!API_BASE) {
     throw new Error(
       "Connexion Discord non disponible en aperçu local.",
     );
   }
 
+  const accessToken =
+    getDesktopAccessToken();
+
+  const refreshToken =
+    await readPersistedDesktopRefreshToken();
+
+  let logoutError: Error | null =
+    null;
+
   try {
-    if (getDesktopAccessToken()) {
-      await fetchJson<void>(
-        "/api/auth/logout",
-        {
-          method: "POST",
-        },
+    const headers =
+      new Headers();
+
+    headers.set(
+      "Accept",
+      "application/json",
+    );
+
+    headers.set(
+      "Content-Type",
+      "application/json",
+    );
+
+    if (accessToken) {
+      headers.set(
+        "Authorization",
+        `Bearer ${accessToken}`,
       );
+    }
+
+    const response = await fetch(
+      `${API_BASE}/api/auth/logout`,
+      {
+        method: "POST",
+        credentials: "omit",
+        headers,
+
+        body: JSON.stringify({
+          refreshToken,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      logoutError =
+        await responseError(
+          response,
+        );
     }
   } finally {
     clearDesktopAccessToken();
+
+    await clearPersistedDesktopRefreshToken();
+  }
+
+  if (logoutError) {
+    throw logoutError;
   }
 }
+
 
 export function openHomeStream(
   _onChange: () => void,
 ): () => void {
+
   /*
-   * Le flux temps réel sera reconnecté ensuite
-   * avec une authentification compatible Desktop.
+   * EventSource natif ne permet toujours
+   * pas d'envoyer Authorization: Bearer.
    *
-   * EventSource natif ne permet pas d'ajouter
-   * Authorization: Bearer ...
-   *
-   * Pour l'instant on évite donc volontairement
-   * d'ouvrir un SSE non authentifié.
+   * Le temps réel authentifié sera
+   * reconnecté séparément.
    */
   return () => undefined;
 }

@@ -97,6 +97,8 @@ function cleanEmojiPrefix(value: string) {
   );
 }
 
+void cleanEmojiPrefix;
+
 function CharacterAvatar({
   url,
   name,

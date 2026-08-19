@@ -3179,3 +3179,316 @@ html.tb-compact .dashboard > div {
     right: 12px;
   }
 }
+
+
+/* ========================================================================== */
+/* TAILBLUE — LOGIN GATE V1                                                   */
+/* ========================================================================== */
+
+.tb-login-gate {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 32px;
+  color: #eef9ff;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(47, 161, 255, .22), transparent 36%),
+    radial-gradient(circle at 15% 80%, rgba(23, 103, 190, .16), transparent 30%),
+    linear-gradient(145deg, #061a30 0%, #03111f 55%, #020b15 100%);
+}
+
+.tb-login-gate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(115, 212, 255, .48) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(115, 212, 255, .22) 0 1px, transparent 1.5px);
+  background-position: 0 0, 35px 52px;
+  background-size: 92px 92px, 137px 137px;
+  opacity: .26;
+}
+
+.tb-login-ambient {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  opacity: .20;
+  background: #2ba9ff;
+  animation: tbLoginAmbient 8s ease-in-out infinite alternate;
+}
+
+.tb-login-ambient-a {
+  left: -150px;
+  top: -120px;
+}
+
+.tb-login-ambient-b {
+  right: -170px;
+  bottom: -150px;
+  animation-delay: -4s;
+}
+
+.tb-login-card {
+  position: relative;
+  z-index: 2;
+  width: min(560px, calc(100vw - 48px));
+  padding: 42px 46px 36px;
+  overflow: hidden;
+  border: 1px solid rgba(142, 213, 255, .20);
+  border-radius: 28px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(47, 169, 255, .14), transparent 34%),
+    linear-gradient(145deg, rgba(7, 35, 62, .90), rgba(3, 18, 34, .91));
+  box-shadow:
+    0 40px 100px rgba(0, 8, 25, .46),
+    inset 0 1px rgba(255, 255, 255, .06),
+    0 0 0 1px rgba(70, 176, 255, .025);
+  backdrop-filter: blur(20px) saturate(1.08);
+  -webkit-backdrop-filter: blur(20px) saturate(1.08);
+  animation: tbLoginCardIn .48s cubic-bezier(.2,.9,.2,1) both;
+}
+
+.tb-login-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(125deg, transparent 18%, rgba(112, 215, 255, .07), transparent 42%);
+}
+
+.tb-login-logo-wrap {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  margin: 0 auto 16px;
+  animation: tbLoginLogoFloat 4.5s ease-in-out infinite;
+}
+
+.tb-login-logo-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  z-index: -1;
+  border-radius: 50%;
+  background: rgba(54, 179, 255, .35);
+  filter: blur(28px);
+}
+
+.tb-login-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 24px;
+  filter: drop-shadow(0 14px 30px rgba(0, 70, 150, .32));
+}
+
+.tb-login-kicker {
+  margin: 0;
+  color: #76d2ff;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .22em;
+}
+
+.tb-login-card h1 {
+  margin: 13px 0 0;
+  color: #f4fbff;
+  font-size: clamp(34px, 5vw, 48px);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+}
+
+.tb-login-copy {
+  max-width: 440px;
+  margin: 17px auto 24px;
+  color: #9ebfd3;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.tb-login-discord {
+  position: relative;
+  width: 100%;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  padding: 0 20px;
+  border: 1px solid rgba(223, 246, 255, .44);
+  border-radius: 17px;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+  background: linear-gradient(90deg, #5865f2, #4e75f3 54%, #3d9cf6);
+  box-shadow:
+    0 18px 36px rgba(32, 75, 190, .25),
+    0 0 0 5px rgba(95, 158, 255, .05);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.tb-login-discord:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow:
+    0 24px 44px rgba(32, 75, 190, .34),
+    0 0 0 7px rgba(95, 158, 255, .07),
+    0 0 28px rgba(74, 154, 255, .14);
+}
+
+.tb-login-discord:disabled {
+  cursor: wait;
+  filter: saturate(.72);
+  opacity: .78;
+}
+
+.tb-login-discord-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,.12);
+  font-size: 20px;
+}
+
+.tb-login-discord strong,
+.tb-login-discord small {
+  display: block;
+}
+
+.tb-login-discord strong {
+  font-size: 14px;
+}
+
+.tb-login-discord small {
+  margin-top: 3px;
+  color: rgba(238, 247, 255, .72);
+  font-size: 9px;
+}
+
+.tb-login-discord b {
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.tb-login-message {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(107, 192, 240, .12);
+  border-radius: 12px;
+  color: #abd5ea;
+  background: rgba(7, 35, 61, .47);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.tb-login-security {
+  display: grid;
+  grid-template-columns: 27px minmax(0,1fr);
+  gap: 9px;
+  align-items: center;
+  margin-top: 17px;
+  padding: 11px 13px;
+  border: 1px solid rgba(117, 181, 220, .09);
+  border-radius: 12px;
+  text-align: left;
+  background: rgba(3, 20, 37, .43);
+}
+
+.tb-login-security span {
+  font-size: 17px;
+}
+
+.tb-login-security p {
+  margin: 0;
+  color: #668ba3;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.tb-login-foot {
+  margin: 18px 0 0;
+  color: rgba(170, 214, 236, .48);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.tb-login-loader {
+  width: min(330px, 82%);
+  height: 7px;
+  overflow: hidden;
+  margin: 22px auto 0;
+  border-radius: 999px;
+  background: rgba(90, 151, 188, .10);
+}
+
+.tb-login-loader span {
+  display: block;
+  width: 34%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #218af5, #55c8ff, #8ae4ff);
+  box-shadow: 0 0 14px rgba(77, 197, 255, .36);
+  animation: tbLoginProgress 1.35s ease-in-out infinite;
+}
+
+.tb-login-gate-loading .tb-login-card {
+  padding-bottom: 30px;
+}
+
+@keyframes tbLoginProgress {
+  0% { transform: translateX(-120%); }
+  50% { transform: translateX(115%); }
+  100% { transform: translateX(310%); }
+}
+
+@keyframes tbLoginLogoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes tbLoginAmbient {
+  from { transform: translate3d(-18px, -12px, 0) scale(.94); }
+  to { transform: translate3d(26px, 21px, 0) scale(1.08); }
+}
+
+@keyframes tbLoginCardIn {
+  from { opacity: 0; transform: translateY(16px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 620px) {
+  .tb-login-gate {
+    padding: 18px;
+  }
+
+  .tb-login-card {
+    width: 100%;
+    padding: 32px 22px 28px;
+    border-radius: 23px;
+  }
+
+  .tb-login-logo-wrap {
+    width: 86px;
+    height: 86px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-login-card,
+  .tb-login-logo-wrap,
+  .tb-login-loader span,
+  .tb-login-ambient {
+    animation: none !important;
+  }
+}
