@@ -41,28 +41,84 @@
         tes compagnons et toutes tes aventures.
       </p>
 
-      <div class="download-platform">
-        <div class="platform-icon"></div>
-        <div>
-          <strong>TailBlue pour macOS</strong>
-          <span>Version Alpha · Apple Silicon / macOS</span>
-        </div>
+      <div class="download-detected">
+  <span class="detected-dot"></span>
+  <span id="detected-os">Détection de votre système…</span>
+</div>
+
+<div class="platform-grid">
+
+        <!-- macOS -->
+        <button
+          class="download-platform platform-choice"
+          id="platform-macos"
+          type="button"
+          data-platform="macos"
+        >
+          <div class="platform-icon"></div>
+
+          <div>
+            <strong>TailBlue pour macOS</strong>
+            <span>Alpha · Apple Silicon / macOS</span>
+          </div>
+
+          <span class="platform-state">Disponible</span>
+        </button>
+
+
+        <!-- Windows -->
+        <button
+          class="download-platform platform-choice"
+          id="platform-windows"
+          type="button"
+          data-platform="windows"
+        >
+          <div class="platform-icon platform-icon-windows">⊞</div>
+
+          <div>
+            <strong>TailBlue pour Windows</strong>
+            <span>Version Windows en préparation</span>
+          </div>
+
+          <span class="platform-state">Bientôt</span>
+        </button>
+
       </div>
+
 
       <a
         class="direct-download-button"
+        id="direct-download-button"
         href="https://github.com/Popoyes15/tailblue-app/releases/latest/download/TailBlue-macOS.zip"
       >
         <span class="download-spark">✦</span>
+
         <div>
-          <strong>Télécharger TailBlue</strong>
-          <small>Téléchargement direct</small>
+          <strong id="download-button-title">
+            Télécharger TailBlue pour macOS
+          </strong>
+
+          <small id="download-button-subtitle">
+            Téléchargement direct
+          </small>
         </div>
+
         <b>↓</b>
         <i aria-hidden="true"></i>
       </a>
 
-      <p class="download-help">
+
+      <div
+        class="download-success"
+        id="download-success"
+        aria-live="polite"
+      >
+        <span>✦</span>
+        TailBlue arrive dans vos téléchargements !
+      </div>
+
+
+      <p class="download-help" id="download-help">
         Version de test Alpha · Les prochaines versions pourront être mises à jour progressivement.
       </p>
     </section>
@@ -76,5 +132,6 @@
   </footer>
 
   <script src="./script.js"></script>
+  <script src="./download.js"></script>
 </body>
 </html>

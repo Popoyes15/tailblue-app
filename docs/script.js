@@ -523,36 +523,24 @@
 })();
 /* =========================================================
    TAILBLUE — ROYAUME VIVANT
-   Ajoute automatiquement les calques sur toutes les pages.
+   Un cadre unique pour garder les calques verrouillés
+   sur le paysage, quelle que soit la taille de fenêtre.
    ========================================================= */
 
 (() => {
-  if (
-    document.querySelector(
-      ".kingdom-motion-layer"
-    )
-  ) {
+  if (document.querySelector(".kingdom-motion-scene")) {
     return;
   }
 
-  const layers = [
-    "leaves",
-    "water",
-    "waterfalls",
-  ];
+  const scene = document.createElement("div");
+  scene.className = "kingdom-motion-scene";
+  scene.setAttribute("aria-hidden", "true");
 
-  layers.forEach((name) => {
-    const layer =
-      document.createElement("div");
+  scene.innerHTML = `
+    <div class="kingdom-motion-layer kingdom-motion-leaves"></div>
+    <div class="kingdom-motion-layer kingdom-motion-water"></div>
+    <div class="kingdom-motion-layer kingdom-motion-waterfalls"></div>
+  `;
 
-    layer.className =
-      `kingdom-motion-layer kingdom-motion-${name}`;
-
-    layer.setAttribute(
-      "aria-hidden",
-      "true"
-    );
-
-    document.body.prepend(layer);
-  });
+  document.body.prepend(scene);
 })();

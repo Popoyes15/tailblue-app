@@ -1812,89 +1812,180 @@ footer i {
   object-fit: cover;
 }
 /* =========================================================
-   TAILBLUE — ROYAUME VIVANT
-   Le château/fond reste fixe.
-   Seuls les overlays bougent.
+   TAILBLUE — ROYAUME VIVANT — VERROUILLÉ AU DÉCOR
    ========================================================= */
 
-.kingdom-motion-layer {
+/*
+ * Ce cadre représente exactement l'image TailBlue :
+ * 1672 × 941.
+ *
+ * Il se comporte comme background-size: cover.
+ */
+.kingdom-motion-scene {
   position: fixed;
-  inset: 0;
+
+  left: 50%;
+  top: 50%;
+
+  width: max(
+    100vw,
+    calc(100vh * 1672 / 941)
+  );
+
+  height: max(
+    100vh,
+    calc(100vw * 941 / 1672)
+  );
+
+  transform: translate(-50%, -50%);
+
   z-index: 0;
+
+  overflow: hidden;
   pointer-events: none;
+}
+
+
+/* ---------------------------------------------------------
+   BASE DES CALQUES
+   --------------------------------------------------------- */
+
+.kingdom-motion-layer {
+  position: absolute;
+
+  pointer-events: none;
+
   background-repeat: no-repeat;
-  background-position: center center;
-  background-size: cover;
-  will-change: transform, opacity, filter;
+
+  will-change:
+    transform,
+    opacity,
+    filter;
 }
 
 
 /* 🌿 FEUILLES */
 
 .kingdom-motion-leaves {
+  inset: 0;
+
   background-image:
     url("./assets/kingdom-leaves.png");
+
+  background-position: center;
+  background-size: 100% 100%;
 
   opacity: 0.37;
 
   transform-origin: 20% 10%;
 
   animation:
-    tailblueLeaves 4s
+    tailblueLeaves
+    4s
     ease-in-out
-    infinite alternate;
+    infinite
+    alternate;
 }
 
 
-/* 🌊 LAC / REFLETS */
+/* 🌊 EAU */
 
 .kingdom-motion-water {
+  inset: 0;
+
   background-image:
     url("./assets/kingdom-water.png");
+
+  background-position: center;
+  background-size: 100% 100%;
 
   opacity: 0.20;
 
   animation:
-    tailblueWater 5s
+    tailblueWater
+    5s
     ease-in-out
-    infinite alternate;
+    infinite
+    alternate;
 }
 
 
-/* 💦 CASCADES */
+/* 💦 CASCADES
+ *
+ * On reprend TON placement qui était joli :
+ *
+ * largeur : 46
+ * droite  : -13
+ * hauteur : 10
+ *
+ * MAIS maintenant ces valeurs sont relatives AU PAYSAGE.
+ */
+
+/* =========================================================
+   TAILBLUE — CASCADES EXACTES / RESPONSIVE
+   Le PNG est extrait directement du fond 1672x941 :
+   il doit donc utiliser EXACTEMENT le même cover + center.
+   ========================================================= */
 
 .kingdom-motion-waterfalls {
-  position: fixed;
+  position: fixed !important;
+  inset: 0 !important;
 
-  left: auto !important;
-  top: auto !important;
-  right: 13vw !important;
-  bottom: 14vh !important;
+  width: auto !important;
+  height: auto !important;
 
-  width: 46vw;
-  height: 78vh;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
 
   z-index: 0;
   pointer-events: none;
 
   background-image: url("./assets/kingdom-waterfalls.png");
   background-repeat: no-repeat;
-  background-position: right bottom;
-  background-size: contain;
+  background-position: center center;
+  background-size: cover;
 
-  opacity: 0.20;
+  opacity: 0.30;
   mix-blend-mode: screen;
 
-  animation: tailblueWaterfallsFloat 4.5s ease-in-out infinite alternate;
-  will-change: transform, opacity;
+  animation:
+    tailblueWaterfallsExact
+    4.8s
+    ease-in-out
+    infinite
+    alternate;
+
+  will-change: transform, opacity, filter;
 }
 
-/* -------------------------
+@keyframes tailblueWaterfallsExact {
+  0% {
+    transform: translate3d(0, -2px, 0);
+    opacity: 0.23;
+    filter: brightness(.98);
+  }
+
+  50% {
+    transform: translate3d(0, 3px, 0);
+    opacity: 0.31;
+    filter: brightness(1.09);
+  }
+
+  100% {
+    transform: translate3d(0, 7px, 0);
+    opacity: 0.25;
+    filter: brightness(1.02);
+  }
+}
+
+
+/* =========================================================
    ANIMATIONS
-   ------------------------- */
+   ========================================================= */
 
 @keyframes tailblueLeaves {
-
   0% {
     transform:
       translate3d(-1px, 0, 0)
@@ -1919,7 +2010,6 @@ footer i {
 
 
 @keyframes tailblueWater {
-
   0% {
     opacity: 0.15;
 
@@ -1955,27 +2045,25 @@ footer i {
 }
 
 
-@keyframes tailblueWaterfallsFloat {
+@keyframes tailblueWaterfallsFlow {
   0% {
-    transform: translateY(0px) scaleY(1);
+    transform: translateY(-2px);
     opacity: 0.24;
   }
 
   50% {
-    transform: translateY(8px) scaleY(1.015);
-    opacity: 0.31;
+    transform: translateY(5px);
+    opacity: 0.32;
   }
 
   100% {
-    transform: translateY(14px) scaleY(1.03);
-    opacity: 0.27;
+    transform: translateY(10px);
+    opacity: 0.26;
   }
 }
 
-/* Accessibilité */
 
 @media (prefers-reduced-motion: reduce) {
-
   .kingdom-motion-layer {
     animation: none !important;
   }

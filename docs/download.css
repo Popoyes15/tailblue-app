@@ -242,3 +242,199 @@
     top: 14px;
   }
 }
+/* =========================================================
+   TAILBLUE — TÉLÉCHARGEMENT INTELLIGENT
+   ========================================================= */
+
+.download-detected {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-bottom: 11px;
+
+  color: rgba(191, 227, 246, .72);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: .04em;
+}
+
+
+.detected-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #5ed8ff;
+
+  box-shadow:
+    0 0 8px rgba(94, 216, 255, .75);
+}
+
+
+.platform-grid {
+  display: grid;
+  gap: 8px;
+}
+
+
+/* Les cartes deviennent cliquables */
+
+.platform-choice {
+  width: 100%;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  color: inherit;
+  font: inherit;
+
+  cursor: pointer;
+
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    background .18s ease,
+    box-shadow .18s ease;
+}
+
+
+.platform-choice:hover {
+  transform: translateY(-2px);
+
+  border-color:
+    rgba(128, 211, 255, .28);
+
+  background:
+    rgba(9, 43, 72, .72);
+}
+
+
+.platform-choice.is-selected {
+  border-color:
+    rgba(101, 207, 255, .50);
+
+  background:
+    linear-gradient(
+      100deg,
+      rgba(16, 77, 122, .76),
+      rgba(7, 37, 64, .65)
+    );
+
+  box-shadow:
+    0 0 0 3px rgba(67, 185, 255, .055),
+    inset 0 1px rgba(255,255,255,.055);
+}
+
+
+.platform-state {
+  justify-self: end;
+
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  color: #80dbff;
+
+  background:
+    rgba(31, 129, 187, .15);
+
+  font-size: 8px !important;
+  font-weight: 900;
+
+  white-space: nowrap;
+}
+
+
+.platform-icon-windows {
+  font-size: 28px;
+}
+
+
+/* ---------------------------------------------------------
+   Bouton indisponible
+   --------------------------------------------------------- */
+
+.direct-download-button.is-disabled {
+  cursor: not-allowed;
+
+  background:
+    linear-gradient(
+      90deg,
+      #39546a,
+      #49687d
+    );
+
+  border-color:
+    rgba(190, 220, 235, .20);
+
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.18);
+
+  opacity: .72;
+}
+
+
+.direct-download-button.is-disabled:hover {
+  transform: none;
+}
+
+
+/* ---------------------------------------------------------
+   Petit message après clic
+   --------------------------------------------------------- */
+
+.download-success {
+  max-height: 0;
+
+  overflow: hidden;
+
+  margin: 0;
+
+  opacity: 0;
+
+  transform:
+    translateY(-6px)
+    scale(.98);
+
+  color: #aee9ff;
+
+  font-size: 10px;
+  font-weight: 850;
+
+  transition:
+    max-height .35s ease,
+    margin .35s ease,
+    opacity .35s ease,
+    transform .35s ease;
+}
+
+
+.download-success span {
+  margin-right: 4px;
+
+  color: #63d8ff;
+}
+
+
+.download-success.is-visible {
+  max-height: 40px;
+
+  margin-top: 13px;
+
+  opacity: 1;
+
+  transform: none;
+}
+
+
+@media (max-width: 600px) {
+
+  .platform-state {
+    display: none !important;
+  }
+
+}
