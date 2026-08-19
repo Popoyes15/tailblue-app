@@ -11,11 +11,11 @@
 
     windows: {
       label: "Windows",
-      available: false,
-      url: "",
-      title: "TailBlue pour Windows",
-      subtitle: "Version bientôt disponible",
-      help: "La version Windows de TailBlue est actuellement en préparation."
+      available: true,
+      url: "https://github.com/Popoyes15/tailblue-app/releases/latest/download/TailBlue-Windows-Setup.exe",
+      title: "Télécharger TailBlue pour Windows",
+      subtitle: "Téléchargement direct",
+      help: "Version Alpha · Windows 64 bits"
     }
   };
 
