@@ -2956,8 +2956,9 @@ html.tb-no-animations .tm-resolution-rune {
    impacts V5.6 utilisent Element.animate() et restent fonctionnels. */
 .tm-v55-interactive { cursor: pointer; }
 /* ==========================================================================
-   TAILBLUE MINE V5.8 — PREP PET CARDS / IMAGES NON COUPÉES
-   À ajouter à la FIN de mineUltra.css
+   TAILBLUE MINE V5.9 — PORTRAITS COMPAGNONS COHÉRENTS
+   Les cartes de choix utilisent exactement le même rendu que le compagnon
+   sélectionné : plein cadre, sans bandes noires, sujet centré vers le haut.
    ========================================================================== */
 
 .tm-page {
@@ -2973,8 +2974,6 @@ html.tb-no-animations .tm-resolution-rune {
   max-width: 100%;
 }
 
-/* La grille s'adapte réellement à la largeur disponible au lieu de forcer
-   trois colonnes qui peuvent sortir de la fenêtre Tauri. */
 .tm-pet-choice-grid {
   width: 100%;
   grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)) !important;
@@ -2993,20 +2992,30 @@ html.tb-no-animations .tm-resolution-rune {
   overflow-wrap: anywhere;
 }
 
-/* Les illustrations de compagnons doivent être visibles EN ENTIER. */
+.tm-pet-choice-image,
+.tm-prep-selected-pet-image {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.tm-pet-choice-image > *,
+.tm-prep-selected-pet-image > * {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  display: block !important;
+}
+
 .tm-pet-choice-image img,
 .tm-prep-selected-pet-image img {
   width: 100% !important;
   height: 100% !important;
-  object-fit: contain !important;
-  object-position: center !important;
-}
-
-/* On garde une petite respiration autour d'une image qui n'est pas carrée. */
-.tm-pet-choice-image,
-.tm-prep-selected-pet-image {
-  overflow: hidden;
-  padding: 2px;
+  max-width: none !important;
+  max-height: none !important;
+  display: block !important;
+  object-fit: cover !important;
+  object-position: center top !important;
 }
 
 @media (max-width: 900px) {
@@ -3019,18 +3028,4 @@ html.tb-no-animations .tm-resolution-rune {
   .tm-pet-choice-grid {
     grid-template-columns: 1fr !important;
   }
-}
-/* V5.8b — retour des portraits compagnons plein cadre */
-
-.tm-pet-choice-image,
-.tm-prep-selected-pet-image {
-  padding: 0 !important;
-}
-
-.tm-pet-choice-image img,
-.tm-prep-selected-pet-image img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  object-position: center top !important;
 }

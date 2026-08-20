@@ -20,6 +20,126 @@ const API_BASE = RAW_API_BASE.replace(/\/+$/, "");
 
 export const characterApiConfigured = Boolean(API_BASE);
 
+
+const CHARACTER_CACHE_KEY =
+  "tailblue.character.snapshot.v1";
+
+type CharacterCacheEnvelope = {
+  cachedAt: number;
+  snapshot: CharacterSnapshot;
+};
+
+let memoryCharacterCache:
+  | CharacterCacheEnvelope
+  | null = null;
+
+function isCharacterSnapshot(
+  value: unknown,
+): value is CharacterSnapshot {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate = value as Partial<CharacterSnapshot>;
+
+  return (
+    typeof candidate.generatedAt === "string" &&
+    (candidate.mode === "api" ||
+      candidate.mode === "preview") &&
+    Boolean(candidate.profile) &&
+    Boolean(candidate.combat) &&
+    Boolean(candidate.activity) &&
+    Array.isArray(candidate.identity)
+  );
+}
+
+function readCharacterCache():
+  | CharacterCacheEnvelope
+  | null {
+  if (memoryCharacterCache) {
+    return memoryCharacterCache;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(
+      CHARACTER_CACHE_KEY,
+    );
+
+    if (!raw) return null;
+
+    const parsed = JSON.parse(
+      raw,
+    ) as Partial<CharacterCacheEnvelope>;
+
+    /*
+     * On ne restaure JAMAIS un ancien aperçu local comme
+     * s'il s'agissait d'une vraie fiche mise en cache.
+     */
+    if (
+      typeof parsed.cachedAt !== "number" ||
+      !isCharacterSnapshot(parsed.snapshot) ||
+      parsed.snapshot.mode !== "api"
+    ) {
+      window.sessionStorage.removeItem(
+        CHARACTER_CACHE_KEY,
+      );
+      return null;
+    }
+
+    memoryCharacterCache = {
+      cachedAt: parsed.cachedAt,
+      snapshot: parsed.snapshot,
+    };
+
+    return memoryCharacterCache;
+  } catch {
+    return null;
+  }
+}
+
+export function getCachedCharacterSnapshot():
+  | CharacterSnapshot
+  | null {
+  return readCharacterCache()?.snapshot ?? null;
+}
+
+export function isCharacterCacheFresh(
+  maxAgeMs = 20_000,
+): boolean {
+  const cached = readCharacterCache();
+  if (!cached) return false;
+
+  return Date.now() - cached.cachedAt <= maxAgeMs;
+}
+
+export function cacheCharacterSnapshot(
+  snapshot: CharacterSnapshot,
+): CharacterSnapshot {
+  /*
+   * Le mock/aperçu ne doit jamais devenir la donnée affichée
+   * au prochain retour sur la page.
+   */
+  if (snapshot.mode !== "api") {
+    return snapshot;
+  }
+
+  const envelope: CharacterCacheEnvelope = {
+    cachedAt: Date.now(),
+    snapshot,
+  };
+
+  memoryCharacterCache = envelope;
+
+  try {
+    window.sessionStorage.setItem(
+      CHARACTER_CACHE_KEY,
+      JSON.stringify(envelope),
+    );
+  } catch {
+    // Le cache mémoire suffit si le stockage WebView est indisponible.
+  }
+
+  return snapshot;
+}
+
 function resolveApiAssets<T>(value: T): T {
   if (!API_BASE) return value;
 
@@ -100,9 +220,15 @@ export async function loadCharacterSnapshot(
     };
   }
 
-  return fetchJson<CharacterSnapshot>("/api/character", {
-    signal,
-  });
+  const snapshot =
+    await fetchJson<CharacterSnapshot>(
+      "/api/character",
+      {
+        signal,
+      },
+    );
+
+  return cacheCharacterSnapshot(snapshot);
 }
 
 export async function loadCharacterDetail(

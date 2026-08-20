@@ -15,6 +15,100 @@ const API_URL = RAW_API_URL.replace(/\/+$/, "");
 
 export const questApiConfigured = Boolean(API_URL);
 
+
+const QUEST_CACHE_KEY =
+  "tailblue.quests.snapshot.v1";
+
+type QuestCacheEnvelope = {
+  cachedAt: number;
+  snapshot: QuestBoardSnapshotDto;
+};
+
+let memoryQuestCache:
+  | QuestCacheEnvelope
+  | null = null;
+
+function isQuestSnapshot(
+  value: unknown,
+): value is QuestBoardSnapshotDto {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate =
+    value as Partial<QuestBoardSnapshotDto>;
+
+  return (
+    Array.isArray(candidate.offers) &&
+    "activeQuest" in candidate
+  );
+}
+
+function readQuestCache():
+  | QuestCacheEnvelope
+  | null {
+  if (memoryQuestCache) {
+    return memoryQuestCache;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(
+      QUEST_CACHE_KEY,
+    );
+
+    if (!raw) return null;
+
+    const parsed = JSON.parse(
+      raw,
+    ) as Partial<QuestCacheEnvelope>;
+
+    if (
+      typeof parsed.cachedAt !== "number" ||
+      !isQuestSnapshot(parsed.snapshot)
+    ) {
+      window.sessionStorage.removeItem(
+        QUEST_CACHE_KEY,
+      );
+      return null;
+    }
+
+    memoryQuestCache = {
+      cachedAt: parsed.cachedAt,
+      snapshot: parsed.snapshot,
+    };
+
+    return memoryQuestCache;
+  } catch {
+    return null;
+  }
+}
+
+export function getCachedQuestSnapshot():
+  | QuestBoardSnapshotDto
+  | null {
+  return readQuestCache()?.snapshot ?? null;
+}
+
+export function cacheQuestSnapshot(
+  snapshot: QuestBoardSnapshotDto,
+): QuestBoardSnapshotDto {
+  const envelope: QuestCacheEnvelope = {
+    cachedAt: Date.now(),
+    snapshot,
+  };
+
+  memoryQuestCache = envelope;
+
+  try {
+    window.sessionStorage.setItem(
+      QUEST_CACHE_KEY,
+      JSON.stringify(envelope),
+    );
+  } catch {
+    // Le cache mémoire suffit si le stockage WebView est indisponible.
+  }
+
+  return snapshot;
+}
+
 async function request<T>(
   path: string,
   init: RequestInit = {},
@@ -64,23 +158,43 @@ async function request<T>(
  * - le bonus Chat Royal.
  */
 export const questApi = {
-  getSnapshot(): Promise<QuestBoardSnapshotDto> {
-    return request<QuestBoardSnapshotDto>("/api/quests");
+  async getSnapshot(): Promise<QuestBoardSnapshotDto> {
+    const snapshot =
+      await request<QuestBoardSnapshotDto>(
+        "/api/quests",
+      );
+
+    return cacheQuestSnapshot(snapshot);
   },
 
-  accept(questId: string): Promise<QuestBoardSnapshotDto> {
+  async accept(
+    questId: string,
+  ): Promise<QuestBoardSnapshotDto> {
     const body: QuestAcceptRequest = { questId };
 
-    return request<QuestBoardSnapshotDto>("/api/quests/accept", {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
+    const snapshot =
+      await request<QuestBoardSnapshotDto>(
+        "/api/quests/accept",
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      );
+
+    return cacheQuestSnapshot(snapshot);
   },
 
-  claim(): Promise<QuestClaimResultDto> {
-    return request<QuestClaimResultDto>("/api/quests/claim", {
-      method: "POST",
-      body: JSON.stringify({}),
-    });
+  async claim(): Promise<QuestClaimResultDto> {
+    const result =
+      await request<QuestClaimResultDto>(
+        "/api/quests/claim",
+        {
+          method: "POST",
+          body: JSON.stringify({}),
+        },
+      );
+
+    cacheQuestSnapshot(result.snapshot);
+    return result;
   },
 };

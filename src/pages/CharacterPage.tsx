@@ -1,11 +1,11 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 import {
   characterApiConfigured,
+  getCachedCharacterSnapshot,
   loadCharacterDetail,
   loadCharacterSnapshot,
   openCharacterStream,
@@ -1064,9 +1064,18 @@ function IdentityCard({
 
 export default function CharacterPage() {
   const [snapshot, setSnapshot] =
-    useState<CharacterSnapshot>(CHARACTER_PREVIEW);
+    useState<CharacterSnapshot | null>(() => {
+      if (!characterApiConfigured) {
+        return CHARACTER_PREVIEW;
+      }
+
+      return getCachedCharacterSnapshot();
+    });
+
   const [loading, setLoading] = useState(
-    characterApiConfigured,
+    () =>
+      characterApiConfigured &&
+      getCachedCharacterSnapshot() === null,
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -1101,11 +1110,23 @@ export default function CharacterPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    void refresh(controller.signal);
 
     if (!characterApiConfigured) {
+      void refresh(controller.signal);
       return () => controller.abort();
     }
+
+    /*
+     * S'il existe déjà un vrai snapshot, il reste affiché
+     * immédiatement. La requête ci-dessous ne remet jamais
+     * l'ancien aperçu à l'écran : elle actualise silencieusement
+     * la fiche en arrière-plan.
+     */
+    if (getCachedCharacterSnapshot()) {
+      setLoading(false);
+    }
+
+    void refresh(controller.signal);
 
     const interval = window.setInterval(
       () => void refresh(),
@@ -1157,16 +1178,46 @@ export default function CharacterPage() {
     }
   }
 
-  const xpPct = useMemo(
-    () =>
-      percent(
-        snapshot.profile.xpCurrent,
-        snapshot.profile.xpNeeded,
-      ),
-    [
-      snapshot.profile.xpCurrent,
-      snapshot.profile.xpNeeded,
-    ],
+  /*
+   * Première ouverture connectée sans cache :
+   * on n'affiche surtout PAS CHARACTER_PREVIEW pendant
+   * que le vrai personnage arrive.
+   */
+  if (!snapshot) {
+    return (
+      <div className="tb-character">
+        <header className="tb-character-page-header">
+          <div>
+            <p className="eyebrow">PROFIL DE L'AVENTURIER</p>
+            <h1>Personnage</h1>
+            <p>
+              Ton identité, ta progression et toutes les
+              facettes de ta vie dans le Royaume.
+            </p>
+          </div>
+
+          <div className="tb-character-sync-state online">
+            <i />
+            <span>Connexion à TailBlue…</span>
+          </div>
+        </header>
+
+        <section className="tb-character-panel">
+          <div className="tb-character-detail-loading">
+            <div className="tb-character-spinner" />
+            <strong>Chargement du personnage…</strong>
+            <span>
+              TailBlue récupère ta vraie fiche.
+            </span>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  const xpPct = percent(
+    snapshot.profile.xpCurrent,
+    snapshot.profile.xpNeeded,
   );
 
   const rank =
@@ -1206,7 +1257,8 @@ export default function CharacterPage() {
         </div>
       )}
 
-      {snapshot.mode === "preview" && (
+      {!characterApiConfigured &&
+        snapshot.mode === "preview" && (
         <div className="tb-character-page-preview">
           <span>🧪</span>
           <p>

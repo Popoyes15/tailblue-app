@@ -7,14 +7,19 @@ import {
 import {
   craftInventoryItem,
   equipInventoryItem,
+  getCachedInventorySnapshot,
   inventoryApiConfigured,
+  isInventoryCacheFresh,
   loadCraftRecipe,
   loadInventorySnapshot,
   openInventoryStream,
+  sellClassicInventoryItem,
   unequipInventorySlot,
 } from "../api/inventoryApi";
 import { INVENTORY_PREVIEW } from "../data/inventoryPreviewData";
 import type {
+  ClassicInventoryCategory,
+  ClassicInventoryItemDto,
   CraftRecipeDetailDto,
   CraftRecipeSummaryDto,
   EquipmentSlot,
@@ -26,7 +31,7 @@ import type {
 import "./playerPages.css";
 import "./inventoryFinal.css";
 
-type InventorySection = "bag" | "equipment" | "craft";
+type InventorySection = "bag" | "loot" | "equipment" | "craft";
 
 const ITEM_TYPES: Array<{
   value: "all" | ItemType;
@@ -72,8 +77,14 @@ const SECTION_TABS: Array<{
   {
     id: "bag",
     icon: "🎒",
-    label: "Inventaire",
-    subtitle: "Tous mes objets",
+    label: "Sac à dos",
+    subtitle: "Inventaire RPG",
+  },
+  {
+    id: "loot",
+    icon: "🧺",
+    label: "Objets & butin",
+    subtitle: "Objets du Royaume et vente",
   },
   {
     id: "equipment",
@@ -87,6 +98,16 @@ const SECTION_TABS: Array<{
     label: "Artisanat",
     subtitle: "Toutes les recettes",
   },
+];
+
+const CLASSIC_CATEGORIES: Array<{
+  value: "all" | ClassicInventoryCategory;
+  label: string;
+}> = [
+  { value: "all", label: "Tous" },
+  { value: "classique", label: "🎒 Objets" },
+  { value: "metier", label: "💼 Loot métier" },
+  { value: "precieux", label: "✨ Précieux" },
 ];
 
 function formatNumber(value: number) {
@@ -429,6 +450,454 @@ function BagSection({
         </div>
       )}
     </>
+  );
+}
+
+
+function LootSection({
+  snapshot,
+  busy,
+  message,
+  onSell,
+}: {
+  snapshot: InventorySnapshotDto;
+  busy: string | null;
+  message: string | null;
+  onSell: (key: string, quantity: number) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] =
+    useState<"all" | ClassicInventoryCategory>("all");
+  const [selectedKey, setSelectedKey] =
+    useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+
+  const classic = snapshot.classicInventory;
+
+  const filtered = useMemo(() => {
+    if (!classic) return [];
+
+    const q = query.trim().toLocaleLowerCase("fr");
+
+    return classic.items.filter((item) => {
+      const haystack = [
+        item.name,
+        item.description || "",
+        item.rarityLabel || "",
+        item.id,
+      ]
+        .join(" ")
+        .toLocaleLowerCase("fr");
+
+      return (
+        (!q || haystack.includes(q)) &&
+        (category === "all" ||
+          item.category === category)
+      );
+    });
+  }, [category, classic, query]);
+
+  const selected = useMemo(
+    () =>
+      classic?.items.find(
+        (item) => item.key === selectedKey,
+      ) ?? null,
+    [classic, selectedKey],
+  );
+
+  const totalObjects =
+    classic?.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    ) ?? 0;
+
+  const selectedTotal =
+    selected &&
+    !selected.mysteryPrice &&
+    selected.unitPrice !== null
+      ? selected.unitPrice * quantity
+      : null;
+
+  useEffect(() => {
+    if (!selected) {
+      setQuantity(1);
+      return;
+    }
+
+    setQuantity((current) =>
+      Math.max(1, Math.min(selected.quantity, current)),
+    );
+  }, [selected]);
+
+  function selectItem(item: ClassicInventoryItemDto) {
+    setSelectedKey(item.key);
+    setQuantity(1);
+  }
+
+  function changeQuantity(delta: number) {
+    if (!selected) return;
+
+    setQuantity((current) =>
+      Math.max(
+        1,
+        Math.min(selected.quantity, current + delta),
+      ),
+    );
+  }
+
+  if (!classic) {
+    return (
+      <div className="tb-loot-section">
+        <div className="tb-loot-hero">
+          <div>
+            <span className="tb-loot-eyebrow">
+              🧺 SAC CLASSIQUE DU ROYAUME
+            </span>
+            <h3>Objets & butin</h3>
+            <p>
+              Lettres, objets spéciaux et loot de métier
+              vivent ici, séparés du Sac à dos RPG.
+            </p>
+          </div>
+
+          <div className="tb-loot-hero-badge">
+            <span>!vendre</span>
+            <strong>!sellloot</strong>
+          </div>
+        </div>
+
+        <div className="tb-loot-api-missing">
+          <span>🔌</span>
+          <div>
+            <strong>
+              Interface prête — données classiques à brancher
+            </strong>
+            <p>
+              Le snapshot actuel ne renvoie encore que le sac
+              RPG. Cette zone attend
+              <code> classicInventory </code>
+              depuis Python. Aucune donnée de butin n'est
+              inventée localement.
+            </p>
+          </div>
+        </div>
+
+        <div className="tb-loot-source-note">
+          <strong>
+            🛡️ La vente reste autoritaire côté Python
+          </strong>
+          <span>
+            Les prix, protections, quantités et gains ne sont
+            jamais recalculés par React.
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="tb-loot-section">
+      <div className="tb-loot-hero">
+        <div>
+          <span className="tb-loot-eyebrow">
+            🧺 SAC CLASSIQUE DU ROYAUME
+          </span>
+          <h3>Objets & butin</h3>
+          <p>
+            Lettres, objets spéciaux et loot de métier.
+            Sélectionne un objet pour préparer sa vente.
+          </p>
+        </div>
+
+        <div className="tb-loot-hero-badge">
+          <span>!vendre</span>
+          <strong>!sellloot</strong>
+        </div>
+      </div>
+
+      <div className="tb-loot-kpis">
+        <div>
+          <span>Types</span>
+          <strong>{classic.items.length}</strong>
+        </div>
+        <div>
+          <span>Objets</span>
+          <strong>{formatNumber(totalObjects)}</strong>
+        </div>
+        <div>
+          <span>Valeur connue</span>
+          <strong>
+            {formatNumber(classic.knownPotentialValue)} 🍪
+          </strong>
+        </div>
+        <div>
+          <span>Cookies</span>
+          <strong>
+            {classic.cookies == null
+              ? "—"
+              : `${formatNumber(classic.cookies)} 🍪`}
+          </strong>
+        </div>
+      </div>
+
+      {message && (
+        <div className="tb-inventory-action-message tb-loot-action-message">
+          {message}
+        </div>
+      )}
+
+      <div className="tb-loot-toolbar">
+        <input
+          value={query}
+          onChange={(event) =>
+            setQuery(event.target.value)
+          }
+          placeholder="Rechercher dans les objets & butin…"
+        />
+
+        <div className="tb-loot-filters">
+          {CLASSIC_CATEGORIES.map((option) => (
+            <button
+              key={option.value}
+              className={
+                category === option.value ? "selected" : ""
+              }
+              onClick={() => setCategory(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="tb-loot-counter">
+        <span>{filtered.length} type(s) affiché(s)</span>
+        <strong>
+          {
+            filtered.reduce(
+              (sum, item) => sum + item.quantity,
+              0,
+            )
+          }{" "}
+          objet(s)
+        </strong>
+      </div>
+
+      {!filtered.length ? (
+        <div className="inventory-empty tb-loot-empty">
+          <span>🧺</span>
+          <h3>Cette poche est vide</h3>
+          <p>
+            Modifie la recherche ou choisis une autre
+            catégorie.
+          </p>
+        </div>
+      ) : (
+        <div className="tb-loot-grid">
+          {filtered.map((item) => {
+            const priceText =
+              item.mysteryPrice || item.unitPrice === null
+                ? "???"
+                : `${formatNumber(item.unitPrice)} 🍪`;
+
+            return (
+              <button
+                key={item.key}
+                className={`tb-loot-card ${
+                  selectedKey === item.key ? "selected" : ""
+                }`}
+                onClick={() => selectItem(item)}
+              >
+                <div className="tb-loot-card-top">
+                  <span className="tb-loot-card-emoji">
+                    {item.emoji || "🎒"}
+                  </span>
+                  <span className="tb-loot-card-quantity">
+                    ×{formatNumber(item.quantity)}
+                  </span>
+                </div>
+
+                <span className="tb-loot-card-meta">
+                  {item.rarityLabel ||
+                    (item.category === "metier"
+                      ? "Loot de métier"
+                      : item.category === "precieux"
+                        ? "Objet précieux"
+                        : "Objet du Royaume")}
+                </span>
+
+                <h3>{item.name}</h3>
+
+                <p>
+                  {item.description ||
+                    "Aucune description disponible."}
+                </p>
+
+                <div className="tb-loot-card-footer">
+                  <span>Prix unitaire</span>
+                  <strong>{priceText}</strong>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {selected && (
+        <div className="tb-loot-sale-panel">
+          <div className="tb-loot-sale-heading">
+            <div className="tb-loot-sale-item">
+              <span>{selected.emoji || "🎒"}</span>
+              <div>
+                <small>Préparer la vente</small>
+                <strong>{selected.name}</strong>
+              </div>
+            </div>
+
+            <button
+              className="tb-loot-close"
+              onClick={() => {
+                setSelectedKey(null);
+                setQuantity(1);
+              }}
+              aria-label="Fermer la préparation de vente"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="tb-loot-sale-info">
+            <div>
+              <span>Dans le sac</span>
+              <strong>
+                ×{formatNumber(selected.quantity)}
+              </strong>
+            </div>
+            <div>
+              <span>Prix unitaire</span>
+              <strong>
+                {selected.mysteryPrice ||
+                selected.unitPrice === null
+                  ? "???"
+                  : `${formatNumber(selected.unitPrice)} 🍪`}
+              </strong>
+            </div>
+            <div>
+              <span>Total estimé</span>
+              <strong>
+                {selectedTotal === null
+                  ? "???"
+                  : `${formatNumber(selectedTotal)} 🍪`}
+              </strong>
+            </div>
+          </div>
+
+          <div className="tb-loot-quantity">
+            <div className="tb-loot-quantity-label">
+              <span>Quantité à vendre</span>
+              <strong>
+                ×{formatNumber(quantity)}
+              </strong>
+              <small>
+                sur {formatNumber(selected.quantity)} dans le sac
+              </small>
+            </div>
+
+            <div className="tb-loot-quantity-controls">
+              <button
+                onClick={() => changeQuantity(-10)}
+                disabled={quantity <= 1}
+              >
+                −10
+              </button>
+              <button
+                onClick={() => changeQuantity(-1)}
+                disabled={quantity <= 1}
+              >
+                −1
+              </button>
+
+              <div
+                className="tb-loot-quantity-value"
+                aria-label={`Quantité sélectionnée : ${quantity}`}
+              >
+                <small>À vendre</small>
+                <strong>
+                  ×{formatNumber(quantity)}
+                </strong>
+              </div>
+
+              <button
+                onClick={() => changeQuantity(1)}
+                disabled={quantity >= selected.quantity}
+              >
+                +1
+              </button>
+              <button
+                onClick={() => changeQuantity(10)}
+                disabled={quantity >= selected.quantity}
+              >
+                +10
+              </button>
+              <button
+                onClick={() =>
+                  setQuantity(selected.quantity)
+                }
+                disabled={quantity >= selected.quantity}
+              >
+                Max
+              </button>
+            </div>
+          </div>
+
+          <div className="tb-loot-sale-actions">
+            <div>
+              <strong>
+                {selected.sellable
+                  ? "🧺 Vente validée par TailBlue"
+                  : "🛡️ Objet protégé"}
+              </strong>
+              <span>
+                {selected.saleLockedReason ||
+                  (selected.sellable
+                    ? "Le serveur relit le stock et le vrai prix au clic. Le total ci-dessus n'est qu'un affichage estimatif."
+                    : "Le serveur indique que cet objet ne peut pas être vendu.")}
+              </span>
+            </div>
+
+            <button
+              className="tb-loot-sell-button"
+              disabled={
+                !inventoryApiConfigured ||
+                !selected.sellable ||
+                busy === `sell:${selected.key}`
+              }
+              onClick={() => onSell(selected.key, quantity)}
+              title={
+                !inventoryApiConfigured
+                  ? "API TailBlue non configurée."
+                  : selected.saleLockedReason || undefined
+              }
+            >
+              {busy === `sell:${selected.key}`
+                ? "⏳ Vente…"
+                : `✅ Vendre ×${formatNumber(quantity)}`}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="tb-loot-source-note">
+        <strong>
+          🧺 Source de vérité : inventaire classique TailBlue
+        </strong>
+        <span>
+          Même logique métier que !vendre / !sellloot :
+          le serveur contrôle le stock, le prix et le gain
+          avant toute modification.
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -1296,11 +1765,15 @@ export default function InventoryPage() {
     useState<InventorySection>("bag");
 
   const [snapshot, setSnapshot] =
-    useState<InventorySnapshotDto>(
-      INVENTORY_PREVIEW,
+    useState<InventorySnapshotDto>(() =>
+      getCachedInventorySnapshot() ??
+      INVENTORY_PREVIEW
     );
+
   const [loading, setLoading] = useState(
-    inventoryApiConfigured,
+    () =>
+      inventoryApiConfigured &&
+      getCachedInventorySnapshot() === null,
   );
   const [error, setError] =
     useState<string | null>(null);
@@ -1344,7 +1817,21 @@ export default function InventoryPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    void refresh(controller.signal);
+
+    /*
+     * Si la page vient juste d'être visitée, on garde le dernier
+     * snapshot immédiatement au lieu de repasser par l'aperçu local.
+     * Au-delà de 20 s, la synchro repart en arrière-plan sans faire
+     * disparaître les données déjà affichées.
+     */
+    if (
+      !inventoryApiConfigured ||
+      !isInventoryCacheFresh()
+    ) {
+      void refresh(controller.signal);
+    } else {
+      setLoading(false);
+    }
 
     if (!inventoryApiConfigured) {
       return () => controller.abort();
@@ -1457,10 +1944,54 @@ export default function InventoryPage() {
     }
   }
 
-  const totalQuantity = snapshot.items.reduce(
+  async function sellClassic(
+    key: string,
+    quantity: number,
+  ) {
+    if (!inventoryApiConfigured) return;
+
+    setBusy(`sell:${key}`);
+    setActionMessage(null);
+
+    try {
+      const result = await sellClassicInventoryItem(
+        key,
+        quantity,
+      );
+
+      setSnapshot((current) => ({
+        ...current,
+        classicInventory: result.classicInventory,
+      }));
+      setActionMessage(result.message);
+    } catch (reason) {
+      setActionMessage(
+        reason instanceof Error
+          ? reason.message
+          : "Vente impossible.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const rpgQuantity = snapshot.items.reduce(
     (sum, item) => sum + item.quantity,
     0,
   );
+
+  const classicQuantity =
+    snapshot.classicInventory?.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    ) ?? 0;
+
+  const totalQuantity =
+    rpgQuantity + classicQuantity;
+
+  const totalTypes =
+    snapshot.items.length +
+    (snapshot.classicInventory?.items.length ?? 0);
 
   return (
     <section className="player-page tb-inventory-final">
@@ -1477,7 +2008,7 @@ export default function InventoryPage() {
         </div>
 
         <div className="inventory-summary">
-          <span>{snapshot.items.length} types</span>
+          <span>{totalTypes} types</span>
           <strong>{totalQuantity} objets</strong>
         </div>
       </div>
@@ -1503,9 +2034,10 @@ export default function InventoryPage() {
         ))}
       </div>
 
-      {snapshot.mode === "preview" && (
-        <InventoryPreviewBanner />
-      )}
+      {snapshot.mode === "preview" &&
+        !loading && (
+          <InventoryPreviewBanner />
+        )}
 
       {loading && (
         <div className="tb-inventory-loading">
@@ -1519,14 +2051,34 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {section === "bag" && (
+      {!(loading &&
+        inventoryApiConfigured &&
+        snapshot.mode === "preview") &&
+        section === "bag" && (
         <BagSection
           snapshot={snapshot}
           onSelected={setSelectedItem}
         />
       )}
 
-      {section === "equipment" && (
+      {!(loading &&
+        inventoryApiConfigured &&
+        snapshot.mode === "preview") &&
+        section === "loot" && (
+        <LootSection
+          snapshot={snapshot}
+          busy={busy}
+          message={actionMessage}
+          onSell={(key, quantity) =>
+            void sellClassic(key, quantity)
+          }
+        />
+      )}
+
+      {!(loading &&
+        inventoryApiConfigured &&
+        snapshot.mode === "preview") &&
+        section === "equipment" && (
         <EquipmentSection
           snapshot={snapshot}
           busy={busy}
@@ -1537,7 +2089,10 @@ export default function InventoryPage() {
         />
       )}
 
-      {section === "craft" && (
+      {!(loading &&
+        inventoryApiConfigured &&
+        snapshot.mode === "preview") &&
+        section === "craft" && (
         <CraftSection
           snapshot={snapshot}
           selectedRecipe={selectedRecipe}
@@ -1560,13 +2115,14 @@ export default function InventoryPage() {
 
       <div className="sync-note">
         <strong>
-          🎒 Inventaire RPG canonique :
-          inventaire_equipement
+          🎒 Sac à dos RPG + 🧺 Objets & butin
         </strong>
         <span>
-          Inventaire, !equipement et !craft partagent le
-          même sac côté Python. L'application ne conservera
-          aucune copie autoritaire des objets.
+          Le Sac à dos reste lié à l'inventaire RPG
+          canonique. Objets & butin représente le sac
+          classique du Royaume utilisé par la logique
+          !vendre / !sellloot. Les règles et mutations
+          restent côté Python.
         </span>
       </div>
 

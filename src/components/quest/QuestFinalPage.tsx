@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { questApi, questApiConfigured } from "../../api/questApi";
+import {
+  getCachedQuestSnapshot,
+  questApi,
+  questApiConfigured,
+} from "../../api/questApi";
 import {
   makeQuestPreviewOffers,
   QUEST_COUNT_BY_DIFFICULTY,
@@ -27,10 +31,25 @@ function makeLocalSnapshot(): QuestBoardSnapshotDto {
 
 export default function QuestFinalPage() {
   const [snapshot, setSnapshot] =
-    useState<QuestBoardSnapshotDto>(makeLocalSnapshot);
-  const [loadState, setLoadState] = useState<QuestLoadState>(
-    questApiConfigured ? "loading" : "ready",
-  );
+    useState<QuestBoardSnapshotDto>(() => {
+      if (!questApiConfigured) {
+        return makeLocalSnapshot();
+      }
+
+      return (
+        getCachedQuestSnapshot() ??
+        makeLocalSnapshot()
+      );
+    });
+
+  const [loadState, setLoadState] =
+    useState<QuestLoadState>(() => {
+      if (!questApiConfigured) return "ready";
+
+      return getCachedQuestSnapshot()
+        ? "ready"
+        : "loading";
+    });
   const [error, setError] = useState("");
   const [claimResult, setClaimResult] =
     useState<QuestClaimResultDto | null>(null);
@@ -48,7 +67,19 @@ export default function QuestFinalPage() {
       };
     }
 
-    setLoadState("loading");
+    const hasCachedSnapshot =
+      getCachedQuestSnapshot() !== null;
+
+    /*
+     * Avec cache : le dernier vrai tableau reste visible
+     * pendant la resynchronisation.
+     *
+     * Sans cache : on garde l'écran de chargement existant,
+     * sans afficher les offres locales comme si elles étaient réelles.
+     */
+    if (!hasCachedSnapshot) {
+      setLoadState("loading");
+    }
 
     questApi
       .getSnapshot()

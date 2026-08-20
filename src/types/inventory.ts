@@ -161,10 +161,76 @@ export type CraftSnapshotDto = {
   newDiscoveries: string[];
 };
 
+
+export type ClassicInventoryCategory =
+  | "classique"
+  | "metier"
+  | "precieux";
+
+export type ClassicInventoryItemDto = {
+  key: string;
+  source: "classic";
+  id: string;
+  name: string;
+  emoji: string;
+  quantity: number;
+  category: ClassicInventoryCategory;
+  rarityLabel?: string | null;
+  description?: string | null;
+
+  /**
+   * Prix unitaire renvoyé par Python.
+   * null = prix volontairement inconnu / spécial.
+   */
+  unitPrice: number | null;
+
+  /**
+   * L'interface ne décide jamais elle-même si un objet peut être vendu.
+   */
+  sellable: boolean;
+  mysteryPrice?: boolean;
+  saleLockedReason?: string | null;
+};
+
+export type ClassicInventorySnapshotDto = {
+  items: ClassicInventoryItemDto[];
+
+  /**
+   * Valeur calculée côté serveur pour les objets dont le prix est connu.
+   */
+  knownPotentialValue: number;
+
+  /**
+   * Solde facultatif, utile lorsque l'API l'exposera dans ce snapshot.
+   */
+  cookies?: number | null;
+};
+
+export type ClassicInventorySellResultDto = {
+  classicInventory: ClassicInventorySnapshotDto;
+  message: string;
+  gain: number;
+  cookies: number;
+  special?: "suspicious_fish" | null;
+};
+
 export type InventorySnapshotDto = {
   generatedAt: string;
   mode: InventoryMode;
+
+  /**
+   * Sac à dos RPG canonique (items.py / inventaire_equipement).
+   */
   items: InventoryItemDto[];
+
+  /**
+   * Sac classique du bot (stats[user].inventaire).
+   *
+   * Optionnel pendant la transition backend afin de ne pas casser
+   * les snapshots et aperçus RPG déjà existants.
+   */
+  classicInventory?: ClassicInventorySnapshotDto;
+
   equipment: EquipmentSnapshotDto;
   craft: CraftSnapshotDto;
 };
