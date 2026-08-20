@@ -33,7 +33,7 @@ jobs:
           VITE_TAILBLUE_API_URL: https://tailblue-api.apps.bot-hosting.cloud
         run: npm run tauri build -- --bundles nsis
 
-      - name: Préparer le téléchargement public
+      - name: Préparer l'installateur Windows
         shell: pwsh
         run: |
           $exe = Get-ChildItem `
@@ -44,17 +44,22 @@ jobs:
             throw "Installateur NSIS TailBlue introuvable."
           }
 
+          $sig = "$($exe.FullName).sig"
+
+          if (-not (Test-Path $sig)) {
+            throw "Signature updater Windows introuvable."
+          }
+
           Copy-Item `
             $exe.FullName `
             "TailBlue-Windows-Setup.exe"
 
-          $sig = "$($exe.FullName).sig"
+          Copy-Item `
+            $sig `
+            "TailBlue-Windows-Setup.exe.sig"
 
-          if (Test-Path $sig) {
-            Copy-Item `
-              $sig `
-              "TailBlue-Windows-Setup.exe.sig"
-          }
+          Write-Host "✅ Installateur Windows prêt."
+          Write-Host "✅ Signature Windows prête."
 
       - name: Trouver la Release actuelle
         id: release
@@ -63,21 +68,114 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = gh release view --json tagName --jq .tagName
+
+          if (-not $tag) {
+            throw "Aucune Release TailBlue trouvée."
+          }
+
           "tag=$tag" >> $env:GITHUB_OUTPUT
 
-      - name: Publier l'installateur Windows
+          Write-Host "✅ Release : $tag"
+
+      - name: Publier Windows
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $tag = "${{ steps.release.outputs.tag }}"
+
           gh release upload `
-            "${{ steps.release.outputs.tag }}" `
+            "$tag" `
             "TailBlue-Windows-Setup.exe" `
+            "TailBlue-Windows-Setup.exe.sig" `
             --clobber
 
-          if (Test-Path "TailBlue-Windows-Setup.exe.sig") {
-            gh release upload `
-              "${{ steps.release.outputs.tag }}" `
-              "TailBlue-Windows-Setup.exe.sig" `
-              --clobber
+          Write-Host "✅ Installateur Windows publié."
+
+      - name: Ajouter Windows au latest.json
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ steps.release.outputs.tag }}"
+
+          Remove-Item `
+            "updater-meta" `
+            -Recurse `
+            -Force `
+            -ErrorAction SilentlyContinue
+
+          New-Item `
+            -ItemType Directory `
+            "updater-meta" |
+            Out-Null
+
+          gh release download `
+            "$tag" `
+            --pattern "latest.json" `
+            --dir "updater-meta"
+
+          $jsonPath = "updater-meta\latest.json"
+
+          if (-not (Test-Path $jsonPath)) {
+            throw "latest.json introuvable dans la Release."
           }
+
+          $metadata = Get-Content `
+            $jsonPath `
+            -Raw |
+            ConvertFrom-Json
+
+          if (-not $metadata.platforms) {
+            throw "latest.json ne contient pas platforms."
+          }
+
+          $signature = (
+            Get-Content `
+              "TailBlue-Windows-Setup.exe.sig" `
+              -Raw
+          ).Trim()
+
+          if (-not $signature) {
+            throw "Signature Windows vide."
+          }
+
+          $entry = [PSCustomObject]@{
+            signature = $signature
+            url = "https://github.com/${{ github.repository }}/releases/download/$tag/TailBlue-Windows-Setup.exe"
+          }
+
+          $metadata.platforms |
+            Add-Member `
+              -NotePropertyName "windows-x86_64" `
+              -NotePropertyValue $entry `
+              -Force
+
+          $metadata |
+            ConvertTo-Json -Depth 20 |
+            Set-Content `
+              $jsonPath `
+              -Encoding utf8
+
+          $check = Get-Content `
+            $jsonPath `
+            -Raw |
+            ConvertFrom-Json
+
+          Write-Host "Plateformes updater :"
+
+          $check.platforms.PSObject.Properties.Name |
+            ForEach-Object {
+              Write-Host "✅ $_"
+            }
+
+          if (-not $check.platforms.'windows-x86_64'.signature) {
+            throw "windows-x86_64 n'a pas de signature."
+          }
+
+          gh release upload `
+            "$tag" `
+            $jsonPath `
+            --clobber
+
+          Write-Host "✅ latest.json Windows publié."
