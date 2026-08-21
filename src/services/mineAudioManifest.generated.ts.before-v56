@@ -1,0 +1,14 @@
+// Généré automatiquement depuis public/ le 2026-08-17T17:21:01.235Z
+export const MINE_AUDIO_FILES: readonly string[] = [
+  "/audio/ambience.mp3",
+  "/audio/mine-combat.mp3",
+  "/audio/mine-defeat.mp3",
+  "/audio/mine-exploration.mp3",
+  "/audio/mine-hit.mp3",
+  "/audio/mine-hurt.mp3",
+  "/audio/mine-mine.mp3",
+  "/audio/mine-rest.mp3",
+  "/audio/mine-search.mp3",
+  "/audio/mine-step.mp3",
+  "/audio/mine-victory.mp3"
+] as const;

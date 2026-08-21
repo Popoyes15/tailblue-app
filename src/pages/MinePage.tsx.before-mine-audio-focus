@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { getCachedMineSnapshot, mineApi } from "../api/mineApi";
+import { mineApi } from "../api/mineApi";
 import CombatPanel from "../components/mine/CombatPanel";
 import MineCompanionCare from "../components/mine/MineCompanionCare";
 import MineJournal from "../components/mine/MineJournal";
@@ -9,7 +9,6 @@ import MinePetPortrait from "../components/mine/MinePetPortrait";
 import PotionMenu from "../components/mine/PotionMenu";
 import { cleanMineText } from "../data/mineText";
 import { resolveMonsterImage } from "../data/monsterVisuals";
-import { setMineAudioFocus } from "../services/mineAudioFocus";
 import {
   getMineAudioDebugInfo,
   installMineAudioUnlock,
@@ -180,15 +179,9 @@ function CombatSummaryCard({ summary }: { summary: MineCombatSummary }) {
 }
 
 export default function MinePage() {
-  useEffect(() => {
-    setMineAudioFocus(true);
-    return () => setMineAudioFocus(false);
-  }, []);
-
-  const cachedMine = getCachedMineSnapshot();
-  const [snapshot, setSnapshot] = useState<MineSnapshot | null>(cachedMine);
-  const [combatResolution, setCombatResolution] = useState<MineCombat | null>(cachedMine?.combatResolution ?? null);
-  const [loading, setLoading] = useState(!cachedMine);
+  const [snapshot, setSnapshot] = useState<MineSnapshot | null>(null);
+  const [combatResolution, setCombatResolution] = useState<MineCombat | null>(null);
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [potionOpen, setPotionOpen] = useState(false);
@@ -205,21 +198,19 @@ export default function MinePage() {
     setError("");
   }, []);
 
-  const refresh = useCallback(async (foreground = false) => {
-    if (foreground || !getCachedMineSnapshot()) setLoading(true);
+  const refresh = useCallback(async () => {
+    setLoading(true);
     try {
       applySnapshot(await mineApi.snapshot());
     } catch (err) {
-      // Avec un snapshot réel en cache, on conserve l'expédition affichée au lieu
-      // de faire recharger toute la page. L'erreur reste discrète et réessayable.
-      setError(err instanceof Error ? err.message : "Impossible de synchroniser la Mine.");
+      setError(err instanceof Error ? err.message : "Impossible de charger la Mine.");
     } finally {
       setLoading(false);
     }
   }, [applySnapshot]);
 
   useEffect(() => {
-    void refresh(false);
+    void refresh();
   }, [refresh]);
 
   useEffect(() => {
@@ -241,6 +232,15 @@ export default function MinePage() {
     }
     void setMineMusic("off");
   }, [snapshot?.active, Boolean(snapshot?.combat?.active), combatResolution]);
+
+  useEffect(() => {
+    const events = combatForDisplay?.events ?? [];
+    if (!events.length) return;
+    const recent = events.slice(-4);
+    if (recent.some((event) => event.visualTarget === "enemy" && event.amount > 0)) void playMineSfx("hit");
+    if (recent.some((event) => event.visualTarget === "player" && event.amount > 0)) void playMineSfx("hurt");
+    if (recent.some((event) => event.visualTarget === "companion" && event.amount > 0)) void playMineSfx("pet");
+  }, [combatForDisplay?.events, combatResolution]);
 
   useEffect(() => {
     if (!combatResolution) return;
@@ -284,7 +284,7 @@ export default function MinePage() {
       <section className="tm-page">
         <div className="tm-error-card">
           <span>⚠️</span><h2>Mine indisponible</h2><p>{cleanMineText(error, "Aucune donnée reçue.")}</p>
-          <button onClick={() => void refresh(true)}>Réessayer</button>
+          <button onClick={() => void refresh()}>Réessayer</button>
         </div>
       </section>
     );
@@ -560,7 +560,7 @@ export default function MinePage() {
       </div>
 
       <div className="tm-bottom-actions">
-        <button className="tm-refresh" disabled={busy || combatActive} onClick={() => void refresh(true)}>↻ Actualiser</button>
+        <button className="tm-refresh" disabled={busy || combatActive} onClick={() => void refresh()}>↻ Actualiser</button>
         <button className="tm-leave" disabled={busy || combatActive} onClick={() => void run(() => mineApi.leave(), "step")}>🚪 Quitter la Mine</button>
       </div>
 
@@ -587,11 +587,11 @@ export default function MinePage() {
         <CombatPanel
           combat={snapshot.combat}
           busy={busy}
-          onAttack={() => run(() => mineApi.combat("attack"))}
-          onDefend={() => run(() => mineApi.combat("defend"))}
-          onFlee={() => run(() => mineApi.combat("flee"), "step")}
-          onSkill={(skillId) => run(() => mineApi.combat("skill", { skillId }))}
-          onItem={(itemId) => run(() => mineApi.combat("item", { itemId }))}
+          onAttack={() => void run(() => mineApi.combat("attack"), "hit")}
+          onDefend={() => void run(() => mineApi.combat("defend"))}
+          onFlee={() => void run(() => mineApi.combat("flee"), "step")}
+          onSkill={(skillId) => void run(() => mineApi.combat("skill", { skillId }), "hit")}
+          onItem={(itemId) => void run(() => mineApi.combat("item", { itemId }), "potion")}
         />
       )}
 

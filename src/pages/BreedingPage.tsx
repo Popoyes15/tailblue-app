@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   companionApi,
   companionApiConfigured,
+  getCachedBreedingSnapshot,
 } from "../api/companionApi";
+import CompanionNotice, {
+  type CompanionNoticeData,
+} from "../components/companions/CompanionNotice";
 import { ImageStage } from "../components/companions/CompanionUi";
-import {
-  COMPANION_RULES,
-  DRAGONS,
-} from "../data/companionsLocalData";
+import { COMPANION_RULES } from "../data/companionsLocalData";
 import type {
   BreedingSnapshotDto,
-  DragonLineageDto,
+  IncubationState,
 } from "../types/companions";
 import "../components/companions/companionsFinal.css";
 
@@ -25,342 +26,66 @@ function localBreeding(): BreedingSnapshotDto {
     huntTarget: COMPANION_RULES.incubation.hunt,
     dailyTarget: COMPANION_RULES.incubation.daily,
     readyToHatch: false,
-    lineages: DRAGONS.map((dragon) => ({ ...dragon })),
+    incubationState: "dormant",
+    eggImage: "/Dragons/Oeuf_Origines.png",
+    lineages: [],
     obtainedDragon: null,
   };
 }
 
-export default function BreedingPage() {
-  const [snapshot, setSnapshot] =
-    useState<BreedingSnapshotDto>(localBreeding());
-  const [selectedDragon, setSelectedDragon] =
-    useState<DragonLineageDto | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+function deriveState(snapshot: BreedingSnapshotDto): IncubationState {
+  if (snapshot.hatched || snapshot.obtainedDragon) return "hatched";
+  if (snapshot.readyToHatch) return "ready";
+  if (snapshot.incubationState) return snapshot.incubationState;
 
-  useEffect(() => {
-    if (!companionApiConfigured) return;
-
-    companionApi
-      .getBreeding()
-      .then(setSnapshot)
-      .catch(() => {
-        // Aperçu local conservé.
-      });
-  }, []);
-
-  const overall = useMemo(() => {
-    const current =
-      Math.min(snapshot.work, snapshot.workTarget) +
-      Math.min(snapshot.hunt, snapshot.huntTarget) +
-      Math.min(snapshot.daily, snapshot.dailyTarget);
-    const target =
-      snapshot.workTarget +
-      snapshot.huntTarget +
-      snapshot.dailyTarget;
-
-    return {
-      current,
-      target,
-      pct: Math.max(
-        0,
-        Math.min(
-          100,
-          (current / Math.max(1, target)) * 100,
-        ),
-      ),
-    };
-  }, [snapshot]);
-
-  async function hatch() {
-    if (
-      !companionApiConfigured ||
-      !snapshot.readyToHatch ||
-      busy
-    ) {
-      return;
-    }
-
-    try {
-      setBusy(true);
-      setMessage("");
-      const next = await companionApi.hatchOriginsEgg();
-      setSnapshot(next);
-    } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "L'éclosion n'a pas pu être déclenchée.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <section className="tb-comp-page tb-breeding-page">
-      <header className="tb-comp-heading">
-        <div>
-          <p className="tb-comp-eyebrow">🥚 HÉRITAGE DRACONIQUE</p>
-          <h1>Élevage</h1>
-          <p>
-            Le système actuel est centré sur l'Œuf des Origines :
-            15 Work, 20 Hunt et 1 Daily réveillent l'une des huit
-            lignées draconiques.
-          </p>
-        </div>
-
-        <div className="tb-comp-source">
-          <i />
-          {companionApiConfigured
-            ? "Backend TailBlue"
-            : "Aperçu local"}
-        </div>
-      </header>
-
-      {!snapshot.hasOriginsEgg && !snapshot.hatched ? (
-        <div className="tb-comp-empty">
-          <span>🥚</span>
-          <h2>Tu ne possèdes pas l'Œuf des Origines.</h2>
-          <p>
-            Cette page s'activera automatiquement lorsque le backend
-            indiquera que l'œuf appartient au joueur.
-          </p>
-        </div>
-      ) : snapshot.obtainedDragon ? (
-        <article className="tb-hatched-dragon">
-          <ImageStage
-            image={snapshot.obtainedDragon.image}
-            alt={snapshot.obtainedDragon.name}
-            className="tb-hatched-image"
-          />
-          <div>
-            <p className="tb-comp-eyebrow">🐉 ÉCLOSION ACCOMPLIE</p>
-            <h2>{snapshot.obtainedDragon.name}</h2>
-            <span>{snapshot.obtainedDragon.rarity}</span>
-            <p>
-              L'Œuf des Origines a disparu de l'inventaire et ce dragon
-              fait désormais partie des compagnons du joueur.
-            </p>
-          </div>
-        </article>
-      ) : (
-        <>
-          <div className="tb-incubation-layout">
-            <main className="tb-incubation-main">
-              <article className="tb-egg-chamber">
-                <div className="tb-egg-aura one" />
-                <div className="tb-egg-aura two" />
-
-                <div className="tb-egg-image-wrap">
-                  <img
-                    src="/Dragons/Oeuf_Origines.png"
-                    alt="Œuf des Origines"
-                  />
-                </div>
-
-                <div className="tb-egg-copy">
-                  <p className="tb-comp-eyebrow">
-                    🥚 ŒUF DES ORIGINES
-                  </p>
-                  <h2>
-                    {snapshot.readyToHatch
-                      ? "La coquille répond enfin."
-                      : "Une ancienne lignée sommeille encore."}
-                  </h2>
-                  <p>
-                    Chaque activité valide est enregistrée côté Python.
-                    L'application ne peut ni accélérer l'incubation ni
-                    choisir le dragon obtenu.
-                  </p>
-                </div>
-
-                <div className="tb-overall-progress">
-                  <div>
-                    <span>Éveil global</span>
-                    <strong>
-                      {overall.current}/{overall.target}
-                    </strong>
-                  </div>
-                  <div className="tb-overall-track">
-                    <div
-                      style={{ width: `${overall.pct}%` }}
-                    />
-                  </div>
-                </div>
-              </article>
-
-              <div className="tb-incubation-objectives">
-                <IncubationCard
-                  icon="💼"
-                  label="Work"
-                  current={snapshot.work}
-                  target={snapshot.workTarget}
-                />
-                <IncubationCard
-                  icon="🏹"
-                  label="Hunt"
-                  current={snapshot.hunt}
-                  target={snapshot.huntTarget}
-                />
-                <IncubationCard
-                  icon="🎁"
-                  label="Daily"
-                  current={snapshot.daily}
-                  target={snapshot.dailyTarget}
-                />
-              </div>
-
-              <button
-                className="tb-hatch-button"
-                onClick={hatch}
-                disabled={
-                  !companionApiConfigured ||
-                  !snapshot.readyToHatch ||
-                  busy
-                }
-              >
-                <span>🐉</span>
-                {snapshot.readyToHatch
-                  ? busy
-                    ? "La coquille se fissure…"
-                    : "Faire éclore l'Œuf"
-                  : "Incubation incomplète"}
-              </button>
-
-              {!companionApiConfigured && (
-                <p className="tb-comp-preview-note centered">
-                  Mode local : l'œuf est affiché uniquement pour tester
-                  l'interface. Les vraies progressions viendront du joueur.
-                </p>
-              )}
-
-              {message && (
-                <p className="tb-comp-action-message centered">
-                  {message}
-                </p>
-              )}
-            </main>
-
-            <aside className="tb-incubation-rules">
-              <div className="tb-comp-side-title">
-                <span>📜</span>
-                <div>
-                  <p className="tb-comp-eyebrow">RÈGLE D'ÉCLOSION</p>
-                  <h3>Le tirage reste côté Python</h3>
-                </div>
-              </div>
-
-              <div className="tb-rule-lines">
-                <p>✓ Work valide → progression Work</p>
-                <p>✓ Hunt valide → progression Hunt</p>
-                <p>✓ Daily valide → progression Daily</p>
-                <p>✓ Tirage pondéré au moment de l'éclosion</p>
-                <p>✓ L'œuf est remplacé par le dragon obtenu</p>
-              </div>
-
-              <div className="tb-egg-note">
-                <strong>Pas de reproduction inventée.</strong>
-                <p>
-                  Les lignées/reproductions futures resteront désactivées
-                  tant que le bot n'a pas de vrai système pour elles.
-                </p>
-              </div>
-            </aside>
-          </div>
-
-          <section className="tb-lineages-section">
-            <div className="tb-lineages-heading">
-              <div>
-                <p className="tb-comp-eyebrow">🐉 LIGNÉES POSSIBLES</p>
-                <h2>Les huit héritages de l'Œuf</h2>
-              </div>
-              <p>
-                Les pourcentages correspondent aux poids de tirage actuels
-                de TailBlue.
-              </p>
-            </div>
-
-            <div className="tb-lineage-grid">
-              {snapshot.lineages.map((dragon) => (
-                <button
-                  key={dragon.id}
-                  onClick={() => setSelectedDragon(dragon)}
-                >
-                  <ImageStage
-                    image={dragon.image}
-                    alt={dragon.name}
-                    className="tb-lineage-image"
-                  />
-                  <div>
-                    <span>{dragon.rarity}</span>
-                    <h3>{dragon.name}</h3>
-                    <p>{dragon.element}</p>
-                    <strong>{dragon.chance}%</strong>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
-
-      {selectedDragon && (
-        <div
-          className="tb-comp-modal-backdrop"
-          onClick={() => setSelectedDragon(null)}
-        >
-          <article
-            className="tb-dragon-modal"
-            onClick={(event: MouseEvent<HTMLElement>) => event.stopPropagation()}
-          >
-            <button
-              className="tb-comp-modal-close"
-              onClick={() => setSelectedDragon(null)}
-            >
-              ×
-            </button>
-
-            <ImageStage
-              image={selectedDragon.image}
-              alt={selectedDragon.name}
-              className="tb-dragon-modal-image"
-            />
-
-            <div>
-              <p className="tb-comp-eyebrow">
-                {selectedDragon.rarity}
-              </p>
-              <h2>{selectedDragon.name}</h2>
-              <p>{selectedDragon.description}</p>
-
-              <div className="tb-comp-meta-grid">
-                <Meta
-                  label="Élément"
-                  value={selectedDragon.element}
-                />
-                <Meta
-                  label="Chance"
-                  value={`${selectedDragon.chance}%`}
-                />
-                <Meta
-                  label="Habitat"
-                  value={selectedDragon.habitat}
-                />
-                <Meta
-                  label="Tempérament"
-                  value={selectedDragon.temperament}
-                />
-              </div>
-            </div>
-          </article>
-        </div>
-      )}
-    </section>
+  const max = Math.max(
+    snapshot.work / Math.max(1, snapshot.workTarget),
+    snapshot.hunt / Math.max(1, snapshot.huntTarget),
+    snapshot.daily / Math.max(1, snapshot.dailyTarget),
   );
+
+  if (max >= 0.75) return "stirring";
+  if (max > 0) return "incubating";
+  return "dormant";
 }
 
-function IncubationCard({
+const STATE_COPY: Record<
+  IncubationState,
+  { eyebrow: string; title: string; text: string; icon: string }
+> = {
+  dormant: {
+    eyebrow: "SOMMEIL ANCIEN",
+    title: "Quelque chose dort sous la coquille.",
+    text: "L'œuf est encore paisible. Les aventures du Royaume réveilleront peu à peu la magie qu'il renferme.",
+    icon: "🌙",
+  },
+  incubating: {
+    eyebrow: "INCUBATION EN COURS",
+    title: "L'œuf commence à réagir.",
+    text: "De petits mouvements trahissent une présence. La coquille répond désormais à tes aventures.",
+    icon: "✨",
+  },
+  stirring: {
+    eyebrow: "ÉVEIL PROCHE",
+    title: "Quelque chose cherche la sortie…",
+    text: "Les mouvements deviennent plus nets et l'énergie draconique s'accumule autour de la coquille.",
+    icon: "⚡",
+  },
+  ready: {
+    eyebrow: "ÉCLOSION PRÊTE",
+    title: "La coquille répond enfin.",
+    text: "Une aura bleu clair pulse autour de l'œuf. Le dragon qui s'y cache peut maintenant se révéler.",
+    icon: "💠",
+  },
+  hatched: {
+    eyebrow: "HÉRITAGE RÉVÉLÉ",
+    title: "Une nouvelle lignée est née.",
+    text: "L'œuf a laissé place à son dragon. Il a rejoint tes compagnons et son histoire ne fait que commencer.",
+    icon: "🐉",
+  },
+};
+
+function SealProgress({
   icon,
   label,
   current,
@@ -371,40 +96,294 @@ function IncubationCard({
   current: number;
   target: number;
 }) {
-  const value = Math.min(current, target);
   const pct = Math.max(
     0,
-    Math.min(100, (value / Math.max(1, target)) * 100),
+    Math.min(100, (Math.min(current, target) / Math.max(1, target)) * 100),
   );
 
   return (
-    <article>
-      <div className="tb-incubation-card-top">
-        <span>{icon}</span>
-        <div>
-          <small>{label}</small>
-          <strong>{value}/{target}</strong>
-        </div>
+    <div className={current >= target ? "tb-seal-v3 is-complete" : "tb-seal-v3"}>
+      <span>{icon}</span>
+      <div>
+        <small>{label}</small>
+        <strong>{Math.min(current, target)}/{target}</strong>
+        <div><i style={{ width: `${pct}%` }} /></div>
       </div>
-
-      <div className="tb-incubation-track">
-        <div style={{ width: `${pct}%` }} />
-      </div>
-    </article>
+      <b>{current >= target ? "✓" : ""}</b>
+    </div>
   );
 }
 
-function Meta({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+export default function BreedingPage() {
+  const cached = companionApiConfigured ? getCachedBreedingSnapshot() : null;
+  const [snapshot, setSnapshot] = useState<BreedingSnapshotDto | null>(
+    companionApiConfigured ? cached : localBreeding(),
+  );
+  const [loading, setLoading] = useState(companionApiConfigured && !cached);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<CompanionNoticeData | null>(null);
+
+  useEffect(() => {
+    if (!companionApiConfigured) return;
+    let cancelled = false;
+
+    void companionApi
+      .getBreeding()
+      .then((next) => {
+        if (!cancelled) setSnapshot(next);
+      })
+      .catch((error) => {
+        if (!cancelled && !getCachedBreedingSnapshot()) {
+          setNotice({
+            icon: "⚠️",
+            title: "Incubation indisponible",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Impossible de lire l'incubation.",
+            tone: "error",
+          });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const overall = useMemo(() => {
+    if (!snapshot) return { current: 0, target: 1, pct: 0 };
+
+    const current =
+      Math.min(snapshot.work, snapshot.workTarget) +
+      Math.min(snapshot.hunt, snapshot.huntTarget) +
+      Math.min(snapshot.daily, snapshot.dailyTarget);
+    const target =
+      snapshot.workTarget + snapshot.huntTarget + snapshot.dailyTarget;
+
+    return {
+      current,
+      target,
+      pct: Math.max(0, Math.min(100, (current / Math.max(1, target)) * 100)),
+    };
+  }, [snapshot]);
+
+  async function hatch() {
+    if (!companionApiConfigured || !snapshot?.readyToHatch || busy) return;
+
+    try {
+      setBusy(true);
+      const next = await companionApi.hatchOriginsEgg();
+      setSnapshot(next);
+      setNotice({
+        icon: "🐉",
+        title: next.obtainedDragon?.name ?? "Éclosion accomplie",
+        message:
+          "La coquille s'est ouverte. Le dragon a rejoint tes compagnons TailBlue.",
+        tone: "success",
+      });
+    } catch (error) {
+      setNotice({
+        icon: "⚠️",
+        title: "Éclosion impossible",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Le rituel n'a pas pu être déclenché.",
+        tone: "error",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading && !snapshot) {
+    return (
+      <section className="tb-comp-page tb-comp-loading-page">
+        <div className="tb-comp-loading-orb">🥚</div>
+        <p className="tb-comp-eyebrow">HÉRITAGE DRACONIQUE</p>
+        <h1>La chambre d'incubation s'éveille…</h1>
+        <p>TailBlue écoute la magie de l'Œuf des Origines.</p>
+      </section>
+    );
+  }
+
+  if (!snapshot) {
+    return (
+      <section className="tb-comp-page tb-comp-loading-page">
+        <div className="tb-comp-loading-orb">⚠️</div>
+        <h1>La chambre ne répond pas.</h1>
+        <p>Aucun état réel d'incubation n'est encore disponible.</p>
+        <CompanionNotice notice={notice} onClose={() => setNotice(null)} />
+      </section>
+    );
+  }
+
+  const state = deriveState(snapshot);
+  const copy = STATE_COPY[state];
+
   return (
-    <div>
-      <small>{label}</small>
-      <strong>{value}</strong>
-    </div>
+    <section className="tb-comp-page tb-breeding-v3-page">
+      <header className="tb-breeding-v3-heading">
+        <div>
+          <p className="tb-comp-eyebrow">🥚 HÉRITAGE DRACONIQUE</p>
+          <h1>Élevage</h1>
+          <p>
+            Ici, pas de catalogue des résultats possibles : la lignée reste
+            secrète jusqu'à l'éclosion. Seule la progression réelle de ton œuf
+            est révélée.
+          </p>
+        </div>
+        <div className={`tb-incubation-status is-${state}`}>
+          <span>{copy.icon}</span>
+          <div>
+            <small>État actuel</small>
+            <strong>{copy.eyebrow}</strong>
+          </div>
+        </div>
+      </header>
+
+      {!snapshot.hasOriginsEgg && !snapshot.hatched && !snapshot.obtainedDragon ? (
+        <div className="tb-comp-empty tb-breeding-empty">
+          <span>🥚</span>
+          <h2>Aucun Œuf des Origines.</h2>
+          <p>
+            La chambre restera silencieuse jusqu'à ce qu'un œuf existe
+            réellement dans tes données TailBlue.
+          </p>
+        </div>
+      ) : snapshot.obtainedDragon ? (
+        <article className="tb-hatched-v3-card">
+          <div className="tb-hatched-v3-glow" />
+          <ImageStage
+            image={snapshot.obtainedDragon.image}
+            alt={snapshot.obtainedDragon.name}
+            className="tb-hatched-v3-image"
+          />
+          <div>
+            <p className="tb-comp-eyebrow">🐉 ÉCLOSION ACCOMPLIE</p>
+            <h2>{snapshot.obtainedDragon.name}</h2>
+            <span>{snapshot.obtainedDragon.rarity}</span>
+            <p>
+              Le secret est levé : ce dragon appartient maintenant à tes
+              compagnons. Sa fiche complète et son histoire sont disponibles
+              dans Pets.
+            </p>
+          </div>
+        </article>
+      ) : (
+        <div className="tb-incubator-v3-layout">
+          <main className={`tb-incubator-v3-chamber is-${state}`}>
+            <div className="tb-incubator-stars" aria-hidden="true">
+              <i /><i /><i /><i /><i />
+            </div>
+            <div className="tb-incubator-runes" aria-hidden="true" />
+            <div className="tb-egg-ready-aura" aria-hidden="true" />
+            <div className="tb-egg-ready-ring ring-one" aria-hidden="true" />
+            <div className="tb-egg-ready-ring ring-two" aria-hidden="true" />
+
+            <div className="tb-incubator-v3-core">
+              <div className="tb-egg-v3-stage">
+                <img
+                  src={snapshot.eggImage || "/Dragons/Oeuf_Origines.png"}
+                  alt="Œuf des Origines"
+                />
+                <span aria-hidden="true" />
+              </div>
+
+              <div className="tb-egg-v3-copy">
+                <p className="tb-comp-eyebrow">{copy.eyebrow}</p>
+                <h2>{copy.title}</h2>
+                <p>{copy.text}</p>
+
+                <div className="tb-awakening-v3">
+                  <div>
+                    <span>Éveil global</span>
+                    <strong>{Math.round(overall.pct)}%</strong>
+                  </div>
+                  <div className="tb-awakening-v3-track">
+                    <i style={{ width: `${overall.pct}%` }} />
+                  </div>
+                  <small>
+                    {overall.current}/{overall.target} sceaux d'incubation accomplis
+                  </small>
+                </div>
+
+                <button
+                  className={`tb-hatch-v3-button ${snapshot.readyToHatch ? "is-ready" : ""}`}
+                  onClick={() => void hatch()}
+                  disabled={
+                    !companionApiConfigured ||
+                    !snapshot.readyToHatch ||
+                    busy
+                  }
+                >
+                  <span>{snapshot.readyToHatch ? "✦" : "🐉"}</span>
+                  <div>
+                    <strong>
+                      {busy
+                        ? "La coquille se fissure…"
+                        : snapshot.readyToHatch
+                          ? "Faire éclore l'Œuf"
+                          : "L'éveil continue"}
+                    </strong>
+                    <small>
+                      {snapshot.readyToHatch
+                        ? "Révéler enfin la lignée"
+                        : "Les trois sceaux doivent être accomplis"}
+                    </small>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </main>
+
+          <aside className="tb-incubator-v3-journal">
+            <div className="tb-comp-side-title">
+              <span>📜</span>
+              <div>
+                <p className="tb-comp-eyebrow">JOURNAL D'INCUBATION</p>
+                <h3>Les trois sceaux</h3>
+              </div>
+            </div>
+
+            <SealProgress
+              icon="💼"
+              label="Work"
+              current={snapshot.work}
+              target={snapshot.workTarget}
+            />
+            <SealProgress
+              icon="🏹"
+              label="Hunt"
+              current={snapshot.hunt}
+              target={snapshot.huntTarget}
+            />
+            <SealProgress
+              icon="🎁"
+              label="Daily"
+              current={snapshot.daily}
+              target={snapshot.dailyTarget}
+            />
+
+            <div className="tb-incubator-v3-secret">
+              <span>🎲</span>
+              <div>
+                <strong>La lignée reste secrète.</strong>
+                <p>
+                  Le tirage est effectué côté Python au moment de l'éclosion.
+                  Aucune liste de dragons n'est affichée ici.
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      <CompanionNotice notice={notice} onClose={() => setNotice(null)} />
+    </section>
   );
 }

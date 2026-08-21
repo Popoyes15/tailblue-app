@@ -4,6 +4,7 @@ export type CompanionFamily =
   | "travail"
   | "combat"
   | "mythiques"
+  | "dragons"
   | string;
 
 export type CompanionFormDto = {
@@ -24,12 +25,10 @@ export type CompanionDefinitionDto = {
   habitat: string;
   temperament: string;
   family: CompanionFamily;
+  price?: number;
   story?: string;
   stats: Record<string, number>;
-  abilities: Array<{
-    name: string;
-    description: string;
-  }>;
+  abilities: Array<{ name: string; description: string }>;
   forms: CompanionFormDto[];
   adoptable?: boolean;
   unique?: boolean;
@@ -87,6 +86,8 @@ export type KennelSnapshotDto = {
   playerLevel?: number;
   guildName?: string | null;
   royalPrivilege?: boolean;
+  cookies?: number;
+  ownedCount?: number;
 };
 
 export type FoodDefinitionDto = {
@@ -116,6 +117,7 @@ export type ProvisionSnapshotDto = {
   current: ProvisionLevelDto;
   levels: ProvisionLevelDto[];
   stock: FoodDefinitionDto[];
+  foods?: FoodDefinitionDto[];
   inventory: FoodInventoryEntryDto[];
   canUpgrade: boolean;
   nextLevel?: ProvisionLevelDto | null;
@@ -133,7 +135,15 @@ export type DragonLineageDto = {
   temperament: string;
   description: string;
   image: string;
+  story?: string;
 };
+
+export type IncubationState =
+  | "dormant"
+  | "incubating"
+  | "stirring"
+  | "ready"
+  | "hatched";
 
 export type BreedingSnapshotDto = {
   hasOriginsEgg: boolean;
@@ -145,6 +155,8 @@ export type BreedingSnapshotDto = {
   huntTarget: number;
   dailyTarget: number;
   readyToHatch: boolean;
+  incubationState?: IncubationState;
+  eggImage?: string;
   lineages: DragonLineageDto[];
   obtainedDragon?: {
     id: string;
@@ -159,13 +171,29 @@ export type CompanionSnapshotDto = {
   owned: OwnedCompanionDto[];
 };
 
+export type PettingResultDto = {
+  text: string;
+  energyGain?: number;
+  affectionGain?: number;
+  companions: CompanionSnapshotDto;
+};
+
 export type FeedResultDto = {
   ok: boolean;
   text: string;
-  preference?: "adore" | "aime" | "neutre" | "deteste";
+  preference?: "adore" | "aime" | "neutre" | "deteste" | "special";
   hpGain?: number;
   energyGain?: number;
   affectionGain?: number;
   companions: CompanionSnapshotDto;
   provisions?: ProvisionSnapshotDto;
+};
+
+
+export type AdoptionResultDto = {
+  ok: boolean;
+  text: string;
+  price: number;
+  companions: CompanionSnapshotDto;
+  kennel?: KennelSnapshotDto;
 };

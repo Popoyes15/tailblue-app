@@ -1,0 +1,200 @@
+import { MINE_AUDIO_FILES } from "./mineAudioManifest.generated";
+
+export type MineMusicMode = "off" | "exploration" | "combat";
+export type MineSfxName =
+  | "step"
+  | "mine"
+  | "search"
+  | "loot"
+  | "event"
+  | "rest"
+  | "potion"
+  | "hit"
+  | "hurt"
+  | "pet"
+  | "victory"
+  | "defeat";
+
+const MUSIC_KEYWORDS: Record<Exclude<MineMusicMode, "off">, string[]> = {
+  exploration: ["exploration", "explore", "mine_ambient", "mine-ambient", "mine ambience", "cave", "dungeon", "abime", "abyss", "ambient", "ambience"],
+  combat: ["combat", "battle", "fight", "boss", "enemy", "battle_theme", "battle-theme"],
+};
+
+const SFX_KEYWORDS: Record<MineSfxName, string[]> = {
+  step: ["step", "foot", "walk", "move", "pas", "door", "porte"],
+  mine: ["pickaxe", "pioche", "mine", "mining", "ore", "minerai"],
+  search: ["search", "fouille", "inspect", "scan"],
+  loot: ["loot", "chest", "coffre", "reward", "treasure", "pickup"],
+  event: ["event", "magic", "mystery", "spark", "anomaly"],
+  rest: ["rest", "sleep", "camp", "repos", "heal_rest"],
+  potion: ["potion", "drink", "heal", "soin"],
+  hit: ["enemy_hit", "hit", "impact", "attack", "slash", "strike"],
+  hurt: ["player_hurt", "hurt", "damage", "ouch", "player_hit"],
+  pet: ["pet", "companion", "paw", "animal", "familiar"],
+  victory: ["victory", "win", "success", "clear", "complete"],
+  defeat: ["defeat", "lose", "death", "gameover", "fail"],
+};
+
+let unlocked = false;
+let pendingMusic: MineMusicMode = "off";
+let currentMusicMode: MineMusicMode = "off";
+let musicAudio: HTMLAudioElement | null = null;
+let unlockInstalled = false;
+const warned = new Set<string>();
+
+function normalizedPath(path: string) {
+  try { return decodeURIComponent(path).toLowerCase().replace(/[\\_\-]+/g, " "); }
+  catch { return path.toLowerCase().replace(/[\\_\-]+/g, " "); }
+}
+
+function score(path: string, keywords: string[], music: boolean) {
+  const value = normalizedPath(path);
+  let points = 0;
+  for (const keyword of keywords) {
+    const needle = keyword.toLowerCase().replace(/[\\_\-]+/g, " ");
+    if (value.includes(needle)) points += needle.length + 12;
+  }
+  const musicWords = ["music", "musique", "theme", "ambient", "ambience", "bgm", "ost"];
+  const sfxWords = ["sfx", "effect", "sound", "bruit", "fx"];
+  if (music && musicWords.some((word) => value.includes(word))) points += 8;
+  if (music && sfxWords.some((word) => value.includes(word))) points -= 7;
+  if (!music && sfxWords.some((word) => value.includes(word))) points += 8;
+  if (!music && musicWords.some((word) => value.includes(word))) points -= 8;
+  return points;
+}
+
+function pick(keywords: string[], music: boolean) {
+  const ranked = MINE_AUDIO_FILES
+    .map((path) => ({ path, score: score(path, keywords, music) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
+  return ranked[0]?.path ?? null;
+}
+
+function urlFor(path: string) {
+  return new URL(path, window.location.href).href;
+}
+
+function warnOnce(key: string, message: string) {
+  if (warned.has(key)) return;
+  warned.add(key);
+  console.warn(message);
+}
+
+async function primeAudio() {
+  if (unlocked) return true;
+  const first = MINE_AUDIO_FILES[0];
+  if (!first) {
+    warnOnce("empty", "[TailBlue Mine Audio] Aucun fichier audio dans le manifest. Lance: node scripts/generate-mine-audio-manifest.mjs");
+    return false;
+  }
+
+  const probe = new Audio(urlFor(first));
+  probe.preload = "auto";
+  probe.volume = 0.001;
+  try {
+    await probe.play();
+    probe.pause();
+    probe.currentTime = 0;
+    unlocked = true;
+    console.info(`[TailBlue Mine Audio] Audio déverrouillé (${MINE_AUDIO_FILES.length} fichier(s)).`);
+    return true;
+  } catch (error) {
+    console.warn("[TailBlue Mine Audio] Déverrouillage refusé par le WebView.", error);
+    return false;
+  }
+}
+
+export async function unlockMineAudio() {
+  const ok = await primeAudio();
+  if (ok && pendingMusic !== "off") await actuallySetMusic(pendingMusic);
+  return ok;
+}
+
+export function installMineAudioUnlock() {
+  if (unlockInstalled) return () => undefined;
+  unlockInstalled = true;
+
+  const handler = () => { void unlockMineAudio(); };
+  document.addEventListener("pointerdown", handler, true);
+  document.addEventListener("keydown", handler, true);
+
+  return () => {
+    document.removeEventListener("pointerdown", handler, true);
+    document.removeEventListener("keydown", handler, true);
+    unlockInstalled = false;
+  };
+}
+
+async function actuallySetMusic(mode: Exclude<MineMusicMode, "off">) {
+  const path = pick(MUSIC_KEYWORDS[mode], true);
+  if (!path) {
+    warnOnce(`music:${mode}`, `[TailBlue Mine Audio] Aucune musique trouvée pour '${mode}'. Fichiers connus: ${MINE_AUDIO_FILES.join(", ")}`);
+    return;
+  }
+
+  const src = urlFor(path);
+  if (!musicAudio || musicAudio.src !== src) {
+    musicAudio?.pause();
+    musicAudio = new Audio(src);
+    musicAudio.loop = true;
+    musicAudio.preload = "auto";
+    musicAudio.volume = mode === "combat" ? 0.42 : 0.32;
+  }
+
+  try {
+    await musicAudio.play();
+    currentMusicMode = mode;
+    console.info(`[TailBlue Mine Audio] Musique ${mode}: ${path}`);
+  } catch (error) {
+    currentMusicMode = "off";
+    console.warn(`[TailBlue Mine Audio] Impossible de lire ${path}`, error);
+  }
+}
+
+export async function setMineMusic(mode: MineMusicMode) {
+  pendingMusic = mode;
+  if (mode === "off") {
+    musicAudio?.pause();
+    currentMusicMode = "off";
+    return;
+  }
+  if (!unlocked) return;
+  if (currentMusicMode === mode && musicAudio && !musicAudio.paused) return;
+  await actuallySetMusic(mode);
+}
+
+export async function playMineSfx(name: MineSfxName) {
+  if (!unlocked) {
+    const ok = await unlockMineAudio();
+    if (!ok) return;
+  }
+
+  const path = pick(SFX_KEYWORDS[name], false);
+  if (!path) {
+    warnOnce(`sfx:${name}`, `[TailBlue Mine Audio] Aucun son trouvé pour '${name}'.`);
+    return;
+  }
+
+  const audio = new Audio(urlFor(path));
+  audio.preload = "auto";
+  audio.volume = name === "victory" || name === "defeat" ? 0.72 : 0.62;
+  try {
+    await audio.play();
+    console.debug(`[TailBlue Mine Audio] SFX ${name}: ${path}`);
+  } catch (error) {
+    console.warn(`[TailBlue Mine Audio] Impossible de lire le SFX ${name}: ${path}`, error);
+  }
+}
+
+export function getMineAudioDebugInfo() {
+  return {
+    unlocked,
+    pendingMusic,
+    currentMusicMode,
+    files: [...MINE_AUDIO_FILES],
+    exploration: pick(MUSIC_KEYWORDS.exploration, true),
+    combat: pick(MUSIC_KEYWORDS.combat, true),
+    sfx: Object.fromEntries(Object.entries(SFX_KEYWORDS).map(([key, keywords]) => [key, pick(keywords, false)])),
+  };
+}

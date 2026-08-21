@@ -1,0 +1,515 @@
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { resolveMonsterImage } from "../../data/monsterVisuals";
+import { cleanMineText } from "../../data/mineText";
+import MinePetPortrait from "./MinePetPortrait";
+import type { CombatEvent, CombatSkill, MineCombat } from "../../types/mine";
+import "./mineUltra.css";
+
+type Props = {
+  combat?: MineCombat | null;
+  busy?: boolean;
+  resolutionMode?: boolean;
+  onResolutionComplete?: () => void;
+  onAttack: () => void | Promise<void>;
+  onSkill: (skillId: string) => void | Promise<void>;
+  onItem: (itemId: string) => void | Promise<void>;
+  onDefend: () => void | Promise<void>;
+  onFlee: () => void | Promise<void>;
+};
+
+type HighlightTarget = "none" | "player" | "enemy" | "companion";
+type CombatFxKind = "impact" | "laser" | "slash" | "pulse" | "hex" | "pet-pounce";
+
+type ActiveFx = {
+  id: number;
+  kind: CombatFxKind;
+  target: HighlightTarget;
+};
+
+function normalize(value?: string | null) {
+  return String(value ?? "").toLowerCase();
+}
+
+function Bar({ value, max, kind }: { value: number; max: number; kind: "hp" | "energy" }) {
+  const pct = Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100));
+  return <div className={`tm-combat-bar ${kind}`}><i style={{ width: `${pct}%` }} /></div>;
+}
+
+function Portrait({
+  image,
+  fallback,
+  shake,
+  defeated,
+  targeted,
+}: {
+  image?: string | null;
+  fallback: string;
+  shake: boolean;
+  defeated?: boolean;
+  targeted?: boolean;
+}) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [image]);
+
+  return (
+    <div className={`tm-fighter-portrait ${shake ? "tm-impact-shake" : ""} ${defeated ? "tm-defeated-vanish" : ""} ${targeted ? "tm-targeted-portrait" : ""}`}>
+      {image && !failed ? (
+        <img src={image} alt="" draggable={false} onError={() => setFailed(true)} />
+      ) : (
+        <span>{fallback}</span>
+      )}
+    </div>
+  );
+}
+
+function eventIcon(event: CombatEvent) {
+  if (event.critical) return "💥";
+  if (event.visualTarget === "enemy") return "⚔️";
+  if (event.visualTarget === "player") return "💢";
+  if (event.visualTarget === "companion") return "🐾";
+  if (event.type.includes("heal")) return "💚";
+  if (event.type.includes("status")) return "✨";
+  return "•";
+}
+
+function BattleFeed({ events }: { events: CombatEvent[] }) {
+  const recent = events.slice(-4);
+  if (recent.length === 0) {
+    return <div className="tm-battle-feed empty">⚔️ Le combat commence…</div>;
+  }
+
+  return (
+    <div className="tm-battle-feed">
+      {recent.map((event, index) => (
+        <div key={`${event.type}-${event.text}-${index}`} className={event.critical ? "critical" : ""}>
+          <span>{eventIcon(event)}</span>
+          <p>{cleanMineText(event.text)}</p>
+          {event.amount > 0 && <b>{event.amount}</b>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Resolution({
+  combat,
+  onComplete,
+}: {
+  combat: MineCombat;
+  onComplete?: () => void;
+}) {
+  const outcome = combat.outcome;
+  const victory = outcome === "player_victory";
+  const defeat = outcome === "player_defeat";
+  const fled = outcome === "fled";
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => onComplete?.(), victory ? 2600 : 2200);
+    return () => window.clearTimeout(timer);
+  }, [onComplete, victory]);
+
+  return (
+    <div className={`tm-combat-resolution ${victory ? "victory" : defeat ? "defeat" : fled ? "fled" : ""}`}>
+      <span className="tm-resolution-rune">{victory ? "✦" : defeat ? "✕" : "➜"}</span>
+      <p>{victory ? "COMBAT TERMINÉ" : defeat ? "EXPÉDITION BRISÉE" : "REPLI RÉUSSI"}</p>
+      <h2>{victory ? "VICTOIRE" : defeat ? "DÉFAITE" : "FUITE"}</h2>
+      <strong>{victory ? `${cleanMineText(combat.enemy.name)} est vaincu.` : defeat ? "Tu t'effondres dans l'Abîme." : "Tu échappes au combat."}</strong>
+
+      {combat.rewards && victory && (
+        <div className="tm-resolution-rewards">
+          {combat.rewards.xp > 0 && <span>✨ +{combat.rewards.xp} XP</span>}
+          {combat.rewards.combatXp > 0 && <span>⚔️ +{combat.rewards.combatXp} XP combat</span>}
+          {combat.rewards.cookies > 0 && <span>🍪 +{combat.rewards.cookies}</span>}
+        </div>
+      )}
+
+      <small>La Mine reprend dans un instant…</small>
+    </div>
+  );
+}
+
+function CombatFxLayer({ effect }: { effect: ActiveFx | null }) {
+  if (!effect) return null;
+
+  return (
+    <div className="tm-arena-fx-layer" aria-hidden="true">
+      <div className={`tm-combat-fx tm-combat-fx-${effect.kind} tm-fx-target-${effect.target}`} />
+    </div>
+  );
+}
+
+function getPlayerSignature(combat?: MineCombat | null): CombatFxKind {
+  if (!combat) return "impact";
+  const playerRace = normalize((combat.player as { race?: string | null }).race);
+  const pool = [
+    playerRace,
+    normalize(combat.player.family),
+    normalize(combat.player.name),
+    ...combat.skills.map((skill) => normalize(skill.name)),
+  ].join(" ");
+
+  if (pool.includes("frieren") || pool.includes("zoltraak") || pool.includes("zoltaak") || pool.includes("laser")) {
+    return "laser";
+  }
+  if (pool.includes("therian") || pool.includes("griff") || pool.includes("claw") || pool.includes("kitsune")) {
+    return "slash";
+  }
+  return "impact";
+}
+
+function inferSkillFx(skill: CombatSkill, signature: CombatFxKind): { kind: CombatFxKind; target: HighlightTarget } {
+  const blob = `${normalize(skill.name)} ${normalize(skill.description)} ${normalize(skill.element)}`;
+  if (blob.includes("barri") || blob.includes("shield") || blob.includes("defen") || blob.includes("protect")) {
+    return { kind: "hex", target: "player" };
+  }
+  if (blob.includes("heal") || blob.includes("restaure") || blob.includes("champ de fleurs") || blob.includes("soin")) {
+    return { kind: "pulse", target: "player" };
+  }
+  if (blob.includes("zoltraak") || blob.includes("zoltaak") || blob.includes("rayon") || blob.includes("laser")) {
+    return { kind: "laser", target: "enemy" };
+  }
+  if (blob.includes("griff") || blob.includes("slash") || blob.includes("claw") || signature === "slash") {
+    return { kind: "slash", target: "enemy" };
+  }
+  return { kind: signature === "laser" ? "laser" : signature === "slash" ? "slash" : "impact", target: "enemy" };
+}
+
+function resolveEventTarget(event: CombatEvent, combat: MineCombat): HighlightTarget {
+  if (event.targetId) {
+    if (event.targetId === combat.enemy.id) return "enemy";
+    if (event.targetId === combat.player.id) return "player";
+    if (combat.companion && event.targetId === combat.companion.id) return "companion";
+  }
+  if (event.visualTarget === "enemy" || event.visualTarget === "player" || event.visualTarget === "companion") {
+    return event.visualTarget;
+  }
+  return "none";
+}
+
+function inferEventFx(event: CombatEvent, combat: MineCombat, signature: CombatFxKind): ActiveFx | null {
+  const target = resolveEventTarget(event, combat);
+  const blob = `${normalize(event.animation)} ${normalize(event.type)} ${normalize(event.text)}`;
+  const fromCompanion = Boolean(combat.companion && event.actorId && event.actorId === combat.companion.id);
+  const looksLikeHeal = blob.includes("heal") || blob.includes("soin") || blob.includes("restaure");
+  const looksDefensive = blob.includes("shield") || blob.includes("barri") || blob.includes("protect") || blob.includes("defend");
+
+  if (target === "enemy" && (event.amount > 0 || event.critical || fromCompanion)) {
+    if (fromCompanion) {
+      return { id: Date.now(), kind: "pet-pounce", target: "enemy" };
+    }
+    if (blob.includes("zoltraak") || blob.includes("zoltaak") || blob.includes("laser") || signature === "laser") {
+      return { id: Date.now(), kind: "laser", target: "enemy" };
+    }
+    if (blob.includes("slash") || blob.includes("griff") || blob.includes("claw") || signature === "slash") {
+      return { id: Date.now(), kind: "slash", target: "enemy" };
+    }
+    return { id: Date.now(), kind: "impact", target: "enemy" };
+  }
+
+  if ((target === "player" || target === "companion") && looksLikeHeal) {
+    return { id: Date.now(), kind: "pulse", target };
+  }
+  if ((target === "player" || target === "companion") && looksDefensive) {
+    return { id: Date.now(), kind: "hex", target };
+  }
+
+  return null;
+}
+
+export default function CombatPanel({
+  combat,
+  busy,
+  resolutionMode = false,
+  onResolutionComplete,
+  onAttack,
+  onSkill,
+  onItem,
+  onDefend,
+  onFlee,
+}: Props) {
+  const [tab, setTab] = useState<"actions" | "skills" | "items" | "log">("actions");
+  const [shake, setShake] = useState({ player: false, enemy: false, companion: false });
+  const [hoverTarget, setHoverTarget] = useState<HighlightTarget>("none");
+  const [activeFx, setActiveFx] = useState<ActiveFx | null>(null);
+  const fxTimerRef = useRef<number | null>(null);
+  const signature = useMemo(() => getPlayerSignature(combat), [combat]);
+
+  const eventKey = useMemo(
+    () => combat?.events.map((event) => `${event.type}:${event.amount}:${event.text}:${event.actorId ?? ""}:${event.targetId ?? ""}`).join("|") ?? "",
+    [combat?.events],
+  );
+
+  const triggerFx = (kind: CombatFxKind, target: HighlightTarget = "enemy", duration = 720) => {
+    if (fxTimerRef.current) window.clearTimeout(fxTimerRef.current);
+    const effect = { id: Date.now(), kind, target };
+    setActiveFx(effect);
+    fxTimerRef.current = window.setTimeout(() => {
+      setActiveFx((current) => (current?.id === effect.id ? null : current));
+      fxTimerRef.current = null;
+    }, duration);
+  };
+
+  useEffect(() => () => {
+    if (fxTimerRef.current) window.clearTimeout(fxTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!combat?.events.length || resolutionMode) return;
+    const recent = combat.events.slice(-5);
+    const nextShake = { player: false, enemy: false, companion: false };
+    let nextFx: ActiveFx | null = null;
+
+    for (const event of recent) {
+      const target = resolveEventTarget(event, combat);
+      if (target === "player") nextShake.player = true;
+      if (target === "enemy") nextShake.enemy = true;
+      if (target === "companion") nextShake.companion = true;
+
+      const fx = inferEventFx(event, combat, signature);
+      if (fx) nextFx = fx;
+    }
+
+    if (nextShake.player || nextShake.enemy || nextShake.companion) {
+      setShake(nextShake);
+      const timer = window.setTimeout(
+        () => setShake({ player: false, enemy: false, companion: false }),
+        520,
+      );
+      if (nextFx) triggerFx(nextFx.kind, nextFx.target, nextFx.kind === "pet-pounce" ? 640 : 740);
+      return () => window.clearTimeout(timer);
+    }
+
+    if (nextFx) triggerFx(nextFx.kind, nextFx.target, nextFx.kind === "pet-pounce" ? 640 : 740);
+  }, [eventKey, combat, resolutionMode, signature]);
+
+  const enemyImage = useMemo(
+    () => (combat ? resolveMonsterImage(combat.enemy) : undefined),
+    [combat],
+  );
+
+  const setPointerGlow = (event: MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+    event.currentTarget.style.setProperty("--my", `${event.clientY - rect.top}px`);
+  };
+
+  const glowHandlers = (target: HighlightTarget) => ({
+    onMouseEnter: () => setHoverTarget(target),
+    onMouseLeave: () => setHoverTarget("none" as HighlightTarget),
+    onMouseMove: setPointerGlow,
+  });
+
+  if (!combat || (!combat.active && !resolutionMode)) return null;
+
+  const { player, enemy, companion } = combat;
+  const victory = resolutionMode && combat.outcome === "player_victory";
+
+  return (
+    <div className="tm-overlay tm-combat-overlay">
+      <article
+        className={`tm-combat-shell ${resolutionMode ? "is-resolution" : ""} ${victory ? "is-victory" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Combat TailBlue"
+      >
+        {/* VOLONTAIREMENT AUCUNE CROIX : un combat actif est verrouillé. */}
+        <header className="tm-combat-title">
+          <div>
+            <p className="tm-kicker">{resolutionMode ? "RÉSOLUTION DU COMBAT" : "COMBAT · MINE"}</p>
+            <h2>{cleanMineText(enemy.name)}</h2>
+            <p>{enemy.boss ? "Boss de l'Abîme" : `Créature niv. ${enemy.level ?? "?"}`} · chaque action est résolue par combat.py</p>
+          </div>
+          <div className="tm-combat-lock">{resolutionMode ? "⚔️ RÉSOLUTION" : "🔒 SORTIE VERROUILLÉE"}</div>
+        </header>
+
+        <div className="tm-arena">
+          <CombatFxLayer effect={activeFx} />
+
+          <section className={`tm-fighter tm-player ${hoverTarget === "player" ? "tm-targeted" : ""}`}>
+            <Portrait image={player.image} fallback={player.emoji || "🧭"} shake={shake.player} targeted={hoverTarget === "player"} />
+            <div className="tm-fighter-copy">
+              <small>AVENTURIER</small>
+              <h3>{cleanMineText(player.name)}</h3>
+              <div className="tm-value"><span>❤️ Points de vie</span><strong>{player.hp}/{player.maxHp}</strong></div>
+              <Bar value={player.hp} max={player.maxHp} kind="hp" />
+              {player.energy != null && player.maxEnergy != null && (
+                <>
+                  <div className="tm-value"><span>🔷 Énergie combat</span><strong>{player.energy}/{player.maxEnergy}</strong></div>
+                  <Bar value={player.energy} max={player.maxEnergy} kind="energy" />
+                </>
+              )}
+              {player.statuses.length > 0 && <div className="tm-statuses">{player.statuses.map((status) => <span key={status}>{cleanMineText(status)}</span>)}</div>}
+            </div>
+          </section>
+
+          <div className="tm-vs"><span>⚔</span><b>VS</b></div>
+
+          <section className={`tm-fighter tm-enemy ${hoverTarget === "enemy" ? "tm-targeted" : ""}`}>
+            <Portrait
+              image={enemyImage}
+              fallback={enemy.emoji || "👹"}
+              shake={shake.enemy}
+              defeated={victory}
+              targeted={hoverTarget === "enemy"}
+            />
+            <div className="tm-fighter-copy">
+              <small>{enemy.boss ? "BOSS" : "ENNEMI"} · NIV. {enemy.level ?? "?"}</small>
+              <h3>{cleanMineText(enemy.name)}</h3>
+              <div className="tm-value"><span>❤️ Points de vie</span><strong>{enemy.hp}/{enemy.maxHp}</strong></div>
+              <Bar value={enemy.hp} max={enemy.maxHp} kind="hp" />
+              {enemy.statuses.length > 0 && <div className="tm-statuses">{enemy.statuses.map((status) => <span key={status}>{cleanMineText(status)}</span>)}</div>}
+            </div>
+          </section>
+        </div>
+
+        {companion && (
+          <section className={`tm-combat-pet ${shake.companion ? "tm-impact-shake" : ""} ${hoverTarget === "companion" ? "tm-targeted" : ""}`}>
+            <div className="tm-combat-pet-pic"><MinePetPortrait pet={companion} /></div>
+            <div>
+              <small>COMPAGNON</small>
+              <strong>{cleanMineText(companion.name)}</strong>
+              <span>Niv. {companion.level} · {cleanMineText(companion.role || "allié")}</span>
+            </div>
+            <div className="tm-combat-pet-bars">
+              <span>❤️ {companion.hp}/{companion.maxHp}</span>
+              <Bar value={companion.hp} max={companion.maxHp} kind="hp" />
+              <span>⚡ {companion.energy}/{companion.maxEnergy}</span>
+              <Bar value={companion.energy} max={companion.maxEnergy} kind="energy" />
+            </div>
+          </section>
+        )}
+
+        <section className="tm-live-round">
+          <div className="tm-live-round-head">
+            <div>
+              <p className="tm-kicker">TOUR {combat.turn}</p>
+              <h3>Ce qui vient de se passer</h3>
+            </div>
+            <span>{combat.events.length} événement(s) enregistré(s)</span>
+          </div>
+          <BattleFeed events={combat.events} />
+        </section>
+
+        {resolutionMode ? (
+          <Resolution combat={combat} onComplete={onResolutionComplete} />
+        ) : (
+          <>
+            <nav className="tm-combat-tabs">
+              {(["actions", "skills", "items", "log"] as const).map((value) => (
+                <button key={value} className={tab === value ? "selected" : ""} onClick={() => setTab(value)}>
+                  {value === "actions" ? "⚔️ Actions" : value === "skills" ? "✨ Compétences" : value === "items" ? "🧪 Sac" : `📜 Journal (${combat.events.length})`}
+                </button>
+              ))}
+            </nav>
+
+            {tab === "actions" && (
+              <div className="tm-combat-actions">
+                <button
+                  className="primary tm-fx-surface"
+                  disabled={busy}
+                  onClick={() => {
+                    triggerFx(signature === "slash" ? "slash" : signature === "laser" ? "laser" : "impact", "enemy");
+                    void onAttack();
+                  }}
+                  {...glowHandlers("enemy")}
+                >
+                  <span>⚔️</span><b>Attaquer</b><small>Attaque de base</small>
+                </button>
+                <button className="tm-fx-surface" disabled={busy} onClick={() => setTab("skills")} {...glowHandlers("enemy")}>
+                  <span>✨</span><b>Compétences</b><small>Techniques et magie</small>
+                </button>
+                <button className="tm-fx-surface" disabled={busy} onClick={() => setTab("items")} {...glowHandlers("player")}>
+                  <span>🧪</span><b>Objets</b><small>Potions du sac</small>
+                </button>
+                <button
+                  className="tm-fx-surface"
+                  disabled={busy}
+                  onClick={() => {
+                    triggerFx("hex", "player");
+                    void onDefend();
+                  }}
+                  {...glowHandlers("player")}
+                >
+                  <span>🛡️</span><b>Défendre</b><small>Réduire les dégâts</small>
+                </button>
+                <button className="danger tm-fx-surface" disabled={busy || !combat.canFlee} onClick={() => void onFlee()}>
+                  <span>🏃</span><b>Fuir</b><small>{combat.canFlee ? "Tentative réelle" : "Impossible contre ce boss"}</small>
+                </button>
+              </div>
+            )}
+
+            {tab === "skills" && (
+              <div className="tm-skill-grid">
+                {combat.skills.length === 0 ? (
+                  <div className="tm-empty">Aucune compétence disponible.</div>
+                ) : combat.skills.map((skill) => {
+                  const hover = inferSkillFx(skill, signature).target;
+                  return (
+                    <button
+                      key={skill.id}
+                      className="tm-fx-surface"
+                      disabled={busy || Boolean(skill.disabledReason)}
+                      onClick={() => {
+                        const fx = inferSkillFx(skill, signature);
+                        triggerFx(fx.kind, fx.target, fx.kind === "laser" ? 820 : 720);
+                        void onSkill(skill.id);
+                      }}
+                      {...glowHandlers(hover)}
+                    >
+                      <div className="tm-skill-title"><strong>{cleanMineText(skill.name)}</strong><b>🔷 {skill.energyCost}</b></div>
+                      <p>{cleanMineText(skill.description, "Compétence TailBlue")}</p>
+                      <div className="tm-tags"><span>{cleanMineText(skill.element || "neutral")}</span>{skill.cooldown > 0 && <span>⏳ {skill.cooldown}</span>}</div>
+                      {skill.disabledReason && <em>{cleanMineText(skill.disabledReason)}</em>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {tab === "items" && (
+              <div className="tm-item-grid">
+                {combat.items.length === 0 ? (
+                  <div className="tm-empty">Ton sac ne contient aucun objet utilisable en combat.</div>
+                ) : combat.items.map((item) => (
+                  <button
+                    key={item.id}
+                    className="tm-fx-surface"
+                    disabled={busy || !item.usable}
+                    onClick={() => {
+                      triggerFx("pulse", "player");
+                      void onItem(item.id);
+                    }}
+                    {...glowHandlers("player")}
+                  >
+                    <strong>🧪 {cleanMineText(item.name)}</strong>
+                    <b>×{item.quantity}</b>
+                    <p>{cleanMineText(item.description)}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {tab === "log" && (
+              <div className="tm-combat-log">
+                {combat.events.length === 0 ? (
+                  <p>Le combat commence…</p>
+                ) : combat.events.map((event, index) => (
+                  <div key={`${event.type}-${index}-${event.text}`}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <b>{eventIcon(event)}</b>
+                    <p className={event.critical ? "critical" : ""}>{cleanMineText(event.text)}</p>
+                    {event.amount > 0 && <em>{event.amount}</em>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <footer className="tm-combat-footer">
+              Tour {combat.turn} · dégâts, esquives, critiques, compétences, compagnon, IA et fuite sont tous résolus côté serveur.
+            </footer>
+          </>
+        )}
+      </article>
+    </div>
+  );
+}

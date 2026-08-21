@@ -1,0 +1,514 @@
+<!doctype html>
+
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>TailBlue</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      overflow: hidden;
+
+      color: #f4fbff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background:
+        radial-gradient(
+          circle at 50% -20%,
+          rgba(53, 169, 255, 0.27),
+          transparent 46%
+        ),
+        linear-gradient(
+          145deg,
+          #071d35,
+          #03101f
+        );
+    }
+
+    .launcher {
+      position: relative;
+
+      width: 100%;
+      height: 100%;
+
+      display: flex;
+      flex-direction: column;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 30px 34px;
+    }
+
+    .launcher::before {
+      content: "";
+
+      position: absolute;
+      inset: 1px;
+
+      border:
+        1px solid
+        rgba(131, 210, 255, 0.17);
+
+      border-radius: 18px;
+
+      pointer-events: none;
+    }
+
+    .logo-ring {
+      width: 64px;
+      height: 64px;
+
+      display: grid;
+      place-items: center;
+
+      margin-bottom: 12px;
+
+      border-radius: 19px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(39, 142, 229, 0.28),
+          rgba(11, 68, 130, 0.16)
+        );
+
+      box-shadow:
+        0 0 38px
+        rgba(45, 169, 255, 0.15);
+
+      animation:
+        logoFloat
+        3.2s
+        ease-in-out
+        infinite;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+
+      object-fit: contain;
+    }
+
+    .brand {
+      margin: 0;
+
+      font-size: 19px;
+      font-weight: 950;
+
+      letter-spacing: 0.16em;
+    }
+
+    .brand span {
+      color: #4fbaff;
+    }
+
+    .status {
+      min-height: 18px;
+
+      margin-top: 12px;
+
+      color: #9ac4dc;
+
+      font-size: 11px;
+      font-weight: 750;
+
+      text-align: center;
+    }
+
+    .progress-wrap {
+      width: 100%;
+
+      margin-top: 17px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 7px;
+
+      overflow: hidden;
+
+      border-radius: 999px;
+
+      background:
+        rgba(112, 164, 196, 0.12);
+    }
+
+    .progress {
+  width: 32%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #147be8,
+      #38baff,
+      #73dcff
+    );
+
+  box-shadow:
+    0 0 14px
+    rgba(61, 190, 255, 0.40);
+
+  transition:
+    width 0.25s ease;
+
+  animation:
+    searching
+    1.6s
+    ease-in-out
+    infinite;
+}
+
+.progress.real {
+  animation: none;
+  transform: none;
+}
+
+@keyframes searching {
+  0% {
+    transform: translateX(-115%);
+  }
+
+  100% {
+    transform: translateX(315%);
+  }
+}
+
+    .percent {
+      min-height: 14px;
+
+      margin-top: 7px;
+
+      color:
+        rgba(174, 215, 238, 0.57);
+
+      font-size: 9px;
+      font-weight: 800;
+
+      text-align: center;
+    }
+
+    .rune {
+      position: absolute;
+
+      right: 20px;
+      bottom: 15px;
+
+      color:
+        rgba(91, 199, 255, 0.34);
+
+      font-size: 16px;
+
+      animation:
+        runePulse
+        2s
+        ease-in-out
+        infinite;
+    }
+        
+
+    @keyframes logoFloat {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-4px);
+      }
+    }
+
+    @keyframes runePulse {
+      0%,
+      100% {
+        opacity: 0.35;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="launcher">
+
+    <div class="logo-ring">
+      <img
+        class="logo"
+        src="/icone-appli.png"
+        alt=""
+      />
+    </div>
+
+    <h1 class="brand">
+      TAIL<span>BLUE</span>
+    </h1>
+
+    <div
+      id="status"
+      class="status"
+    >
+      Recherche de mise à jour…
+    </div>
+
+    <div class="progress-wrap">
+
+      <div class="progress-track">
+        <div
+          id="progress"
+          class="progress"
+        ></div>
+      </div>
+
+      <div
+        id="percent"
+        class="percent"
+      >
+        Connexion aux services TailBlue
+      </div>
+
+    </div>
+
+    <div class="rune">
+      ✦
+    </div>
+
+  </main>
+
+
+  <script>
+    const status =
+      document.getElementById(
+        "status"
+      );
+
+    const progress =
+      document.getElementById(
+        "progress"
+      );
+
+    const percent =
+      document.getElementById(
+        "percent"
+      );
+
+
+    function realProgress(value) {
+      const safe =
+        Math.max(
+          0,
+          Math.min(
+            100,
+            Number(value) || 0
+          )
+        );
+
+
+      progress.classList.add(
+        "real"
+      );
+
+      progress.style.width =
+        `${safe}%`;
+
+      progress.style.transform =
+        "none";
+
+
+      return safe;
+    }
+
+
+    function handleStatus(value) {
+      const state =
+        String(value ?? "");
+
+
+      if (
+        state.startsWith(
+          "update:"
+        )
+      ) {
+        const version =
+          state
+            .substring(7)
+            .trim();
+
+
+        status.textContent =
+          `Mise à jour ${version} disponible`;
+
+
+        percent.textContent =
+          "Préparation du téléchargement…";
+
+
+        return;
+      }
+
+
+      switch (state) {
+
+        case "checking":
+          status.textContent =
+            "Recherche de mise à jour…";
+
+          percent.textContent =
+            "Connexion aux services TailBlue";
+
+          break;
+
+
+        case "up-to-date":
+          realProgress(100);
+
+          status.textContent =
+            "TailBlue est à jour ✦";
+
+          percent.textContent =
+            "Ouverture du royaume…";
+
+          break;
+
+
+        case "installing":
+          realProgress(100);
+
+          status.textContent =
+            "Installation de la mise à jour…";
+
+          percent.textContent =
+            "Encore quelques instants ✦";
+
+          break;
+
+
+        case "restart":
+          realProgress(100);
+
+          status.textContent =
+            "Mise à jour terminée ✦";
+
+          percent.textContent =
+            "Redémarrage de TailBlue…";
+
+          break;
+
+
+        case "error":
+          realProgress(100);
+
+          status.textContent =
+            "Vérification momentanément indisponible";
+
+          percent.textContent =
+            "Ouverture de TailBlue…";
+
+          break;
+      }
+    }
+
+
+    async function boot() {
+      /*
+       * IMPORTANT :
+       * ce JS ne peut PLUS empêcher
+       * l'updater Rust de fonctionner.
+       */
+      if (
+        !window.__TAURI__ ||
+        !window.__TAURI__.event
+      ) {
+        console.warn(
+          "Événements Tauri indisponibles"
+        );
+
+        return;
+      }
+
+
+      const {
+        listen
+      } =
+        window.__TAURI__.event;
+
+
+      await listen(
+        "tailblue-updater-status",
+        (event) => {
+          handleStatus(
+            event.payload
+          );
+        }
+      );
+
+
+      await listen(
+        "tailblue-updater-progress",
+        (event) => {
+
+          const value =
+            realProgress(
+              event.payload
+            );
+
+
+          status.textContent =
+            "Téléchargement de la mise à jour…";
+
+
+          percent.textContent =
+            `${Math.round(value)} %`;
+        }
+      );
+    }
+
+
+    boot().catch(
+      (error) => {
+        /*
+         * On log seulement.
+         *
+         * SURTOUT :
+         * on ne bloque rien.
+         */
+        console.error(
+          "Erreur interface updater :",
+          error
+        );
+      }
+    );
+  </script>
+
+</body>
+</html>
