@@ -10,6 +10,7 @@ import type {
   MineMutationState,
 } from "../../types/mine";
 import "./mineMutation.css";
+// TAILBLUE_MINE_V475_EXACT_POLISH_20260822
 
 type Props = {
   mode: "call" | "reveal";
@@ -118,7 +119,7 @@ export default function MineMutationCinematic({ mode, mutation, onComplete }: Pr
             <p>La paroi cède dans un grondement qui traverse tout l'étage.</p>
             <p>Un tunnel qui n'existait pas auparavant s'ouvre devant vous.</p>
             <strong>
-              {reveal?.roomCount ?? 0} nouvelles salles · {reveal?.themeLabel ?? "Galerie inconnue"}
+              {reveal?.themeLabel ?? "Galerie inconnue"} · la Mine garde le reste de ses secrets.
             </strong>
           </div>
         )}

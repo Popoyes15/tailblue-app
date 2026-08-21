@@ -4600,3 +4600,132 @@ html.tb-no-animations .tm-resolution-rune {
   .tm-death-ash *,
   .tm-death-ash::before { animation-duration:.01ms !important; animation-delay:0ms !important; }
 }
+
+
+/* ==================================================================
+   TAILBLUE_MINE_V475_EXACT_POLISH_20260822
+   RP polish : top progression + cendres + indices
+   ================================================================== */
+
+.tm-death-ash.is-enemy {
+  left: 22px !important;
+  right: auto !important;
+}
+
+.tm-expedition-status {
+  grid-template-columns:
+    minmax(230px, 1.25fr)
+    minmax(175px, .8fr)
+    minmax(175px, .8fr)
+    minmax(250px, 1.1fr);
+}
+
+.tm-topbar-progression {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 5px 0 6px;
+}
+
+.tm-topbar-progress-item,
+.tm-topbar-pickaxe {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 8px;
+  border: 1px solid rgba(94, 178, 220, .13);
+  border-radius: 999px;
+  background: rgba(6, 35, 55, .58);
+  color: #89aabd;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+.tm-topbar-progress-item > b {
+  color: #a9c5d4;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.tm-topbar-progress-item > i {
+  width: 46px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(105, 171, 200, .13);
+}
+
+.tm-topbar-progress-item > i > em {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(62, 171, 221, .74),
+    rgba(118, 220, 248, .94)
+  );
+  box-shadow: 0 0 8px rgba(92, 198, 238, .24);
+}
+
+.tm-topbar-pickaxe {
+  color: #a8bdc9;
+}
+
+.tm-rpg-hint {
+  width: min(860px, 100%);
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 15px auto 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(97, 174, 210, .12);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 8% 50%, rgba(74, 166, 205, .08), transparent 34%),
+    rgba(5, 29, 45, .5);
+  animation: tmRpgHintIn .55s ease both;
+}
+
+.tm-rpg-hint > span {
+  flex: 0 0 auto;
+  color: #69a8c7;
+  font-size: 7px;
+  font-weight: 950;
+  letter-spacing: .18em;
+}
+
+.tm-rpg-hint > p {
+  margin: 0;
+  color: #819fac;
+  font-size: 9px;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+@keyframes tmRpgHintIn {
+  from { opacity: 0; transform: translateY(4px); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@media (max-width: 980px) {
+  .tm-expedition-status {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .tm-expedition-status {
+    grid-template-columns: 1fr;
+  }
+  .tm-topbar-progress-item > i {
+    display: none;
+  }
+  .tm-rpg-hint {
+    align-items: flex-start;
+  }
+}

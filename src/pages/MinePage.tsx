@@ -38,6 +38,7 @@ import "../components/mine/mineUltra.css";
 // TAILBLUE_MINE_V45_KEYS_TELEPORT_20260821
 // TAILBLUE_MINE_V46_FINAL_PROGRESS_ASH_20260821
 // TAILBLUE_MINE_V47_LIVING_MINE_20260822
+// TAILBLUE_MINE_V475_EXACT_POLISH_20260822
 
 // TAILBLUE_MINE_ENCOUNTER_V44_20260821
 
@@ -125,6 +126,22 @@ function MineProgressMeter({
 }
 
 
+
+const MINE_RPG_HINTS = [
+  "La Mine regorge de secrets passés. Revenir sur ses pas peut parfois réveiller un ancien écho.",
+  "Un étage terminé n'a pas forcément livré tous ses secrets.",
+  "Écoute la Mine : un changement de vent, de silence ou de lumière n'est jamais anodin.",
+  "La roche garde la mémoire de tes passages.",
+  "Un détour peut mener à une découverte que la route la plus directe aurait laissée dormir.",
+  "Certains murs racontent plus de choses qu'une porte déjà ouverte.",
+  "Un bruit lointain peut être un avertissement… ou une invitation.",
+  "Les refuges ne servent pas qu'à reprendre des forces : ils sont de précieux repères dans les profondeurs.",
+  "Une galerie silencieuse aujourd'hui peut raconter une toute autre histoire demain.",
+  "Les embranchements oubliés récompensent souvent les exploratrices les plus curieuses.",
+  "Une clé ancienne n'a jamais l'air importante… jusqu'au jour où une serrure la reconnaît.",
+  "Quand la Mine semble respirer différemment, prends le temps de regarder autour de toi.",
+] as const;
+
 function resultKind(result?: MineResult | null) {
   const value = result?.metadata?.uiKind;
   return typeof value === "string" ? value : "";
@@ -180,32 +197,8 @@ function StatusBar({
         <div>
           <p className="tm-kicker">EXPÉDITION</p>
           <strong>{cleanMineText(snapshot.player.name)}</strong>
-          <span>
-            Mine niv. {snapshot.player.miningLevel} · Pioche R{snapshot.player.pickaxeTier}
-            {" · "}Combat niv. {snapshot.player.combatLevel}
-          </span>
+          <span>Exploration en cours</span>
         </div>
-      </div>
-
-      <div className="tm-status-progressions">
-        <MineProgressMeter
-          compact
-          icon="⛏️"
-          label="MINAGE"
-          level={snapshot.player.miningLevel}
-          current={snapshot.player.miningXpCurrent}
-          needed={snapshot.player.miningXpNeeded}
-          detail={`${snapshot.player.miningXpToNext} XP avant le niveau ${snapshot.player.miningLevel + 1}`}
-        />
-        <MineProgressMeter
-          compact
-          icon="⚔️"
-          label="COMBAT"
-          level={snapshot.player.combatLevel}
-          current={snapshot.player.combatXpCurrent}
-          needed={snapshot.player.combatXpNeeded}
-          detail={`${snapshot.player.combatXpToNext} XP avant le niveau ${snapshot.player.combatLevel + 1}`}
-        />
       </div>
 
       <div className="tm-status-vital">
@@ -292,6 +285,7 @@ export default function MinePage() {
   const [careOpen, setCareOpen] = useState(false);
   const [entryDestinationOpen, setEntryDestinationOpen] = useState(false);
   const [teleportOpen, setTeleportOpen] = useState(false);
+  const [mineHintIndex, setMineHintIndex] = useState(0);
   const [selectedCompanion, setSelectedCompanion] = useState<string>("");
   const [result, setResult] = useState<MineResult | null>(null);
   const [mutationScene, setMutationScene] = useState<{
@@ -357,6 +351,13 @@ export default function MinePage() {
   useEffect(() => {
     void refresh(false);
   }, [refresh]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setMineHintIndex((current) => (current + 1) % MINE_RPG_HINTS.length);
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const updateAudioSettings = useCallback(
     (patch: Partial<MineAudioSettings>) => {
@@ -656,6 +657,11 @@ export default function MinePage() {
           </section>
         </div>
 
+        <aside className="tm-rpg-hint" key={mineHintIndex} aria-live="polite">
+          <span>✦ INDICE</span>
+          <p>{MINE_RPG_HINTS[mineHintIndex]}</p>
+        </aside>
+
         <button className="tm-enter" disabled={busy} onClick={() => {
             const destinations = snapshot.entryDestinations ?? [];
             if (destinations.length <= 1) {
@@ -744,6 +750,17 @@ export default function MinePage() {
       <header className="tm-mine-topbar">
         <div>
           <p className="tm-kicker">L'ABÎME DE TAILBLUE</p>
+          <div className="tm-topbar-progression" aria-label="Progression de la Mine">
+            <span className="tm-topbar-progress-item">
+              <b>⛏️ Mine niv. {snapshot.player.miningLevel}</b>
+              <i><em style={{ width: `${pct(snapshot.player.miningXpCurrent, snapshot.player.miningXpNeeded)}%` }} /></i>
+            </span>
+            <span className="tm-topbar-pickaxe">🪓 Pioche R{snapshot.player.pickaxeTier}</span>
+            <span className="tm-topbar-progress-item">
+              <b>⚔️ Combat niv. {snapshot.player.combatLevel}</b>
+              <i><em style={{ width: `${pct(snapshot.player.combatXpCurrent, snapshot.player.combatXpNeeded)}%` }} /></i>
+            </span>
+          </div>
           <div className="tm-topbar-title">
             <h1>Mine</h1>
             <span>{combatActive ? "🔒 Combat actif" : "🧭 Exploration"}</span>
@@ -1015,25 +1032,6 @@ export default function MinePage() {
       </div>
 
       <StatusBar snapshot={snapshot} combatActive={combatActive} onCompanion={() => setCareOpen(true)} />
-
-      {snapshot.mutation && (
-        <section className={`tm-mutation-status-card ${snapshot.mutation.status}`}>
-          <div>
-            <p className="tm-kicker">MINE VIVANTE</p>
-            <strong>Mutation {snapshot.mutation.stage}/{snapshot.mutation.maxStages}</strong>
-            <span>
-              {snapshot.mutation.stabilized
-                ? "Cet étage s'est définitivement stabilisé."
-                : snapshot.mutation.status === "pending"
-                  ? `La Mine bougera à nouveau dans environ ${Math.max(1, Math.ceil((snapshot.mutation.availableInSeconds ?? 0) / 3600))} h.`
-                  : snapshot.mutation.status === "ready"
-                    ? `Quelque chose t'attire vers ${snapshot.mutation.directionLabel ?? "une autre partie de l'étage"}. Retrouve la salle de jonction.`
-                    : `Extension en exploration · ${snapshot.mutation.roomsDiscovered ?? 0}/${snapshot.mutation.roomsTotal ?? 0} salles visitées · ${snapshot.mutation.hostilesRemaining ?? 0} menace(s) restante(s).`}
-            </span>
-          </div>
-          <b>{snapshot.mutation.stabilized ? "🔒" : snapshot.mutation.status === "ready" ? "🌑" : snapshot.mutation.status === "revealed" ? "🧭" : "⏱️"}</b>
-        </section>
-      )}
 
       <div className="tm-lower-grid-v48">
         <section className="tm-actions-card tm-actions-card-v48">
