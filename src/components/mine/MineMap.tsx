@@ -15,6 +15,8 @@ import type {
 } from "../../types/mine";
 import { cleanMineText } from "../../data/mineText";
 
+// TAILBLUE_MAP_NO_GHOST_DOORS_V441_20260821
+
 const ROOM_ICONS: Record<string, string> = {
   entrance: "🚪",
   empty: "🕯️",
@@ -134,10 +136,27 @@ export default function MineMap({ map, exits, disabled, onMove }: Props) {
   } | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  const nodes = useMemo(() => graphLayout(map), [map]);
+  const allNodes = useMemo(() => graphLayout(map), [map]);
   const exitByRoom = useMemo(
     () => new Map(exits.map((exit) => [exit.roomId, exit])),
     [exits],
+  );
+
+  // V4.4.1 - pas de portes reperees fantomes.
+  // La carte montre uniquement :
+  // - ce qui a reellement ete visite / decouvert ;
+  // - la salle actuelle ;
+  // - les sorties reellement accessibles depuis la salle actuelle.
+  const nodes = useMemo(
+    () =>
+      allNodes.filter(
+        (node) =>
+          node.current ||
+          node.known ||
+          node.cleared ||
+          exitByRoom.has(node.id),
+      ),
+    [allNodes, exitByRoom],
   );
 
   const geometry = useMemo(() => {
@@ -335,9 +354,7 @@ export default function MineMap({ map, exits, disabled, onMove }: Props) {
                   ? (node.known ? "Déjà visitée" : "À explorer")
                   : node.cleared
                     ? "Nettoyée"
-                    : node.known
-                      ? "Visitée"
-                      : "Porte repérée";
+                    : "Visitée";
 
               return (
                 <foreignObject

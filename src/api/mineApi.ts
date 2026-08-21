@@ -78,11 +78,20 @@ function post(path: string, body?: unknown) {
 export const mineApi = {
   configured: Boolean(API_URL),
   snapshot: () => snapshotRequest("/api/mine"),
-  enter: (companionId?: string | null) => post("/api/mine/enter", { companionId: companionId || null }),
+  enter: (companionId?: string | null, destinationFloor?: number | null) =>
+    post("/api/mine/enter", {
+      companionId: companionId || null,
+      destinationFloor: destinationFloor ?? null,
+    }),
+  teleport: (floor: number) => post("/api/mine/teleport", { floor }),
   leave: () => post("/api/mine/leave"),
   action: (action: string, options: { direction?: string; targetId?: string } = {}) => post("/api/mine/action", { action, direction: options.direction ?? null, targetId: options.targetId ?? null }),
+  ackMutationCall: () => post("/api/mine/mutation/ack"),
+  revealMutation: () => post("/api/mine/mutation/reveal"),
   usePotion: (itemId: string) => post("/api/mine/potion", { itemId }),
   feedCompanion: (foodId: string) => post("/api/mine/companion/feed", { foodId }),
   cuddleCompanion: () => post("/api/mine/companion/cuddle"),
   combat: (action: "attack" | "defend" | "flee" | "skill" | "item", options: { skillId?: string; itemId?: string } = {}) => post("/api/mine/combat/action", { action, skillId: options.skillId ?? null, itemId: options.itemId ?? null }),
 };
+
+// TAILBLUE_MINE_V47_LIVING_MINE_20260822

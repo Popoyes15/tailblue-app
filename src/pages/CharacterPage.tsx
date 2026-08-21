@@ -337,6 +337,36 @@ function RaceDetail({
           </span>
         </div>
 
+        {detail.combatLevel != null && (
+          <div className="tb-character-race-progress">
+            <div className="tb-character-race-progress-head">
+              <div>
+                <span>⚔️ Niveau de combat actuel</span>
+                <strong>{detail.combatLevel}</strong>
+              </div>
+              <b>
+                {formatNumber(detail.combatXpCurrent ?? 0)}
+                {" / "}
+                {formatNumber(detail.combatXpNeeded ?? 1)} XP
+              </b>
+            </div>
+            <div className="tb-character-race-progress-track">
+              <i
+                style={{
+                  width: `${percent(
+                    detail.combatXpCurrent ?? 0,
+                    detail.combatXpNeeded ?? 1,
+                  )}%`,
+                }}
+              />
+            </div>
+            <small>
+              {formatNumber(detail.combatXpToNext ?? 0)} XP avant le niveau{" "}
+              {detail.combatLevel + 1}
+            </small>
+          </div>
+        )}
+
         {detail.nextSkillLevel != null && (
           <div className="tb-character-next-skill">
             ✨ Prochain palier racial au niveau de combat{" "}
@@ -1345,6 +1375,69 @@ export default function CharacterPage() {
                 </article>
               ))}
             </div>
+
+            {(snapshot.combat.combatLevel != null ||
+              snapshot.combat.miningLevel != null) && (
+              <div className="tb-character-progression-duo">
+                {snapshot.combat.combatLevel != null && (
+                  <article>
+                    <div>
+                      <span>⚔️ Combat</span>
+                      <strong>Niveau {snapshot.combat.combatLevel}</strong>
+                      <small>
+                        {formatNumber(snapshot.combat.combatXpToNext ?? 0)} XP avant le niveau{" "}
+                        {snapshot.combat.combatLevel + 1}
+                      </small>
+                    </div>
+                    <b>
+                      {formatNumber(snapshot.combat.combatXpCurrent ?? 0)}
+                      {" / "}
+                      {formatNumber(snapshot.combat.combatXpNeeded ?? 1)} XP
+                    </b>
+                    <div className="tb-character-mini-progress">
+                      <i
+                        style={{
+                          width: `${percent(
+                            snapshot.combat.combatXpCurrent ?? 0,
+                            snapshot.combat.combatXpNeeded ?? 1,
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </article>
+                )}
+
+                {snapshot.combat.miningLevel != null && (
+                  <article>
+                    <div>
+                      <span>⛏️ Minage</span>
+                      <strong>Niveau {snapshot.combat.miningLevel}</strong>
+                      <small>
+                        Pioche rang {snapshot.combat.pickaxeTier ?? 0}
+                        {snapshot.combat.pickaxeNextTierLevel != null
+                          ? ` · prochain rang au niv. ${snapshot.combat.pickaxeNextTierLevel}`
+                          : " · rang maximum"}
+                      </small>
+                    </div>
+                    <b>
+                      {formatNumber(snapshot.combat.miningXpCurrent ?? 0)}
+                      {" / "}
+                      {formatNumber(snapshot.combat.miningXpNeeded ?? 1)} XP
+                    </b>
+                    <div className="tb-character-mini-progress is-mining">
+                      <i
+                        style={{
+                          width: `${percent(
+                            snapshot.combat.miningXpCurrent ?? 0,
+                            snapshot.combat.miningXpNeeded ?? 1,
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </article>
+                )}
+              </div>
+            )}
 
             {(snapshot.combat.combatLevel != null ||
               snapshot.combat.combatEnergy != null) && (

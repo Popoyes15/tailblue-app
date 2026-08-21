@@ -1739,3 +1739,27 @@
     grid-column: auto;
   }
 }
+
+
+/* ==================================================================
+   TAILBLUE_MINE_V46_FINAL_PROGRESS_ASH_20260821
+   Progression Combat + Minage dans Personnage
+   ================================================================== */
+.tb-character-progression-duo { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:16px; }
+.tb-character-progression-duo > article { padding:13px; border:1px solid rgba(121,156,217,.13); border-radius:15px; background:rgba(31,37,62,.44); }
+.tb-character-progression-duo > article > div:first-child { display:grid; gap:2px; }
+.tb-character-progression-duo span { color:var(--tb-muted,#9298ad); font-size:10px; }
+.tb-character-progression-duo strong { color:#f3f4fb; font-size:14px; }
+.tb-character-progression-duo small { min-height:24px; color:#777f99; font-size:8px; line-height:1.45; }
+.tb-character-progression-duo > article > b { display:block; margin-top:9px; color:#adb8d5; font-size:9px; font-weight:800; }
+.tb-character-mini-progress,.tb-character-race-progress-track { height:6px; margin-top:6px; overflow:hidden; border-radius:999px; background:rgba(132,142,179,.11); }
+.tb-character-mini-progress > i,.tb-character-race-progress-track > i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,rgba(119,106,242,.78),rgba(172,132,255,.96)); box-shadow:0 0 12px rgba(143,111,245,.22); }
+.tb-character-mini-progress.is-mining > i { background:linear-gradient(90deg,rgba(45,158,191,.78),rgba(94,212,216,.94)); box-shadow:0 0 12px rgba(66,190,205,.22); }
+.tb-character-race-progress { margin:14px 0 10px; padding:14px; border:1px solid rgba(138,116,235,.17); border-radius:16px; background:radial-gradient(circle at 8% 0%,rgba(126,103,229,.12),transparent 42%),rgba(33,31,55,.48); }
+.tb-character-race-progress-head { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; }
+.tb-character-race-progress-head span,.tb-character-race-progress-head strong { display:block; }
+.tb-character-race-progress-head span { color:#9298ae; font-size:9px; }
+.tb-character-race-progress-head strong { margin-top:2px; color:#f3f1ff; font-size:22px; }
+.tb-character-race-progress-head > b { color:#aab1cc; font-size:9px; }
+.tb-character-race-progress > small { display:block; margin-top:7px; color:#777f9a; font-size:8px; }
+@media (max-width:720px) { .tb-character-progression-duo { grid-template-columns:1fr; } }

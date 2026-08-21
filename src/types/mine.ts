@@ -21,8 +21,18 @@ export type MinePlayer = {
   energy: number;
   maxEnergy: number;
   pickaxeTier: number;
+  pickaxeNextTier?: number | null;
+  pickaxeNextTierLevel?: number | null;
   miningLevel: number;
   miningXp: number;
+  miningXpCurrent: number;
+  miningXpNeeded: number;
+  miningXpToNext: number;
+  combatLevel: number;
+  combatXp: number;
+  combatXpCurrent: number;
+  combatXpNeeded: number;
+  combatXpToNext: number;
   statusEffects: string[];
 };
 
@@ -232,6 +242,48 @@ export type MineCombat = {
   rewards?: { xp: number; combatXp: number; cookies: number } | null;
 };
 
+export type MineDestination = {
+  id: string;
+  kind: "resume" | "refuge" | "entrance";
+  floor: number;
+  label: string;
+  description: string;
+};
+
+export type MineMutationState = {
+  stage: number;
+  maxStages: number;
+  status: "pending" | "ready" | "revealed" | "complete" | "stabilized" | string;
+  stabilized: boolean;
+  completedStages: number;
+  availableAt?: number | null;
+  availableInSeconds?: number;
+  showCall: boolean;
+  callSeen?: boolean;
+  canReveal: boolean;
+  direction?: string | null;
+  directionLabel?: string | null;
+  signatureId?: number;
+  theme?: string | null;
+  themeLabel?: string | null;
+  roomsTotal?: number;
+  roomsDiscovered?: number;
+  hostilesRemaining?: number;
+};
+
+export type MineMutationReveal = {
+  stage: number;
+  maxStages: number;
+  signatureId: number;
+  theme: string;
+  themeLabel: string;
+  direction: string;
+  directionLabel: string;
+  roomCount: number;
+  title: string;
+  message: string;
+};
+
 export type MineSnapshot = {
   version: number;
   active: boolean;
@@ -243,11 +295,18 @@ export type MineSnapshot = {
   exits: MineExit[];
   map: MineMap;
   allowedActions: string[];
+  entryDestinations: MineDestination[];
+  teleportDestinations: MineDestination[];
+  canTeleport: boolean;
   potions: MinePotion[];
   companionChoices: MineCompanion[];
   companion?: MineCompanion | null;
   combat?: MineCombat | null;
   combatResolution?: MineCombat | null;
+  mutation?: MineMutationState | null;
+  mutationReveal?: MineMutationReveal | null;
   journal: MineJournalEntry[];
   result?: MineResult | null;
 };
+
+// TAILBLUE_MINE_V47_LIVING_MINE_20260822

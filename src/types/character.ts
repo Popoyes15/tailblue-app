@@ -17,6 +17,18 @@ export type CharacterStatBlock = {
   dodge: number;
   luck: number;
   combatLevel?: number | null;
+  combatXpTotal?: number | null;
+  combatXpCurrent?: number | null;
+  combatXpNeeded?: number | null;
+  combatXpToNext?: number | null;
+  miningLevel?: number | null;
+  miningXpTotal?: number | null;
+  miningXpCurrent?: number | null;
+  miningXpNeeded?: number | null;
+  miningXpToNext?: number | null;
+  pickaxeTier?: number | null;
+  pickaxeNextTier?: number | null;
+  pickaxeNextTierLevel?: number | null;
   combatEnergy?: number | null;
   combatEnergyMax?: number | null;
 };
@@ -104,6 +116,10 @@ export type CharacterRaceDetail = {
   statBonuses: Record<string, number>;
 
   combatLevel?: number | null;
+  combatXpTotal?: number | null;
+  combatXpCurrent?: number | null;
+  combatXpNeeded?: number | null;
+  combatXpToNext?: number | null;
   unlockedSkills: CharacterRaceSkill[];
   nextSkillLevel?: number | null;
 

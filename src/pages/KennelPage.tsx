@@ -20,6 +20,8 @@ import type {
 } from "../types/companions";
 import "../components/companions/companionsFinal.css";
 
+// TAILBLUE_V3_POLISH_20260821
+
 type Tab = "kennel" | "team" | "provisions";
 
 type StoryTarget = {
@@ -206,10 +208,30 @@ export default function KennelPage() {
     try {
       setBusy(true);
       let next = provisions;
-      for (const [foodId, quantity] of entries) next = await companionApi.buyFood(foodId, quantity);
+      for (const [foodId, quantity] of entries) {
+        next = await companionApi.buyFood(foodId, quantity);
+      }
+
+      const purchasedStats = entries.map(([foodId, quantity]) => {
+        const food = provisions?.stock.find((item) => item.id === foodId);
+        return {
+          icon: "🍖",
+          label: `${food?.name ?? foodId} ×${quantity}`,
+        };
+      });
+
       setProvisions(next);
       setBasket({});
-      setNotice({ icon: "🧺", title: "Commande rangée", message: "L'intendance a reçu les provisions et les réserves sont déjà à jour.", tone: "success", stats: [{ icon: "🍪", label: `${formatNumber(basketTotal)} dépensés` }] });
+      setNotice({
+        icon: "🧺",
+        title: "Commande rangée",
+        message: "L'intendance a reçu la commande. Les quantités et le stock affiché sont déjà synchronisés avec TailBlue.",
+        tone: "success",
+        stats: [
+          ...purchasedStats,
+          { icon: "🍪", label: `${formatNumber(basketTotal)} cookies dépensés` },
+        ],
+      });
     } catch (error) {
       setNotice({ icon: "⚠️", title: "Commande refusée", message: error instanceof Error ? error.message : "Achat impossible.", tone: "error" });
     } finally {
@@ -272,12 +294,27 @@ export default function KennelPage() {
       const result = await companionApi.feed(pet.id, foodId);
       setCompanions(result.companions);
       if (result.provisions) setProvisions(result.provisions);
+
+      const preferenceStat =
+        result.preference === "adore"
+          ? { icon: "😍", label: "Il adore ce repas" }
+          : result.preference === "aime"
+            ? { icon: "😋", label: "Il aime ce repas" }
+            : result.preference === "deteste"
+              ? { icon: "😖", label: "Il n'aime vraiment pas ça" }
+              : result.preference === "special"
+                ? { icon: "✨", label: "Réaction spéciale" }
+                : result.preference === "neutre"
+                  ? { icon: "🙂", label: "Goût neutre" }
+                  : null;
+
       setNotice({
         icon: "🍖",
         title: `${pet.displayName} a mangé`,
         message: result.text || "Le repas a été servi dans le sanctuaire.",
         tone: "success",
         stats: [
+          ...(preferenceStat ? [preferenceStat] : []),
           ...(result.hpGain ? [{ icon: "❤️", label: `+${result.hpGain} PV` }] : []),
           ...(result.energyGain ? [{ icon: "⚡", label: `+${result.energyGain} énergie` }] : []),
           ...(result.affectionGain ? [{ icon: "💜", label: `+${result.affectionGain} confiance` }] : []),

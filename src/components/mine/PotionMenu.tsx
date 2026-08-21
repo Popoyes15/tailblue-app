@@ -3,6 +3,8 @@ import type { MinePotion, MineResult } from "../../types/mine";
 import { cleanMineText } from "../../data/mineText";
 import "./mineUltra.css";
 
+// TAILBLUE_HOTFIX_V4_20260821
+
 type Props = {
   open: boolean;
   potions: MinePotion[];
@@ -10,9 +12,10 @@ type Props = {
   onClose: () => void;
   onUse: (id: string) => void | Promise<void>;
   feedback?: MineResult | null;
+  fxToken?: number;
 };
 
-export default function PotionMenu({ open, potions, busy, onClose, onUse, feedback }: Props) {
+export default function PotionMenu({ open, potions, busy, onClose, onUse, feedback, fxToken = 0 }: Props) {
   if (!open) return null;
   return (
     <div className="tm-overlay" onMouseDown={onClose}>
@@ -26,6 +29,12 @@ export default function PotionMenu({ open, potions, busy, onClose, onUse, feedba
             <p>Potions, bandages et remèdes viennent directement de ton vrai inventaire TailBlue.</p>
           </div>
         </header>
+        {fxToken > 0 && (
+          <div key={fxToken} className="tm-potion-once-fx" aria-hidden="true">
+            <span>🧪</span><i /><i /><i /><i /><i />
+          </div>
+        )}
+
         {feedback && (
           <div className="tm-inline-feedback potion">
             <span>{feedback.emoji || "🧪"}</span>

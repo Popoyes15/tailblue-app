@@ -15,6 +15,111 @@ export type MineSfxName =
   | "victory"
   | "defeat";
 
+export type MineAudioSettings = {
+  enabled: boolean;
+  explorationMusicEnabled: boolean;
+  combatMusicEnabled: boolean;
+  explorationSfxEnabled: boolean;
+  combatSfxEnabled: boolean;
+  explorationMusicVolume: number;
+  combatMusicVolume: number;
+  explorationSfxVolume: number;
+  combatSfxVolume: number;
+};
+
+const MINE_AUDIO_SETTINGS_KEY = "tailblue.mine.audio.settings.v1";
+
+const DEFAULT_MINE_AUDIO_SETTINGS: MineAudioSettings = {
+  enabled: true,
+  explorationMusicEnabled: true,
+  combatMusicEnabled: true,
+  explorationSfxEnabled: true,
+  combatSfxEnabled: true,
+  explorationMusicVolume: 0.30,
+  combatMusicVolume: 0.40,
+  explorationSfxVolume: 0.60,
+  combatSfxVolume: 0.60,
+};
+
+function clampAudioVolume(value: unknown, fallback: number) {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(1, number)) : fallback;
+}
+
+function loadMineAudioSettings(): MineAudioSettings {
+  try {
+    const raw = window.localStorage.getItem(MINE_AUDIO_SETTINGS_KEY);
+    if (!raw) return { ...DEFAULT_MINE_AUDIO_SETTINGS };
+    const parsed = JSON.parse(raw) as Partial<MineAudioSettings>;
+
+    return {
+      enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : true,
+      explorationMusicEnabled:
+        typeof parsed.explorationMusicEnabled === "boolean" ? parsed.explorationMusicEnabled : true,
+      combatMusicEnabled:
+        typeof parsed.combatMusicEnabled === "boolean" ? parsed.combatMusicEnabled : true,
+      explorationSfxEnabled:
+        typeof parsed.explorationSfxEnabled === "boolean" ? parsed.explorationSfxEnabled : true,
+      combatSfxEnabled:
+        typeof parsed.combatSfxEnabled === "boolean" ? parsed.combatSfxEnabled : true,
+      explorationMusicVolume: clampAudioVolume(
+        parsed.explorationMusicVolume,
+        DEFAULT_MINE_AUDIO_SETTINGS.explorationMusicVolume,
+      ),
+      combatMusicVolume: clampAudioVolume(
+        parsed.combatMusicVolume,
+        DEFAULT_MINE_AUDIO_SETTINGS.combatMusicVolume,
+      ),
+      explorationSfxVolume: clampAudioVolume(
+        parsed.explorationSfxVolume,
+        DEFAULT_MINE_AUDIO_SETTINGS.explorationSfxVolume,
+      ),
+      combatSfxVolume: clampAudioVolume(
+        parsed.combatSfxVolume,
+        DEFAULT_MINE_AUDIO_SETTINGS.combatSfxVolume,
+      ),
+    };
+  } catch {
+    return { ...DEFAULT_MINE_AUDIO_SETTINGS };
+  }
+}
+
+let mineAudioSettings = loadMineAudioSettings();
+
+function isCombatSfx(name: MineSfxName) {
+  return (
+    name === "hit" ||
+    name === "hurt" ||
+    name === "pet" ||
+    name === "victory" ||
+    name === "defeat"
+  );
+}
+
+function musicSettingEnabled(mode: Exclude<MineMusicMode, "off">) {
+  return mode === "combat"
+    ? mineAudioSettings.combatMusicEnabled
+    : mineAudioSettings.explorationMusicEnabled;
+}
+
+function musicSettingVolume(mode: Exclude<MineMusicMode, "off">) {
+  return mode === "combat"
+    ? mineAudioSettings.combatMusicVolume
+    : mineAudioSettings.explorationMusicVolume;
+}
+
+function sfxSettingEnabled(name: MineSfxName) {
+  return isCombatSfx(name)
+    ? mineAudioSettings.combatSfxEnabled
+    : mineAudioSettings.explorationSfxEnabled;
+}
+
+function sfxSettingVolume(name: MineSfxName) {
+  return isCombatSfx(name)
+    ? mineAudioSettings.combatSfxVolume
+    : mineAudioSettings.explorationSfxVolume;
+}
+
 const MUSIC_KEYWORDS: Record<Exclude<MineMusicMode, "off">, string[]> = {
   exploration: [
     "mine exploration",
@@ -192,6 +297,80 @@ function stopAllMusic() {
   musicAudio = null;
 }
 
+export function getMineAudioSettings(): MineAudioSettings {
+  return { ...mineAudioSettings };
+}
+
+export function setMineAudioSettings(
+  patch: Partial<MineAudioSettings>,
+): MineAudioSettings {
+  mineAudioSettings = {
+    ...mineAudioSettings,
+    ...patch,
+    explorationMusicVolume: clampAudioVolume(
+      patch.explorationMusicVolume ?? mineAudioSettings.explorationMusicVolume,
+      mineAudioSettings.explorationMusicVolume,
+    ),
+    combatMusicVolume: clampAudioVolume(
+      patch.combatMusicVolume ?? mineAudioSettings.combatMusicVolume,
+      mineAudioSettings.combatMusicVolume,
+    ),
+    explorationSfxVolume: clampAudioVolume(
+      patch.explorationSfxVolume ?? mineAudioSettings.explorationSfxVolume,
+      mineAudioSettings.explorationSfxVolume,
+    ),
+    combatSfxVolume: clampAudioVolume(
+      patch.combatSfxVolume ?? mineAudioSettings.combatSfxVolume,
+      mineAudioSettings.combatSfxVolume,
+    ),
+  };
+
+  try {
+    window.localStorage.setItem(
+      MINE_AUDIO_SETTINGS_KEY,
+      JSON.stringify(mineAudioSettings),
+    );
+  } catch {}
+
+  if (
+    !mineAudioSettings.enabled ||
+    (currentMusicMode !== "off" && !musicSettingEnabled(currentMusicMode))
+  ) {
+    stopAllMusic();
+    currentMusicMode = "off";
+  } else if (musicAudio && currentMusicMode !== "off") {
+    musicAudio.volume = musicSettingVolume(currentMusicMode);
+  }
+
+  if (
+    mineAudioSettings.enabled &&
+    pendingMusic !== "off" &&
+    musicSettingEnabled(pendingMusic) &&
+    currentMusicMode === "off"
+  ) {
+    void setMineMusic(pendingMusic);
+  }
+
+  return getMineAudioSettings();
+}
+
+export function resetMineAudioSettings(): MineAudioSettings {
+  mineAudioSettings = { ...DEFAULT_MINE_AUDIO_SETTINGS };
+  try {
+    window.localStorage.setItem(
+      MINE_AUDIO_SETTINGS_KEY,
+      JSON.stringify(mineAudioSettings),
+    );
+  } catch {}
+
+  if (musicAudio && currentMusicMode !== "off") {
+    musicAudio.volume = musicSettingVolume(currentMusicMode);
+  }
+
+  if (pendingMusic !== "off") void setMineMusic(pendingMusic);
+  return getMineAudioSettings();
+}
+
 async function tryPlay(
   asset: MineAudioAsset,
   volume: number,
@@ -286,6 +465,12 @@ async function actuallySetMusic(
 ) {
   if (!unlocked) return;
 
+  if (!mineAudioSettings.enabled || !musicSettingEnabled(mode)) {
+    stopAllMusic();
+    currentMusicMode = "off";
+    return;
+  }
+
   stopAllMusic();
 
   const candidates = musicCandidates(mode);
@@ -299,7 +484,7 @@ async function actuallySetMusic(
       audio = new Audio(srcFor(asset));
       audio.preload = "auto";
       audio.loop = true;
-      audio.volume = mode === "combat" ? 0.40 : 0.30;
+      audio.volume = musicSettingVolume(mode);
 
       musicRegistry.add(audio);
       await audio.play();
@@ -351,6 +536,7 @@ export async function setMineMusic(mode: MineMusicMode) {
 }
 
 export async function playMineSfx(name: MineSfxName) {
+  if (!mineAudioSettings.enabled || !sfxSettingEnabled(name)) return false;
   if (!unlocked && !(await unlockMineAudio())) return false;
 
   const candidates = sfxCandidates(name);
@@ -366,9 +552,12 @@ export async function playMineSfx(name: MineSfxName) {
     return false;
   }
 
+  const baseVolume = sfxSettingVolume(name);
   const result = await firstPlayable(
     candidates,
-    name === "victory" || name === "defeat" ? 0.72 : 0.60,
+    name === "victory" || name === "defeat"
+      ? Math.min(1, baseVolume * 1.12)
+      : baseVolume,
     false,
   );
 
@@ -408,7 +597,8 @@ export async function playMineAudioTest() {
 
 export function getMineAudioDebugInfo() {
   return {
-    version: "5.8-no-music-as-sfx",
+    version: "5.9-user-audio-mixer",
+    settings: getMineAudioSettings(),
     unlocked,
     pendingMusic,
     currentMusicMode,

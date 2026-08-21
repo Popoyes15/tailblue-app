@@ -1,29 +1,48 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getCachedMineSnapshot, mineApi } from "../api/mineApi";
 import CombatPanel from "../components/mine/CombatPanel";
 import MineCompanionCare from "../components/mine/MineCompanionCare";
 import MineJournal from "../components/mine/MineJournal";
 import MineMap from "../components/mine/MineMap";
+import MineMutationCinematic from "../components/mine/MineMutationCinematic";
+import MineDestinationDialog from "../components/mine/MineDestinationDialog";
+import MineEncounterIntro from "../components/mine/MineEncounterIntro";
 import MinePetPortrait from "../components/mine/MinePetPortrait";
 import PotionMenu from "../components/mine/PotionMenu";
 import { cleanMineText } from "../data/mineText";
+import type { MineEncounterSource } from "../data/mineEncounterIntros";
 import { resolveMonsterImage } from "../data/monsterVisuals";
 import { setMineAudioFocus } from "../services/mineAudioFocus";
+import { installMutationAudioUnlock } from "../services/mineMutationAudio";
 import {
   getMineAudioDebugInfo,
+  getMineAudioSettings,
   installMineAudioUnlock,
   playMineSfx,
-  playMineAudioTest,
+  resetMineAudioSettings,
+  setMineAudioSettings,
   setMineMusic,
+  type MineAudioSettings,
 } from "../services/mineAudioService";
 import type {
   MineCombat,
+  MineDestination,
   MineCombatSummary,
   MineResult,
   MineSnapshot,
 } from "../types/mine";
+import type { MineMutationReveal, MineMutationState } from "../types/mine";
 import "../components/mine/mineUltra.css";
+
+// TAILBLUE_MINE_V45_KEYS_TELEPORT_20260821
+// TAILBLUE_MINE_V46_FINAL_PROGRESS_ASH_20260821
+// TAILBLUE_MINE_V47_LIVING_MINE_20260822
+
+// TAILBLUE_MINE_ENCOUNTER_V44_20260821
+
+// TAILBLUE_HOTFIX_V4_20260821
+// TAILBLUE_HOTFIX_V43_MINE_POLISH_AUDIO_20260821
 
 const ROOM_ICONS: Record<string, string> = {
   entrance: "🚪",
@@ -39,6 +58,14 @@ const ROOM_ICONS: Record<string, string> = {
   safe: "🏕️",
 };
 
+const MINE_ITEM_DISPLAY_NAMES: Record<string, string> = {
+  mine_key: "Clé ancienne de la Mine",
+};
+
+function mineItemDisplayName(id: string) {
+  return MINE_ITEM_DISPLAY_NAMES[id] || cleanMineText(id.replace(/_/g, " "));
+}
+
 const ACTIONS: Array<{
   key: string;
   aliases: string[];
@@ -51,6 +78,7 @@ const ACTIONS: Array<{
   { key: "open_chest", aliases: ["open_chest", "chest"], label: "Ouvrir le coffre", icon: "📦", description: "Récupérer le contenu" },
   { key: "resolve_event", aliases: ["resolve_event", "event"], label: "Examiner", icon: "✨", description: "Interagir avec l'anomalie" },
   { key: "rest", aliases: ["rest"], label: "Se reposer", icon: "🛏️", description: "Récupérer dans ce recoin" },
+  { key: "teleport", aliases: ["teleport"], label: "Téléportation", icon: "✨", description: "Rejoindre l'entrée ou un Refuge" },
   { key: "descend", aliases: ["descend"], label: "Descendre", icon: "🔽", description: "Atteindre l'étage suivant" },
   { key: "build_safe_zone", aliases: ["build_safe_zone", "safe_zone"], label: "Créer un refuge", icon: "🏕️", description: "Sécuriser durablement la salle" },
 ];
@@ -58,6 +86,44 @@ const ACTIONS: Array<{
 function pct(value: number, max: number) {
   return Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100));
 }
+
+function MineProgressMeter({
+  icon,
+  label,
+  level,
+  current,
+  needed,
+  detail,
+  compact = false,
+}: {
+  icon: string;
+  label: string;
+  level: number;
+  current: number;
+  needed: number;
+  detail?: string;
+  compact?: boolean;
+}) {
+  const progress = pct(current, needed);
+
+  return (
+    <div className={`tm-mine-progress-meter ${compact ? "is-compact" : ""}`}>
+      <div className="tm-mine-progress-head">
+        <span>{icon}</span>
+        <div>
+          <small>{label}</small>
+          <strong>Niveau {level}</strong>
+        </div>
+        <b>{current}/{needed} XP</b>
+      </div>
+      <div className="tm-mine-progress-track">
+        <i style={{ width: `${progress}%` }} />
+      </div>
+      {detail && <em>{detail}</em>}
+    </div>
+  );
+}
+
 
 function resultKind(result?: MineResult | null) {
   const value = result?.metadata?.uiKind;
@@ -88,7 +154,7 @@ function ResultCinematic({ result, onClose }: { result: MineResult; onClose: () 
           {result.playerXp !== 0 && <span>✨ +{result.playerXp} XP</span>}
           {result.healing > 0 && <span>❤️ +{result.healing}</span>}
           {Object.entries(result.items).map(([id, quantity]) => (
-            <span key={id}>🎒 {quantity > 0 ? "+" : ""}{quantity} {cleanMineText(id.replace(/_/g, " "))}</span>
+            <span key={id}>🎒 {quantity > 0 ? "+" : ""}{quantity} {mineItemDisplayName(id)}</span>
           ))}
         </div>
       </div>
@@ -114,8 +180,32 @@ function StatusBar({
         <div>
           <p className="tm-kicker">EXPÉDITION</p>
           <strong>{cleanMineText(snapshot.player.name)}</strong>
-          <span>Mine niv. {snapshot.player.miningLevel} · Pioche R{snapshot.player.pickaxeTier}</span>
+          <span>
+            Mine niv. {snapshot.player.miningLevel} · Pioche R{snapshot.player.pickaxeTier}
+            {" · "}Combat niv. {snapshot.player.combatLevel}
+          </span>
         </div>
+      </div>
+
+      <div className="tm-status-progressions">
+        <MineProgressMeter
+          compact
+          icon="⛏️"
+          label="MINAGE"
+          level={snapshot.player.miningLevel}
+          current={snapshot.player.miningXpCurrent}
+          needed={snapshot.player.miningXpNeeded}
+          detail={`${snapshot.player.miningXpToNext} XP avant le niveau ${snapshot.player.miningLevel + 1}`}
+        />
+        <MineProgressMeter
+          compact
+          icon="⚔️"
+          label="COMBAT"
+          level={snapshot.player.combatLevel}
+          current={snapshot.player.combatXpCurrent}
+          needed={snapshot.player.combatXpNeeded}
+          detail={`${snapshot.player.combatXpToNext} XP avant le niveau ${snapshot.player.combatLevel + 1}`}
+        />
       </div>
 
       <div className="tm-status-vital">
@@ -186,22 +276,68 @@ export default function MinePage() {
   }, []);
 
   const cachedMine = getCachedMineSnapshot();
+  const activeCombatRef = useRef<MineCombat | null>(cachedMine?.combat?.active ? cachedMine.combat : null);
   const [snapshot, setSnapshot] = useState<MineSnapshot | null>(cachedMine);
   const [combatResolution, setCombatResolution] = useState<MineCombat | null>(cachedMine?.combatResolution ?? null);
+  const [finishingCombat, setFinishingCombat] = useState<MineCombat | null>(null);
+  const [encounterIntro, setEncounterIntro] = useState<{
+    combat: MineCombat;
+    source: MineEncounterSource;
+  } | null>(null);
   const [loading, setLoading] = useState(!cachedMine);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [potionOpen, setPotionOpen] = useState(false);
+  const [potionFxToken, setPotionFxToken] = useState(0);
   const [careOpen, setCareOpen] = useState(false);
+  const [entryDestinationOpen, setEntryDestinationOpen] = useState(false);
+  const [teleportOpen, setTeleportOpen] = useState(false);
   const [selectedCompanion, setSelectedCompanion] = useState<string>("");
   const [result, setResult] = useState<MineResult | null>(null);
-  const [audioDiag, setAudioDiag] = useState("🔊 TEST SON");
+  const [mutationScene, setMutationScene] = useState<{
+    mode: "call" | "reveal";
+    mutation: MineMutationState | MineMutationReveal;
+  } | null>(null);
+  const [audioSettingsOpen, setAudioSettingsOpen] = useState(false);
+  const [audioSettings, setAudioSettingsState] = useState<MineAudioSettings>(
+    () => getMineAudioSettings(),
+  );
 
   const applySnapshot = useCallback((next: MineSnapshot) => {
+    const hadActiveCombat = Boolean(activeCombatRef.current);
+
     setSnapshot(next);
-    if (next.combat?.active) setCombatResolution(null);
-    if (next.combatResolution) setCombatResolution(next.combatResolution);
+
+    if (next.combat?.active) {
+      activeCombatRef.current = next.combat;
+      setFinishingCombat(null);
+      setCombatResolution(null);
+    } else if (next.combatResolution && hadActiveCombat) {
+      const finalPresentation: MineCombat = {
+        ...next.combatResolution,
+        active: true,
+        locked: true,
+      };
+      activeCombatRef.current = finalPresentation;
+      setFinishingCombat(finalPresentation);
+      setCombatResolution(null);
+    } else if (next.combatResolution) {
+      setCombatResolution(next.combatResolution);
+    }
+
     if (next.result) setResult(next.result);
+    if (next.mutationReveal) {
+      setMutationScene({ mode: "reveal", mutation: next.mutationReveal });
+    } else if (
+      next.active
+      && !next.combat?.active
+      && !next.combatResolution
+      && next.mutation?.showCall
+    ) {
+      setMutationScene((current) =>
+        current ?? { mode: "call", mutation: next.mutation as MineMutationState }
+      );
+    }
     setError("");
   }, []);
 
@@ -222,25 +358,68 @@ export default function MinePage() {
     void refresh(false);
   }, [refresh]);
 
+  const updateAudioSettings = useCallback(
+    (patch: Partial<MineAudioSettings>) => {
+      setAudioSettingsState(setMineAudioSettings(patch));
+    },
+    [],
+  );
+
+  const restoreAudioDefaults = useCallback(() => {
+    setAudioSettingsState(resetMineAudioSettings());
+  }, []);
+
+  useEffect(() => {
+    const cleanupMutation = installMutationAudioUnlock();
+    return cleanupMutation;
+  }, []);
+
   useEffect(() => {
     const cleanup = installMineAudioUnlock();
     console.info("[TailBlue Mine Audio] État initial", getMineAudioDebugInfo());
     return cleanup;
   }, []);
 
-  const combatForDisplay = snapshot?.combat?.active ? snapshot.combat : combatResolution;
+
+  const combatMusicActive = Boolean(
+    (snapshot?.combat?.active && !encounterIntro) || finishingCombat,
+  );
 
   useEffect(() => {
-    if (combatForDisplay) {
+    if (!result) return;
+
+    if (snapshot?.combat?.active || finishingCombat || combatResolution) {
+      setResult(null);
+      return;
+    }
+
+    const delay = resultKind(result) === "potion" ? 1800 : 6500;
+    const timer = window.setTimeout(() => {
+      setResult((current) => current === result ? null : current);
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [result, snapshot?.combat?.active, finishingCombat, combatResolution]);
+
+  useEffect(() => {
+    if (combatMusicActive) {
       void setMineMusic("combat");
-      return () => { void setMineMusic("off"); };
-    }
-    if (snapshot?.active) {
+    } else if (snapshot?.active) {
       void setMineMusic("exploration");
-      return () => { void setMineMusic("off"); };
+    } else {
+      void setMineMusic("off");
     }
+  }, [snapshot?.active, combatMusicActive]);
+
+  useEffect(() => () => {
     void setMineMusic("off");
-  }, [snapshot?.active, Boolean(snapshot?.combat?.active), combatResolution]);
+  }, []);
+
+  const finishAnimatedCombat = useCallback((resolved: MineCombat) => {
+    activeCombatRef.current = null;
+    setFinishingCombat(null);
+    setCombatResolution({ ...resolved, active: false, locked: false });
+  }, []);
 
   useEffect(() => {
     if (!combatResolution) return;
@@ -251,19 +430,82 @@ export default function MinePage() {
   const run = useCallback(async (
     job: () => Promise<MineSnapshot>,
     sound?: Parameters<typeof playMineSfx>[0],
+    encounterSource: MineEncounterSource = "generic",
   ) => {
     if (busy) return;
     setBusy(true);
     setError("");
     try {
       if (sound) void playMineSfx(sound);
-      applySnapshot(await job());
+
+      const hadActiveCombat = Boolean(activeCombatRef.current);
+      const next = await job();
+      const startsCombat = Boolean(next.combat?.active && !hadActiveCombat);
+
+      if (startsCombat && next.combat) {
+        setResult(null);
+        setPotionOpen(false);
+        setCareOpen(false);
+        setEncounterIntro({
+          combat: next.combat,
+          source: encounterSource,
+        });
+        void playMineSfx("event");
+      }
+
+      applySnapshot(next);
     } catch (err) {
       setError(cleanMineText(err instanceof Error ? err.message : "Action impossible."));
     } finally {
       setBusy(false);
     }
   }, [applySnapshot, busy]);
+
+  const finishMutationScene = useCallback(async () => {
+    const scene = mutationScene;
+    if (!scene) return;
+
+    setMutationScene(null);
+    try {
+      if (scene.mode === "call") {
+        applySnapshot(await mineApi.ackMutationCall());
+      } else {
+        // Le snapshot normal efface aussi mutationReveal du cache, afin que
+        // la cinématique d'ouverture ne soit jamais rejouée en boucle.
+        applySnapshot(await mineApi.snapshot());
+      }
+    } catch (err) {
+      setError(cleanMineText(
+        err instanceof Error
+          ? err.message
+          : "Impossible de synchroniser la Mine vivante."
+      ));
+    }
+  }, [applySnapshot, mutationScene]);
+
+  const useExplorationPotion = useCallback(async (id: string) => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    setResult(null);
+    try {
+      const next = await mineApi.usePotion(id);
+      applySnapshot(next);
+      void playMineSfx("potion");
+      setPotionFxToken(Date.now());
+      window.setTimeout(() => {
+        setResult((current) => resultKind(current) === "potion" ? null : current);
+      }, 1800);
+    } catch (err) {
+      setError(cleanMineText(err instanceof Error ? err.message : "Potion inutilisable."));
+    } finally {
+      setBusy(false);
+    }
+  }, [applySnapshot, busy]);
+
+  const finishEncounterIntro = useCallback(() => {
+    setEncounterIntro(null);
+  }, []);
 
   const allowed = useMemo(
     () => new Set(snapshot?.allowedActions ?? []),
@@ -327,12 +569,40 @@ export default function MinePage() {
               <div>
                 <p className="tm-kicker">AVENTURIER</p>
                 <h2>{cleanMineText(snapshot.player.name)}</h2>
-                <p>Niveau mine {snapshot.player.miningLevel} · Pioche rang {snapshot.player.pickaxeTier}</p>
+                <p>
+                  Niveau mine {snapshot.player.miningLevel} · Pioche rang {snapshot.player.pickaxeTier}
+                  {snapshot.player.pickaxeNextTierLevel != null
+                    ? ` · prochain rang au niv. ${snapshot.player.pickaxeNextTierLevel}`
+                    : " · rang maximum"}
+                </p>
               </div>
             </div>
             <div className="tm-vitals">
               <div><span>❤️ PV</span><b>{snapshot.player.hp}/{snapshot.player.maxHp}</b><div className="tm-track hp"><i style={{ width: `${pct(snapshot.player.hp, snapshot.player.maxHp)}%` }} /></div></div>
               <div><span>⚡ Fatigue</span><b>{snapshot.player.energy}/{snapshot.player.maxEnergy}</b><div className="tm-track energy"><i style={{ width: `${pct(snapshot.player.energy, snapshot.player.maxEnergy)}%` }} /></div></div>
+            </div>
+
+            <div className="tm-mine-progress-grid">
+              <MineProgressMeter
+                icon="⛏️"
+                label="MINAGE"
+                level={snapshot.player.miningLevel}
+                current={snapshot.player.miningXpCurrent}
+                needed={snapshot.player.miningXpNeeded}
+                detail={
+                  snapshot.player.pickaxeNextTierLevel != null
+                    ? `Pioche R${snapshot.player.pickaxeTier} · R${snapshot.player.pickaxeNextTier} au niveau ${snapshot.player.pickaxeNextTierLevel}`
+                    : `Pioche R${snapshot.player.pickaxeTier} · rang maximum`
+                }
+              />
+              <MineProgressMeter
+                icon="⚔️"
+                label="COMBAT"
+                level={snapshot.player.combatLevel}
+                current={snapshot.player.combatXpCurrent}
+                needed={snapshot.player.combatXpNeeded}
+                detail={`${snapshot.player.combatXpToNext} XP avant le niveau ${snapshot.player.combatLevel + 1}`}
+              />
             </div>
 
             {selectedPet ? (
@@ -386,11 +656,51 @@ export default function MinePage() {
           </section>
         </div>
 
-        <button className="tm-enter" disabled={busy} onClick={() => void run(() => mineApi.enter(selectedCompanion || null), "step")}>
+        <button className="tm-enter" disabled={busy} onClick={() => {
+            const destinations = snapshot.entryDestinations ?? [];
+            if (destinations.length <= 1) {
+              const destination = destinations[0];
+              void run(
+                () => mineApi.enter(
+                  selectedCompanion || null,
+                  destination?.kind === "refuge" ? destination.floor : null,
+                ),
+                "step",
+                "move",
+              );
+              return;
+            }
+            setEntryDestinationOpen(true);
+          }}>
           <span>⛏️</span>
-          <div><strong>{busy ? "Ouverture…" : "Entrer dans la Mine"}</strong><small>Lancer l'expédition réelle</small></div>
+          <div><strong>{busy ? "Ouverture…" : "Entrer dans la Mine"}</strong><small>Choisir le point de descente</small></div>
           <b>→</b>
         </button>
+
+        {entryDestinationOpen && (
+          <MineDestinationDialog
+            mode="entry"
+            destinations={snapshot.entryDestinations ?? []}
+            busy={busy}
+            companionLabel={
+              selectedPet
+                ? `${cleanMineText(selectedPet.name)} · niveau ${selectedPet.level}`
+                : "Expédition solo"
+            }
+            onClose={() => setEntryDestinationOpen(false)}
+            onSelect={(destination: MineDestination) => {
+              setEntryDestinationOpen(false);
+              void run(
+                () => mineApi.enter(
+                  selectedCompanion || null,
+                  destination.kind === "refuge" ? destination.floor : null,
+                ),
+                "step",
+                "move",
+              );
+            }}
+          />
+        )}
 
         {resolutionOverlay}
       </section>
@@ -398,7 +708,8 @@ export default function MinePage() {
   }
 
   const room = snapshot.room;
-  const combatActive = Boolean(snapshot.combat?.active);
+  const combatActive = Boolean(snapshot.combat?.active || finishingCombat);
+  const combatForPlay = snapshot.combat?.active ? snapshot.combat : finishingCombat;
   const visibleActions = ACTIONS.filter((item) => item.aliases.some((alias) => allowed.has(alias)));
   const defeatedMonster = room?.defeatedMonsters?.slice(-1)[0];
   const defeatedImage = defeatedMonster ? resolveMonsterImage(defeatedMonster) : undefined;
@@ -407,10 +718,28 @@ export default function MinePage() {
   const companionFeedback = resultKind(result) === "companion" ? result : null;
   const potionFeedback = resultKind(result) === "potion" ? result : null;
 
-  const doAction = (action: string) => run(() => mineApi.action(action), actionSound(action));
+  const encounterSourceForAction = (action: string): MineEncounterSource => {
+    if (action === "search") return "search";
+    if (action === "resolve_event" || action === "event") return "examine";
+    return "generic";
+  };
+
+  const doAction = (action: string) =>
+    run(
+      () => mineApi.action(action),
+      actionSound(action),
+      encounterSourceForAction(action),
+    );
 
   return (
     <section className="tm-page tm-page-v48">
+      {mutationScene && (
+        <MineMutationCinematic
+          mode={mutationScene.mode}
+          mutation={mutationScene.mutation}
+          onComplete={() => void finishMutationScene()}
+        />
+      )}
       {/* Header volontairement compact : on garde l'identité Mine sans manger 170px. */}
       <header className="tm-mine-topbar">
         <div>
@@ -430,7 +759,12 @@ export default function MinePage() {
 
       {/* V5.6 : portail directement dans document.body. La popup n'a plus
           aucun parent commun avec la grille Mine et ne peut donc pas la pousser. */}
-      {result && !combatResolution && createPortal(
+      {result &&
+        resultKind(result) !== "potion" &&
+        !snapshot.combat?.active &&
+        !finishingCombat &&
+        !combatResolution &&
+        createPortal(
         <div
           aria-live="polite"
           style={{
@@ -451,23 +785,182 @@ export default function MinePage() {
         document.body,
       )}
 
-      {/* Marqueur volontairement visible : s'il n'est pas affiché, ce n'est
-          PAS le build V5.6 qui tourne. Le bouton teste un vrai fichier audio. */}
-      <div style={{ position: "fixed", right: 14, bottom: 14, zIndex: 10001, display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ padding: "7px 10px", borderRadius: 999, background: "rgba(21,92,128,.94)", border: "1px solid rgba(116,213,255,.35)", color: "#dff6ff", fontSize: 10, fontWeight: 900, letterSpacing: ".08em", boxShadow: "0 8px 24px rgba(0,0,0,.28)" }}>MINE FX 5.6 LIVE</span>
-        <button
-          type="button"
-          onClick={async () => setAudioDiag(await playMineAudioTest())}
-          style={{ padding: "7px 10px", borderRadius: 999, border: "1px solid rgba(116,213,255,.35)", color: "#dff6ff", background: "rgba(8,39,60,.96)", cursor: "pointer", fontSize: 10, fontWeight: 800 }}
-        >{audioDiag}</button>
-      </div>
+      <button
+        type="button"
+        className="tm-mine-audio-settings-button"
+        onClick={() => {
+          setAudioSettingsState(getMineAudioSettings());
+          setAudioSettingsOpen(true);
+        }}
+      >
+        <span>🎚️</span>
+        <strong>Régler son de la mine</strong>
+      </button>
+
+      {audioSettingsOpen && createPortal(
+        <div className="tm-audio-mixer-overlay" onMouseDown={() => setAudioSettingsOpen(false)}>
+          <section
+            className="tm-audio-mixer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Réglages audio de la Mine"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header className="tm-audio-mixer-head">
+              <div>
+                <p className="tm-kicker">AUDIO · MINE</p>
+                <h2>Régler le son de la Mine</h2>
+                <p>Chaque ambiance et chaque famille de bruitages peut être réglée séparément.</p>
+              </div>
+              <button type="button" onClick={() => setAudioSettingsOpen(false)} aria-label="Fermer">×</button>
+            </header>
+
+            <div className="tm-audio-master">
+              <div>
+                <span>🔊</span>
+                <div><strong>Son de la Mine</strong><small>Coupe ou réactive tout l'audio de la Mine.</small></div>
+              </div>
+              <button
+                type="button"
+                className={audioSettings.enabled ? "is-on" : ""}
+                onClick={() => updateAudioSettings({ enabled: !audioSettings.enabled })}
+              >
+                {audioSettings.enabled ? "ACTIVÉ" : "COUPÉ"}
+              </button>
+            </div>
+
+            <div className={`tm-audio-sections ${audioSettings.enabled ? "" : "is-disabled"}`}>
+              <article className="tm-audio-channel">
+                <div className="tm-audio-channel-title">
+                  <div><span>🧭</span><div><strong>Musique d'exploration</strong><small>mine-exploration.mp3</small></div></div>
+                  <button
+                    type="button"
+                    className={audioSettings.explorationMusicEnabled ? "is-on" : ""}
+                    onClick={() => updateAudioSettings({
+                      explorationMusicEnabled: !audioSettings.explorationMusicEnabled,
+                    })}
+                  >
+                    {audioSettings.explorationMusicEnabled ? "ON" : "OFF"}
+                  </button>
+                </div>
+                <label>
+                  <span>Volume <b>{Math.round(audioSettings.explorationMusicVolume * 100)}%</b></span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={Math.round(audioSettings.explorationMusicVolume * 100)}
+                    onChange={(event) => updateAudioSettings({
+                      explorationMusicVolume: Number(event.currentTarget.value) / 100,
+                    })}
+                  />
+                </label>
+              </article>
+
+              <article className="tm-audio-channel">
+                <div className="tm-audio-channel-title">
+                  <div><span>⚔️</span><div><strong>Musique de combat</strong><small>mine-combat.mp3</small></div></div>
+                  <button
+                    type="button"
+                    className={audioSettings.combatMusicEnabled ? "is-on" : ""}
+                    onClick={() => updateAudioSettings({
+                      combatMusicEnabled: !audioSettings.combatMusicEnabled,
+                    })}
+                  >
+                    {audioSettings.combatMusicEnabled ? "ON" : "OFF"}
+                  </button>
+                </div>
+                <label>
+                  <span>Volume <b>{Math.round(audioSettings.combatMusicVolume * 100)}%</b></span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={Math.round(audioSettings.combatMusicVolume * 100)}
+                    onChange={(event) => updateAudioSettings({
+                      combatMusicVolume: Number(event.currentTarget.value) / 100,
+                    })}
+                  />
+                </label>
+              </article>
+
+              <article className="tm-audio-channel">
+                <div className="tm-audio-channel-title">
+                  <div><span>⛏️</span><div><strong>VFX d'exploration</strong><small>pas, minage, fouille, coffre, potion…</small></div></div>
+                  <button
+                    type="button"
+                    className={audioSettings.explorationSfxEnabled ? "is-on" : ""}
+                    onClick={() => updateAudioSettings({
+                      explorationSfxEnabled: !audioSettings.explorationSfxEnabled,
+                    })}
+                  >
+                    {audioSettings.explorationSfxEnabled ? "ON" : "OFF"}
+                  </button>
+                </div>
+                <label>
+                  <span>Volume <b>{Math.round(audioSettings.explorationSfxVolume * 100)}%</b></span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={Math.round(audioSettings.explorationSfxVolume * 100)}
+                    onChange={(event) => updateAudioSettings({
+                      explorationSfxVolume: Number(event.currentTarget.value) / 100,
+                    })}
+                  />
+                </label>
+              </article>
+
+              <article className="tm-audio-channel">
+                <div className="tm-audio-channel-title">
+                  <div><span>💥</span><div><strong>VFX de combat</strong><small>impacts, dégâts, compagnon, victoire…</small></div></div>
+                  <button
+                    type="button"
+                    className={audioSettings.combatSfxEnabled ? "is-on" : ""}
+                    onClick={() => updateAudioSettings({
+                      combatSfxEnabled: !audioSettings.combatSfxEnabled,
+                    })}
+                  >
+                    {audioSettings.combatSfxEnabled ? "ON" : "OFF"}
+                  </button>
+                </div>
+                <label>
+                  <span>Volume <b>{Math.round(audioSettings.combatSfxVolume * 100)}%</b></span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={Math.round(audioSettings.combatSfxVolume * 100)}
+                    onChange={(event) => updateAudioSettings({
+                      combatSfxVolume: Number(event.currentTarget.value) / 100,
+                    })}
+                  />
+                </label>
+              </article>
+            </div>
+
+            <footer className="tm-audio-mixer-footer">
+              <button type="button" onClick={restoreAudioDefaults}>↺ Valeurs par défaut</button>
+              <span>Réglages enregistrés automatiquement sur cet appareil.</span>
+              <button type="button" className="primary" onClick={() => setAudioSettingsOpen(false)}>Terminé</button>
+            </footer>
+          </section>
+        </div>,
+        document.body,
+      )}
 
       <div className="tm-explore-grid tm-explore-grid-v48">
         <MineMap
           map={snapshot.map}
           exits={snapshot.exits}
           disabled={busy || combatActive}
-          onMove={(direction) => void run(() => mineApi.action("move", { direction }), "step")}
+          onMove={(direction) =>
+            void run(
+              () => mineApi.action("move", { direction }),
+              "step",
+              "move",
+            )
+          }
         />
 
         <section className="tm-room-card tm-room-card-v48">
@@ -523,6 +1016,25 @@ export default function MinePage() {
 
       <StatusBar snapshot={snapshot} combatActive={combatActive} onCompanion={() => setCareOpen(true)} />
 
+      {snapshot.mutation && (
+        <section className={`tm-mutation-status-card ${snapshot.mutation.status}`}>
+          <div>
+            <p className="tm-kicker">MINE VIVANTE</p>
+            <strong>Mutation {snapshot.mutation.stage}/{snapshot.mutation.maxStages}</strong>
+            <span>
+              {snapshot.mutation.stabilized
+                ? "Cet étage s'est définitivement stabilisé."
+                : snapshot.mutation.status === "pending"
+                  ? `La Mine bougera à nouveau dans environ ${Math.max(1, Math.ceil((snapshot.mutation.availableInSeconds ?? 0) / 3600))} h.`
+                  : snapshot.mutation.status === "ready"
+                    ? `Quelque chose t'attire vers ${snapshot.mutation.directionLabel ?? "une autre partie de l'étage"}. Retrouve la salle de jonction.`
+                    : `Extension en exploration · ${snapshot.mutation.roomsDiscovered ?? 0}/${snapshot.mutation.roomsTotal ?? 0} salles visitées · ${snapshot.mutation.hostilesRemaining ?? 0} menace(s) restante(s).`}
+            </span>
+          </div>
+          <b>{snapshot.mutation.stabilized ? "🔒" : snapshot.mutation.status === "ready" ? "🌑" : snapshot.mutation.status === "revealed" ? "🧭" : "⏱️"}</b>
+        </section>
+      )}
+
       <div className="tm-lower-grid-v48">
         <section className="tm-actions-card tm-actions-card-v48">
           <div className="tm-section-head">
@@ -534,8 +1046,29 @@ export default function MinePage() {
           </div>
 
           <div className="tm-action-grid tm-action-grid-v48">
+            {snapshot.mutation?.canReveal && !combatActive && (
+              <button
+                className="tm-mutation-reveal-action"
+                disabled={busy}
+                onClick={() => void run(() => mineApi.revealMutation(), "event")}
+              >
+                <span>🪨</span>
+                <div>
+                  <strong>Forcer le passage</strong>
+                  <small>Quelque chose existe derrière cette paroi…</small>
+                </div>
+                <b>✦</b>
+              </button>
+            )}
+
             {visibleActions.map((action) => (
-              <button key={action.key} disabled={busy || combatActive} onClick={() => void doAction(action.key)}>
+              <button key={action.key} disabled={busy || combatActive} onClick={() => {
+                if (action.key === "teleport") {
+                  setTeleportOpen(true);
+                  return;
+                }
+                void doAction(action.key);
+              }}>
                 <span>{action.icon}</span>
                 <div><strong>{action.label}</strong><small>{action.description}</small></div>
                 <b>→</b>
@@ -569,8 +1102,12 @@ export default function MinePage() {
         potions={snapshot.potions}
         busy={busy}
         feedback={potionFeedback}
-        onClose={() => setPotionOpen(false)}
-        onUse={(id) => void run(() => mineApi.usePotion(id), "potion")}
+        fxToken={potionFxToken}
+        onClose={() => {
+          setPotionOpen(false);
+          setResult((current) => resultKind(current) === "potion" ? null : current);
+        }}
+        onUse={(id) => void useExplorationPotion(id)}
       />
 
       <MineCompanionCare
@@ -583,15 +1120,41 @@ export default function MinePage() {
         onCuddle={() => void run(() => mineApi.cuddleCompanion(), "pet")}
       />
 
-      {snapshot.combat?.active && (
+      {combatForPlay && !encounterIntro && (
         <CombatPanel
-          combat={snapshot.combat}
+          combat={combatForPlay}
           busy={busy}
+          onSequenceComplete={finishAnimatedCombat}
           onAttack={() => run(() => mineApi.combat("attack"))}
           onDefend={() => run(() => mineApi.combat("defend"))}
           onFlee={() => run(() => mineApi.combat("flee"), "step")}
           onSkill={(skillId) => run(() => mineApi.combat("skill", { skillId }))}
           onItem={(itemId) => run(() => mineApi.combat("item", { itemId }))}
+        />
+      )}
+
+      {teleportOpen && (
+        <MineDestinationDialog
+          mode="teleport"
+          destinations={snapshot.teleportDestinations ?? []}
+          busy={busy}
+          onClose={() => setTeleportOpen(false)}
+          onSelect={(destination: MineDestination) => {
+            setTeleportOpen(false);
+            void run(
+              () => mineApi.teleport(destination.floor),
+              "step",
+              "generic",
+            );
+          }}
+        />
+      )}
+
+      {encounterIntro && (
+        <MineEncounterIntro
+          combat={encounterIntro.combat}
+          source={encounterIntro.source}
+          onComplete={finishEncounterIntro}
         />
       )}
 
