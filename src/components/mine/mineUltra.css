@@ -4729,3 +4729,88 @@ html.tb-no-animations .tm-resolution-rune {
     align-items: flex-start;
   }
 }
+
+
+/* ==================================================================
+   TAILBLUE_MINE_V476_HEADER_ASH_FIX_20260822
+   Mini HUD hors embed + cendres ancrées physiquement à la PP.
+   ================================================================== */
+
+.tm-mine-progress-hud {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  margin: 0 0 7px;
+  padding: 0 4px;
+}
+
+.tm-mine-progress-hud .tm-topbar-progression {
+  margin: 0;
+}
+
+.tm-mine-topbar {
+  position: relative;
+}
+
+.tm-death-anchor {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  min-width: 0;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.tm-death-anchor > .tm-fighter-portrait {
+  width: 100%;
+  height: 100% !important;
+  position: relative;
+  z-index: 1;
+}
+
+.tm-death-anchor > .tm-death-ash,
+.tm-death-anchor > .tm-death-ash.is-player,
+.tm-death-anchor > .tm-death-ash.is-enemy {
+  position: absolute !important;
+  z-index: 80 !important;
+  left: 0 !important;
+  right: auto !important;
+  top: 0 !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+.tm-death-anchor > .tm-death-ash::before {
+  inset: 12% 8% 4% !important;
+  z-index: 1;
+}
+
+.tm-death-anchor > .tm-death-ash i {
+  z-index: 2;
+  width: 6px;
+  height: 6px;
+  background: rgba(183, 192, 197, .96);
+  box-shadow:
+    0 0 5px rgba(225, 233, 236, .28),
+    0 0 11px rgba(132, 147, 154, .18);
+}
+
+.tm-fighter > .tm-death-anchor {
+  align-self: stretch;
+}
+
+@media (max-width: 760px) {
+  .tm-mine-progress-hud {
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .tm-mine-progress-hud .tm-topbar-progression {
+    flex-wrap: nowrap;
+    min-width: max-content;
+  }
+}

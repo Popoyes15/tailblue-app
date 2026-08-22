@@ -39,6 +39,7 @@ import "../components/mine/mineUltra.css";
 // TAILBLUE_MINE_V46_FINAL_PROGRESS_ASH_20260821
 // TAILBLUE_MINE_V47_LIVING_MINE_20260822
 // TAILBLUE_MINE_V475_EXACT_POLISH_20260822
+// TAILBLUE_MINE_V476_HEADER_ASH_FIX_20260822
 
 // TAILBLUE_MINE_ENCOUNTER_V44_20260821
 
@@ -746,21 +747,25 @@ export default function MinePage() {
           onComplete={() => void finishMutationScene()}
         />
       )}
-      {/* Header volontairement compact : on garde l'identité Mine sans manger 170px. */}
+      {/* Progression volontairement HORS du panneau principal : mini HUD RPG. */}
+      <div className="tm-mine-progress-hud" aria-label="Progression de la Mine">
+        <div className="tm-topbar-progression">
+          <span className="tm-topbar-progress-item">
+            <b>⛏️ Mine niv. {snapshot.player.miningLevel}</b>
+            <i><em style={{ width: `${pct(snapshot.player.miningXpCurrent, snapshot.player.miningXpNeeded)}%` }} /></i>
+          </span>
+          <span className="tm-topbar-pickaxe">🪓 Pioche R{snapshot.player.pickaxeTier}</span>
+          <span className="tm-topbar-progress-item">
+            <b>⚔️ Combat niv. {snapshot.player.combatLevel}</b>
+            <i><em style={{ width: `${pct(snapshot.player.combatXpCurrent, snapshot.player.combatXpNeeded)}%` }} /></i>
+          </span>
+        </div>
+      </div>
+
+      {/* Header principal de la Mine. */}
       <header className="tm-mine-topbar">
         <div>
           <p className="tm-kicker">L'ABÎME DE TAILBLUE</p>
-          <div className="tm-topbar-progression" aria-label="Progression de la Mine">
-            <span className="tm-topbar-progress-item">
-              <b>⛏️ Mine niv. {snapshot.player.miningLevel}</b>
-              <i><em style={{ width: `${pct(snapshot.player.miningXpCurrent, snapshot.player.miningXpNeeded)}%` }} /></i>
-            </span>
-            <span className="tm-topbar-pickaxe">🪓 Pioche R{snapshot.player.pickaxeTier}</span>
-            <span className="tm-topbar-progress-item">
-              <b>⚔️ Combat niv. {snapshot.player.combatLevel}</b>
-              <i><em style={{ width: `${pct(snapshot.player.combatXpCurrent, snapshot.player.combatXpNeeded)}%` }} /></i>
-            </span>
-          </div>
           <div className="tm-topbar-title">
             <h1>Mine</h1>
             <span>{combatActive ? "🔒 Combat actif" : "🧭 Exploration"}</span>

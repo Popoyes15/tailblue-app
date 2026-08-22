@@ -17,6 +17,7 @@ import "./mineUltra.css";
 // TAILBLUE_HOTFIX_V4_20260821
 // TAILBLUE_HOTFIX_V41_20260821
 // TAILBLUE_HOTFIX_V42_FINISH_FX_20260821
+// TAILBLUE_MINE_V476_HEADER_ASH_FIX_20260822
 
 type Props = {
   combat?: MineCombat | null;
@@ -683,9 +684,13 @@ export default function CombatPanel({
   const { player, enemy, companion } = shown;
   const victory = resolutionMode && combat.outcome === "player_victory";
   const terminalVictory =
-    !resolutionMode && normal(shown.outcome) === "player_victory";
+    !resolutionMode &&
+    normal(combat.outcome) === "player_victory" &&
+    shown.enemy.hp <= 0;
   const terminalDefeat =
-    !resolutionMode && normal(shown.outcome) === "player_defeat";
+    !resolutionMode &&
+    normal(combat.outcome) === "player_defeat" &&
+    shown.player.hp <= 0;
   const controlsLocked = Boolean(busy || resolvingTurn);
 
   if (resolutionMode) {
@@ -745,8 +750,10 @@ export default function CombatPanel({
                 <i /><i /><i /><i /><i /><i /><i /><i /><i /><i />
               </div>
             )}
-            <Portrait image={player.image} fallback={player.emoji || "🧭"} />
-            {terminalDefeat && <DeathAsh side="player" />}
+            <div className="tm-death-anchor">
+              <Portrait image={player.image} fallback={player.emoji || "🧭"} />
+              {terminalDefeat && <DeathAsh side="player" />}
+            </div>
             <div className="tm-fighter-copy">
               <small>AVENTURIER</small>
               <h3>{cleanMineText(player.name)}</h3>
@@ -760,8 +767,10 @@ export default function CombatPanel({
           <div className="tm-vs"><span>⚔</span><b>VS</b></div>
 
           <section ref={enemyRef} className={`tm-fighter tm-enemy ${terminalVictory ? "tm-fighter-dying tm-fighter-dying-enemy" : ""} ${hoverTarget === "enemy" ? "tm-v55-targeted" : ""}`} style={hoverTarget === "enemy" ? { borderColor: "rgba(255,128,128,.74)", boxShadow: "0 0 0 1px rgba(255,128,128,.24), 0 0 38px rgba(218,83,91,.24), inset 0 0 34px rgba(150,48,58,.10)" } : undefined}>
-            <Portrait image={enemyImage} fallback={enemy.emoji || "👹"} defeated={victory} />
-            {terminalVictory && <DeathAsh side="enemy" />}
+            <div className="tm-death-anchor">
+              <Portrait image={enemyImage} fallback={enemy.emoji || "👹"} defeated={victory} />
+              {terminalVictory && <DeathAsh side="enemy" />}
+            </div>
             <div className="tm-fighter-copy">
               <small>{enemy.boss ? "BOSS" : "ENNEMI"} · NIV. {enemy.level ?? "?"}</small>
               <h3>{cleanMineText(enemy.name)}</h3>
