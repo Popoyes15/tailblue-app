@@ -33,3 +33,12 @@ dist-ssr
 # Archives / doublons locaux inutiles
 public/ImagesBestiaire.7z
 /tailbluepdp.png
+
+# TailBlue - sauvegardes locales de patch
+*.before-*
+*.bak
+*.backup
+*.orig
+
+# Archives temporaires générées dans src
+src/*.zip
