@@ -66,6 +66,7 @@ export default function PetsPage() {
   const [busy, setBusy] = useState(false);
   const [nickname, setNickname] = useState("");
   const [storyOpen, setStoryOpen] = useState(false);
+  const [sellConfirmId, setSellConfirmId] = useState<string | null>(null);
   const [notice, setNotice] = useState<CompanionNoticeData | null>(null);
 
   useEffect(() => {
@@ -219,6 +220,44 @@ export default function PetsPage() {
     }
   }
 
+  async function sellCompanion(pet: OwnedCompanionDto) {
+    if (!companionApiConfigured || busy) return;
+
+    if (sellConfirmId !== pet.id) {
+      setSellConfirmId(pet.id);
+      return;
+    }
+
+    try {
+      setBusy(true);
+      const result = await companionApi.sell(pet.id);
+      setSnapshot(result.companions);
+      setSellConfirmId(null);
+      setSelectedId(null);
+      setStoryOpen(false);
+      setNickname("");
+      setNotice({
+        icon: result.isDragon ? "🐉" : "💰",
+        title: result.isDragon ? "Dragon vendu" : "Compagnon vendu",
+        message: result.text,
+        tone: "success",
+        stats: result.price > 0
+          ? [{ icon: "🍪", label: `+${new Intl.NumberFormat("fr-CH").format(result.price)} cookies` }]
+          : undefined,
+      });
+    } catch (error) {
+      setSellConfirmId(null);
+      setNotice({
+        icon: "⚠️",
+        title: "Vente impossible",
+        message: error instanceof Error ? error.message : "TailBlue a refusé la vente.",
+        tone: "error",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function adoptCompanion(definition: CompanionDefinitionDto) {
     if (!companionApiConfigured || busy || !definition.adoptable) return;
     try {
@@ -277,6 +316,7 @@ export default function PetsPage() {
                   setSelectedId(pet.id);
                   setNickname("");
                   setStoryOpen(false);
+                  setSellConfirmId(null);
                 }}
               >
                 <ImageStage image={petOwned?.currentImage || pet.image} fallbackImages={pet.forms.map((form) => form.image ?? "")} alt={petOwned?.displayName || pet.name} className="tb-comp-pet-card-image" />
@@ -293,9 +333,9 @@ export default function PetsPage() {
       )}
 
       {selected && (
-        <div className="tb-comp-modal-backdrop" onClick={() => { setSelectedId(null); setStoryOpen(false); }}>
+        <div className="tb-comp-modal-backdrop" onClick={() => { setSelectedId(null); setStoryOpen(false); setSellConfirmId(null); }}>
           <article className="tb-comp-modal tb-comp-modal-v3" onClick={(event: MouseEvent<HTMLElement>) => event.stopPropagation()}>
-            <button className="tb-comp-modal-close" onClick={() => { setSelectedId(null); setStoryOpen(false); }}>×</button>
+            <button className="tb-comp-modal-close" onClick={() => { setSelectedId(null); setStoryOpen(false); setSellConfirmId(null); }}>×</button>
 
             <div className="tb-comp-detail-hero-v3">
               <ImageStage image={selectedOwned?.currentImage || selected.image} fallbackImages={selected.forms.map((form) => form.image ?? "")} alt={selectedOwned?.displayName || selected.name} className="tb-comp-detail-image-v3" />
@@ -356,6 +396,20 @@ export default function PetsPage() {
                   <div className="tb-pet-action-grid-v3">
                     <button onClick={() => void toggleActive(selectedOwned)} disabled={busy}>{selectedOwned.active ? "🏠 Mettre au repos" : "⚔️ Activer"}</button>
                     <button onClick={() => void petCompanion(selectedOwned)} disabled={busy}>💜 Papouiller</button>
+                    <button
+                      onClick={() => void sellCompanion(selectedOwned)}
+                      disabled={busy || !companionApiConfigured}
+                      style={{
+                        gridColumn: "1 / -1",
+                        borderColor: sellConfirmId === selectedOwned.id ? "rgba(255, 113, 113, .58)" : "rgba(231, 156, 92, .34)",
+                        background: sellConfirmId === selectedOwned.id
+                          ? "linear-gradient(160deg, rgba(112, 31, 39, .96), rgba(61, 20, 29, .98))"
+                          : "linear-gradient(160deg, rgba(90, 55, 29, .92), rgba(48, 31, 20, .96))",
+                        color: sellConfirmId === selectedOwned.id ? "#ffd6d6" : "#ffd5a5",
+                      }}
+                    >
+                      {sellConfirmId === selectedOwned.id ? "⚠️ Confirmer la vente" : "💰 Vendre le pet"}
+                    </button>
                   </div>
                   <div className="tb-comp-rename tb-comp-rename-v3">
                     <input value={nickname} onChange={(event: ChangeEvent<HTMLInputElement>) => setNickname(event.target.value)} maxLength={24} placeholder={selectedOwned.canRename ? "Nouveau surnom…" : "Surnom disponible au niveau 10"} disabled={!selectedOwned.canRename} />
