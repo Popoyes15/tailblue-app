@@ -10,6 +10,7 @@ import { getCurrent, onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
  
 import "./App.css";
+// TAILBLUE_CHESTS_DESKTOP_V1_20260822
 import PetsPage from "./pages/PetsPage";
 import HousePage from "./pages/HousePage";
 import MarketPage from "./pages/MarketPage";
@@ -17,6 +18,7 @@ import CharacterPage from "./pages/CharacterPage";
 import InventoryPage from "./pages/InventoryPage";
 import QuestsPage from "./pages/QuestsPage";
 import MinePage from "./pages/MinePage";
+import ChestPage from "./pages/ChestPage";
 import WorkPage from "./pages/WorkPage";
 import HimeControlPage from "./pages/HimeControlPage";
 import HuntPage from "./pages/HuntPage";
@@ -140,6 +142,7 @@ const SEARCH_ENTRIES: SearchEntry[] = [
 
   { icon: "📜", name: "Quêtes", group: "Aventure", keywords: ["quest", "missions", "récompenses"] },
   { icon: "⛏️", name: "Mine", group: "Aventure", keywords: ["combat", "minerais", "donjon"] },
+  { icon: "🎁", name: "Coffres", group: "Aventure", keywords: ["coffre", "butin", "loot", "mimic", "trésor"] },
   { icon: "🏹", name: "Hunt", group: "Aventure", keywords: ["chasse", "aventure", "loot"] },
   { icon: "🛠️", name: "Work", group: "Aventure", keywords: ["travail", "métier", "job"] },
   { icon: "🗺️", name: "Conquêtes", group: "Aventure", keywords: ["conquete", "territoire"] },
@@ -1898,6 +1901,7 @@ function App() {
               mineBadgeSignature,
             )}
 
+            {navButton("🎁", "Coffres")}
             {navButton("🏹", "Hunt")}
             {navButton("🛠️", "Work")}
             {navButton("🗺️", "Conquêtes")}
@@ -2593,6 +2597,8 @@ function App() {
 
         ) : activePage === "Mine" ? (
           <MinePage />
+        ) : activePage === "Coffres" ? (
+          <ChestPage />
         ) : activePage === "Hunt" ? (
           <HuntPage />
 

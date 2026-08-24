@@ -29,6 +29,15 @@ type CacheEnvelope<T> = {
   snapshot: T;
 };
 
+export type CompanionSaleResultDto = {
+  ok: boolean;
+  text: string;
+  price: number;
+  petId: string;
+  isDragon: boolean;
+  companions: CompanionSnapshotDto;
+};
+
 let companionMemory: CacheEnvelope<CompanionSnapshotDto> | null = null;
 let kennelMemory: CacheEnvelope<KennelSnapshotDto> | null = null;
 let provisionMemory: CacheEnvelope<ProvisionSnapshotDto> | null = null;
@@ -263,6 +272,15 @@ export const companionApi = {
     );
     result.companions = cacheCompanionSnapshot(result.companions);
     if (result.kennel) result.kennel = cacheKennelSnapshot(result.kennel);
+    return result;
+  },
+
+  async sell(petId: string): Promise<CompanionSaleResultDto> {
+    const result = await request<CompanionSaleResultDto>(
+      `/api/companions/${encodeURIComponent(petId)}/sell`,
+      { method: "POST", body: JSON.stringify({}) },
+    );
+    result.companions = cacheCompanionSnapshot(result.companions);
     return result;
   },
 
