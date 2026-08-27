@@ -1272,3 +1272,157 @@
     width: 100% !important;
   }
 }
+
+
+/* TAILBLUE_IDEAS_HIME_SIZE_V1B_20260827 */
+
+.tb-hime-page-ideas .tb-hime-ideas-toolbar-v1b {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(230px, 0.35fr) minmax(210px, 0.3fr);
+  gap: 14px;
+  margin: 20px 0 24px;
+}
+
+.tb-hime-page-ideas .tb-hime-ideas-toolbar-v1b input,
+.tb-hime-page-ideas .tb-hime-ideas-toolbar-v1b select {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 17px;
+  border-radius: 14px;
+  font-size: 0.98rem;
+  font-weight: 650;
+}
+
+.tb-hime-page-ideas .tb-hime-ideas-grid-v1b {
+  gap: 18px;
+}
+
+.tb-hime-page-ideas .tb-hime-ideas-grid-v1b .tb-hime-idea-card {
+  min-height: 250px;
+  padding: 25px 26px;
+  border-radius: 22px;
+}
+
+.tb-hime-page-ideas .tb-hime-ideas-grid-v1b .tb-hime-idea-card h3 {
+  margin-top: 15px;
+  font-size: 1.22rem;
+}
+
+.tb-hime-page-ideas .tb-hime-ideas-grid-v1b .tb-hime-idea-card > p {
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b button {
+  min-height: 46px;
+  padding: 10px 15px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b button.royal {
+  border-color: rgba(230, 184, 89, 0.34);
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b button.active.royal {
+  color: #f3d490;
+  box-shadow: inset 0 0 0 1px rgba(232, 188, 98, 0.17);
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b button.success-action:not(:disabled) {
+  color: #a4e8b5;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b button.danger-action:not(:disabled) {
+  color: #ffb0b6;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-card.royal-spotlight {
+  border-color: rgba(235, 190, 96, 0.46);
+  box-shadow:
+    inset 0 0 0 1px rgba(235, 190, 96, 0.08),
+    0 18px 42px rgba(0, 0, 0, 0.13);
+}
+
+@media (max-width: 1100px) {
+  .tb-hime-page-ideas .tb-hime-ideas-toolbar-v1b {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* TAILBLUE_IDEAS_HIME_POLISH_V1C_20260827 */
+
+.tb-hime-page-ideas .tb-hime-badges {
+  gap: 10px !important;
+  margin-top: 14px !important;
+}
+
+.tb-hime-page-ideas .tb-hime-badges span {
+  min-height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 8px 13px !important;
+  border-radius: 999px !important;
+  font-size: 0.96rem !important;
+  font-weight: 850 !important;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b {
+  gap: 12px !important;
+  margin-top: 24px !important;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-actions-v1b button {
+  min-height: 56px !important;
+  padding: 13px 19px !important;
+  border-radius: 14px !important;
+  font-size: 1.02rem !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+}
+
+.tb-hime-page-ideas .tb-hime-ideas-toolbar-v1b input,
+.tb-hime-page-ideas .tb-hime-ideas-toolbar-v1b select {
+  min-height: 60px !important;
+  padding: 0 18px !important;
+  font-size: 1.02rem !important;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-card h3 {
+  font-size: 1.4rem !important;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-card > header strong {
+  font-size: 1.05rem !important;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-card > header small {
+  font-size: 0.9rem !important;
+}
+
+.tb-hime-page-ideas .tb-hime-idea-archived-label {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  padding: 12px 17px;
+  border-radius: 13px;
+  background: rgba(88, 183, 119, 0.11);
+  border: 1px solid rgba(88, 183, 119, 0.18);
+  color: #9ce0af;
+  font-size: 1rem;
+  font-weight: 850;
+}

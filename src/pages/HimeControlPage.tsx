@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { himeApi, himeApiConfigured } from "../api/himeApi";
-import HimeIdeasPanel from "../components/hime/HimeIdeasPanel";
+import HimeIdeasPanel from "../components/hime/HimeIdeasCanonicalPanel";
 import {
   DashboardPanel,
   EconomyPanel,

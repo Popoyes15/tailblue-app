@@ -7,6 +7,7 @@ import NewsPage from "./NewsPage";
 import RoadmapPage from "./RoadmapPage";
 import SettingsPage from "./SettingsPage";
 import WikiPage from "./WikiPage";
+import IdeasPage from "./IdeasPage";
 
 const EXTRA_PAGES = new Set([
   "Chenil",
@@ -16,6 +17,7 @@ const EXTRA_PAGES = new Set([
   "Wiki",
   "Nouveautés",
   "Roadmap",
+  "Idées du Royaume",
   "ShowIdées",
   "Bilan général",
   "Statistiques",
@@ -53,6 +55,7 @@ export default function TailBlueExtraPages({ activePage }: { activePage: string 
   if (activePage === "Wiki") return <WikiPage />;
   if (activePage === "Nouveautés") return <NewsPage />;
   if (activePage === "Roadmap") return <RoadmapPage />;
+  if (activePage === "Idées du Royaume") return <IdeasPage />;
   if (activePage === "Paramètres") return <SettingsPage />;
 
   if (HIME_PAGES.has(activePage as HimeSection)) {

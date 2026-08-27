@@ -162,6 +162,7 @@ const SEARCH_ENTRIES: SearchEntry[] = [
   { icon: "📖", name: "Wiki", group: "Informations", keywords: ["helpme", "commandes", "aide"] },
   { icon: "✨", name: "Nouveautés", group: "Informations", keywords: ["update", "news", "annonce"] },
   { icon: "🛣️", name: "Roadmap", group: "Informations", keywords: ["avenir", "prévu", "planning"] },
+  { icon: "💡", name: "Idées du Royaume", group: "Informations", keywords: ["idées", "suggestions", "communauté", "trophées", "archives royales"] },
 
   { icon: "📊", name: "Bilan général", group: "Hime Control", keywords: ["admin", "bilan"], himeOnly: true },
   { icon: "📈", name: "Statistiques", group: "Hime Control", keywords: ["stats", "serveur"], himeOnly: true },
@@ -1224,7 +1225,7 @@ function App() {
 
     const interval = window.setInterval(
       () => void refreshHome(),
-      60_000,
+      20_000,
     );
 
     const closeStream = openHomeStream(
@@ -1637,6 +1638,21 @@ function App() {
       console.error("Notification TailBlue :", error);
     }
 
+    if (
+      notification.id.startsWith("idea-progress-")
+    ) {
+      const match = notification.id.match(
+        /^idea-progress-([a-f0-9]{12})-/i,
+      );
+
+      if (match?.[1]) {
+        window.sessionStorage.setItem(
+          "tailblue.ideas.open-progress-letter",
+          match[1],
+        );
+      }
+    }
+
     if (notification.targetPage) {
       navigate(notification.targetPage);
     }
@@ -1988,6 +2004,7 @@ function App() {
             )}
 
             {navButton("🛣️", "Roadmap")}
+            {navButton("💡", "Idées du Royaume")}
           </MenuSection>
 
           {isHime && (
@@ -2495,7 +2512,7 @@ function App() {
               <button
                 className="suggestion-button"
                 onClick={() =>
-                  setActivePage("Faire une suggestion")
+                  setActivePage("Idées du Royaume")
                 }
               >
                 💡 Faire part d'une suggestion
