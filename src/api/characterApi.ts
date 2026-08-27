@@ -33,6 +33,36 @@ let memoryCharacterCache:
   | CharacterCacheEnvelope
   | null = null;
 
+// TAILBLUE_POLISH_PACK_V3_20260826
+const memoryCharacterDetailCache =
+  new Map<CharacterDetailKind, CharacterDetail | null>();
+
+const inflightCharacterDetails =
+  new Map<CharacterDetailKind, Promise<CharacterDetail | null>>();
+
+export function getCachedCharacterDetail(
+  kind: CharacterDetailKind,
+): CharacterDetail | null | undefined {
+  return memoryCharacterDetailCache.get(kind);
+}
+
+export function prefetchCharacterDetails(
+  kinds: CharacterDetailKind[],
+): void {
+  if (!characterApiConfigured) return;
+
+  for (const kind of [...new Set(kinds)]) {
+    if (
+      memoryCharacterDetailCache.has(kind) ||
+      inflightCharacterDetails.has(kind)
+    ) {
+      continue;
+    }
+
+    void loadCharacterDetail(kind).catch(() => {});
+  }
+}
+
 function isCharacterSnapshot(
   value: unknown,
 ): value is CharacterSnapshot {
@@ -236,13 +266,32 @@ export async function loadCharacterDetail(
   signal?: AbortSignal,
 ): Promise<CharacterDetail | null> {
   if (!API_BASE) {
-    return getPreviewCharacterDetail(kind);
+    const preview = getPreviewCharacterDetail(kind);
+    memoryCharacterDetailCache.set(kind, preview);
+    return preview;
   }
 
-  return fetchJson<CharacterDetail | null>(
+  if (!signal) {
+    const inflight = inflightCharacterDetails.get(kind);
+    if (inflight) return inflight;
+  }
+
+  const request = fetchJson<CharacterDetail | null>(
     `/api/character/details/${encodeURIComponent(kind)}`,
     { signal },
-  );
+  ).then((detail) => {
+    memoryCharacterDetailCache.set(kind, detail);
+    return detail;
+  });
+
+  if (signal) return request;
+
+  inflightCharacterDetails.set(kind, request);
+  try {
+    return await request;
+  } finally {
+    inflightCharacterDetails.delete(kind);
+  }
 }
 
 /*

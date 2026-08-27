@@ -5,10 +5,12 @@ import {
 } from "react";
 import {
   characterApiConfigured,
+  getCachedCharacterDetail,
   getCachedCharacterSnapshot,
   loadCharacterDetail,
   loadCharacterSnapshot,
   openCharacterStream,
+  prefetchCharacterDetails,
 } from "../api/characterApi";
 import { CHARACTER_PREVIEW } from "../data/characterPreviewData";
 import type {
@@ -1175,6 +1177,16 @@ export default function CharacterPage() {
   }, [refresh]);
 
   useEffect(() => {
+    if (!snapshot || !characterApiConfigured) return;
+
+    prefetchCharacterDetails(
+      snapshot.identity
+        .filter((item) => item.available)
+        .map((item) => item.kind),
+    );
+  }, [snapshot]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setDrawerOpen(false);
@@ -1189,22 +1201,33 @@ export default function CharacterPage() {
   async function openDetail(
     kind: CharacterDetailKind,
   ) {
+    const cached = getCachedCharacterDetail(kind);
+    const hasCached = cached !== undefined;
+
     setDrawerOpen(true);
-    setDetailLoading(true);
     setDetailError(null);
-    setDetail(null);
+
+    if (hasCached) {
+      setDetail(cached ?? null);
+      setDetailLoading(false);
+    } else {
+      setDetail(null);
+      setDetailLoading(true);
+    }
 
     try {
       const result = await loadCharacterDetail(kind);
       setDetail(result);
     } catch (reason) {
-      setDetailError(
-        reason instanceof Error
-          ? reason.message
-          : "Impossible de charger cette fiche.",
-      );
+      if (!hasCached) {
+        setDetailError(
+          reason instanceof Error
+            ? reason.message
+            : "Impossible de charger cette fiche.",
+        );
+      }
     } finally {
-      setDetailLoading(false);
+      if (!hasCached) setDetailLoading(false);
     }
   }
 

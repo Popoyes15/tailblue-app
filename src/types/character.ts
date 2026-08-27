@@ -158,12 +158,40 @@ export type CharacterGuildMember = {
   founder?: boolean;
 };
 
+export type CharacterGuildRelic = {
+  slotId: string;
+  owned: boolean;
+  id?: string | null;
+  name?: string | null;
+  emoji: string;
+  rarityId?: string | null;
+  rarityName?: string | null;
+  prestige?: number | null;
+  description?: string | null;
+};
+
+export type CharacterGuildHallCollection = {
+  id: string;
+  name: string;
+  description?: string | null;
+  owned: number;
+  total: number;
+  complete: boolean;
+  relics: CharacterGuildRelic[];
+};
+
 export type CharacterGuildHall = {
   name: string;
   description?: string | null;
   imageUrl?: string | null;
   level?: number | null;
   xp?: number | null;
+  prestige?: number | null;
+  relicsOwned?: number | null;
+  relicsTotal?: number | null;
+  collectionsCompleted?: number | null;
+  collectionsTotal?: number | null;
+  collections?: CharacterGuildHallCollection[];
 };
 
 export type CharacterGuildDetail = {

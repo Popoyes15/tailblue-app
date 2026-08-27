@@ -1640,3 +1640,12 @@
     flex-direction: column;
   }
 }
+/* MARKET V3.2 — cadrage plus bas */
+.wv3-market-art img {
+  object-fit: cover !important;
+  object-position: 50% 78% !important;
+}
+
+.wv3-market-art .wv3-blur {
+  background-position: 50% 70% !important;
+}

@@ -1,5 +1,4 @@
 import BreedingPage from "./BreedingPage";
-import GalleryPage from "./GalleryPage";
 import HimeControlPage, { type HimeSection } from "./HimeControlPage";
 import KennelPage from "./KennelPage";
 import LeaderboardPage from "./LeaderboardPage";
@@ -14,7 +13,6 @@ const EXTRA_PAGES = new Set([
   "Élevage",
   "Musée",
   "Classement",
-  "Galerie",
   "Wiki",
   "Nouveautés",
   "Roadmap",
@@ -52,7 +50,6 @@ export default function TailBlueExtraPages({ activePage }: { activePage: string 
   if (activePage === "Élevage") return <BreedingPage />;
   if (activePage === "Musée") return <MuseumPage />;
   if (activePage === "Classement") return <LeaderboardPage />;
-  if (activePage === "Galerie") return <GalleryPage />;
   if (activePage === "Wiki") return <WikiPage />;
   if (activePage === "Nouveautés") return <NewsPage />;
   if (activePage === "Roadmap") return <RoadmapPage />;

@@ -13,6 +13,7 @@ import "./App.css";
 // TAILBLUE_CHESTS_DESKTOP_V1_20260822
 import PetsPage from "./pages/PetsPage";
 import HousePage from "./pages/HousePage";
+import GuildPage from "./pages/GuildPage"; // TAILBLUE_GUILD_DESKTOP_V1_20260824
 import MarketPage from "./pages/MarketPage";
 import CharacterPage from "./pages/CharacterPage";
 import InventoryPage from "./pages/InventoryPage";
@@ -69,6 +70,7 @@ import {
 import TailBlueExtraPages, {
   isTailBlueExtraPage,
 } from "./pages/TailBlueExtraPages";
+import WorldImageZoomHost from "./components/WorldImageZoomHost";
 
 type NotificationLevel = "info" | "new" | "important" | "urgent";
 
@@ -151,11 +153,11 @@ const SEARCH_ENTRIES: SearchEntry[] = [
   { icon: "🏡", name: "Chenil", group: "Compagnons", keywords: ["nourrir", "provisions", "équipe"] },
   { icon: "🥚", name: "Élevage", group: "Compagnons", keywords: ["oeuf", "œuf", "dragon", "origines"] },
 
+  { icon: "🛡️", name: "Guilde", group: "Monde", keywords: ["guild", "hall", "reliques", "guildwork", "bestiaire"] },
   { icon: "🏰", name: "Maison", group: "Monde", keywords: ["résidence", "logement", "mobilier"] },
   { icon: "🏛️", name: "Musée", group: "Monde", keywords: ["collection", "trophées", "objets"] },
   { icon: "🛒", name: "Marché", group: "Monde", keywords: ["forge", "alchimiste", "boutique", "achat", "vente"] },
   { icon: "🏆", name: "Classement", group: "Monde", keywords: ["top", "niveau", "ranking"] },
-  { icon: "🖼️", name: "Galerie", group: "Monde", keywords: ["images", "illustrations"] },
 
   { icon: "📖", name: "Wiki", group: "Informations", keywords: ["helpme", "commandes", "aide"] },
   { icon: "✨", name: "Nouveautés", group: "Informations", keywords: ["update", "news", "annonce"] },
@@ -1222,19 +1224,61 @@ function App() {
 
     const interval = window.setInterval(
       () => void refreshHome(),
-      12_000,
+      60_000,
     );
 
     const closeStream = openHomeStream(
       () => void refreshHome(),
     );
 
+    // TAILBLUE_HOME_REFRESH_V1A_20260827
+    // Fallback doux : 60 s, plus synchronisation immédiate
+    // quand l'utilisateur revient dans TailBlue.
+    const onFocus = () => {
+      void refreshHome();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void refreshHome();
+      }
+    };
+
+    window.addEventListener(
+      "focus",
+      onFocus,
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      onVisibilityChange,
+    );
+
     return () => {
       controller.abort();
       window.clearInterval(interval);
       closeStream();
+
+      window.removeEventListener(
+        "focus",
+        onFocus,
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        onVisibilityChange,
+      );
     };
   }, [refreshHome, authUser?.id]);
+
+  useEffect(() => {
+    if (activePage !== "Accueil") return;
+
+    // Retour sur Accueil = snapshot frais immédiatement.
+    // Les erreurs restent silencieuses dans refreshHome()
+    // et ne remplacent jamais le dernier snapshot déjà affiché.
+    void refreshHome();
+  }, [activePage, refreshHome]);
 
   useEffect(() => {
     applySettingsToDocument(settings);
@@ -1819,6 +1863,7 @@ function App() {
 
   return (
     <div className="app-shell">
+      <WorldImageZoomHost />
       <aside className="sidebar">
         <button
           className="brand brand-button"
@@ -1914,11 +1959,11 @@ function App() {
           </MenuSection>
 
           <MenuSection title="Monde" icon="🌍">
+            {navButton("🛡️", "Guilde")}
             {navButton("🏰", "Maison")}
             {navButton("🏛️", "Musée")}
             {navButton("🛒", "Marché")}
             {navButton("🏆", "Classement")}
-            {navButton("🖼️", "Galerie")}
           </MenuSection>
 
           <MenuSection
@@ -2582,6 +2627,8 @@ function App() {
         ) : activePage === "Pets" ? (
             <PetsPage />
 
+      ) : activePage === "Guilde" ? (
+          <GuildPage />
       ) : activePage === "Maison" ? (
            <HousePage />
 

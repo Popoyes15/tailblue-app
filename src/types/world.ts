@@ -1,3 +1,4 @@
+// TAILBLUE_WORLD_APP_V3_20260826
 export type HouseId =
   | "sans_abri"
   | "ferme"
@@ -19,7 +20,8 @@ export interface HouseDefinition {
   name: string;
   levelRequired: number;
   price: number | null;
-  image: string;
+  image?: string;
+  imageUrl?: string | null;
   description: string;
   effect: HouseEffect;
   furnitureSlots: number;
@@ -32,8 +34,10 @@ export interface HouseFurnitureDto {
   emoji?: string;
   description?: string;
   category?: string;
+  minimumHouseId?: string;
   owned?: number;
   installed?: boolean;
+  canUse?: boolean;
   price?: number | null;
   effects?: Record<string, number>;
 }
@@ -50,6 +54,11 @@ export interface HouseSnapshot {
   installedFurnitureIds?: string[];
   furnitureSlotsUsed?: number;
   furnitureSlotsTotal?: number;
+  furnitureBonusCaps?: Record<string, number>;
+  activeFurnitureBonus?: Record<string, number>;
+  furnitureStyle?: string | null;
+  furnitureValue?: number;
+  catalog: HouseDefinition[];
 }
 
 export interface MuseumDefinition {
@@ -69,15 +78,18 @@ export interface MuseumPieceDto {
   image?: string | null;
 }
 
-export interface MuseumCandidateDto extends MuseumPieceDto {
+export interface MuseumCandidateDto
+  extends MuseumPieceDto {
+  key: string;
+  source?: "classic" | "rpg" | string;
   quantity: number;
 }
 
 export interface MuseumSnapshot {
   houseId: HouseId;
-  museumHouseId: MuseumDefinition["houseId"];
+  museumHouseId: string;
   museumName: string;
-  museumImage?: string;
+  museumImage?: string | null;
   description?: string;
   pieces: MuseumPieceDto[];
   candidates: MuseumCandidateDto[];

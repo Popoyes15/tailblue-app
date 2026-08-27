@@ -11,7 +11,10 @@ import type {
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
-import { chestApi } from "../api/chestApi";
+import {
+  chestApi,
+  getCachedChestSnapshot,
+} from "../api/chestApi"; // TAILBLUE_POLISH_PACK_V3_20260826
 import type {
   ChestMysteryEventDto,
   ChestBonusCardEventDto,
@@ -498,8 +501,10 @@ export default function ChestPage() {
   const pointerInsideVaultRef = useRef(false);
   const keyModeRef = useRef(false);
 
-  const [snapshot, setSnapshot] = useState<ChestSnapshotDto | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [snapshot, setSnapshot] =
+    useState<ChestSnapshotDto | null>(() => getCachedChestSnapshot());
+  const [loading, setLoading] =
+    useState(() => getCachedChestSnapshot() === null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);

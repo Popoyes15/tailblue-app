@@ -13,6 +13,59 @@ const API_URL = RAW_API_URL.replace(/\/+$/, "");
 
 export const chestApiConfigured = Boolean(API_URL);
 
+// TAILBLUE_POLISH_PACK_V3_20260826
+const CHEST_CACHE_KEY = "tailblue.chests.snapshot.v1";
+let memoryChestSnapshot: ChestSnapshotDto | null = null;
+
+function isChestSnapshot(value: unknown): value is ChestSnapshotDto {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<ChestSnapshotDto>;
+  return (
+    typeof candidate.totalOpened === "number" &&
+    typeof candidate.cookies === "number" &&
+    typeof candidate.canOpen === "boolean"
+  );
+}
+
+export function getCachedChestSnapshot(): ChestSnapshotDto | null {
+  if (memoryChestSnapshot) return memoryChestSnapshot;
+
+  try {
+    const raw = window.sessionStorage.getItem(CHEST_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isChestSnapshot(parsed)) {
+      window.sessionStorage.removeItem(CHEST_CACHE_KEY);
+      return null;
+    }
+    memoryChestSnapshot = parsed;
+    return memoryChestSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+function cacheChestSnapshot(snapshot: ChestSnapshotDto) {
+  memoryChestSnapshot = snapshot;
+  try {
+    window.sessionStorage.setItem(CHEST_CACHE_KEY, JSON.stringify(snapshot));
+  } catch {}
+}
+
+function cacheChestPayload<T>(payload: T): T {
+  if (isChestSnapshot(payload)) {
+    cacheChestSnapshot(payload);
+    return payload;
+  }
+
+  if (payload && typeof payload === "object") {
+    const nested = (payload as { snapshot?: unknown }).snapshot;
+    if (isChestSnapshot(nested)) cacheChestSnapshot(nested);
+  }
+
+  return payload;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!API_URL) throw new Error("TAILBLUE_API_NOT_CONFIGURED");
 
@@ -45,7 +98,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message);
   }
 
-  return response.json() as Promise<T>;
+  const payload = (await response.json()) as T;
+  return cacheChestPayload(payload);
 }
 
 export const chestApi = {

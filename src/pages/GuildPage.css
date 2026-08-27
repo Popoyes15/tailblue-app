@@ -1,0 +1,1376 @@
+/* TAILBLUE_GUILD_DESKTOP_V2_20260824 */
+
+.tb-guild-page,
+.tb-guild-state {
+  width: min(1480px, calc(100% - 42px));
+  margin: 20px auto 60px;
+}
+
+.tb-guild-page {
+  color: #eef5ff;
+}
+
+.tb-guild-page-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 17px;
+}
+
+.tb-guild-page-header h1 {
+  margin: 2px 0 0;
+  font-size: clamp(31px, 3vw, 49px);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.tb-guild-page-header > div > p:last-child {
+  margin: 8px 0 0;
+  color: rgba(219, 229, 248, 0.57);
+}
+
+.tb-guild-title-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tb-guild-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(102, 213, 171, 0.18);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(49, 128, 99, 0.1);
+  color: rgba(178, 236, 214, 0.78);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.tb-guild-live-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #67d5a9;
+  box-shadow: 0 0 12px rgba(103, 213, 169, 0.7);
+}
+
+.tb-guild-eyebrow {
+  margin: 0;
+  color: #96afe1;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tb-guild-refresh {
+  min-width: 148px;
+  border: 1px solid rgba(159, 188, 244, 0.16);
+  border-radius: 13px;
+  padding: 10px 13px;
+  background: rgba(22, 34, 57, 0.66);
+  color: #e8f0ff;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.tb-guild-refresh:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(159, 188, 244, 0.28);
+  background: rgba(33, 48, 78, 0.78);
+}
+
+.tb-guild-refresh:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.tb-guild-refresh span {
+  display: inline-block;
+  margin-right: 7px;
+}
+
+.tb-guild-refresh .spin {
+  animation: tbGuildSpin 0.8s linear infinite;
+}
+
+@keyframes tbGuildSpin {
+  to { transform: rotate(360deg); }
+}
+
+.tb-guild-soft-error {
+  margin-bottom: 13px;
+  border: 1px solid rgba(255, 173, 92, 0.2);
+  border-radius: 13px;
+  padding: 10px 13px;
+  background: rgba(91, 52, 25, 0.35);
+  color: #ffd5a8;
+  font-size: 12px;
+}
+
+.tb-guild-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.tb-guild-nav {
+  position: sticky;
+  top: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 179, 235, 0.12);
+  border-radius: 20px;
+  padding: 9px;
+  background:
+    radial-gradient(circle at 25% -10%, rgba(76, 108, 175, 0.18), transparent 42%),
+    rgba(10, 17, 30, 0.82);
+  box-shadow:
+    0 18px 52px rgba(0, 0, 0, 0.18),
+    inset 0 1px rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(18px);
+}
+
+.tb-guild-nav-heading {
+  padding: 10px 11px 12px;
+}
+
+.tb-guild-nav-heading span,
+.tb-guild-nav-heading small {
+  display: block;
+}
+
+.tb-guild-nav-heading span {
+  color: rgba(164, 188, 231, 0.47);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.17em;
+}
+
+.tb-guild-nav-heading small {
+  margin-top: 3px;
+  overflow: hidden;
+  color: rgba(230, 237, 250, 0.82);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-guild-nav-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid rgba(149, 178, 231, 0.1);
+  border-radius: 14px;
+  background: rgba(27, 39, 63, 0.36);
+}
+
+.tb-guild-nav-duo button,
+.tb-guild-nav > button {
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: rgba(211, 222, 243, 0.62);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.tb-guild-nav-duo button {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 10px 4px;
+}
+
+.tb-guild-nav-duo button span {
+  font-size: 18px;
+}
+
+.tb-guild-nav-duo button strong {
+  font-size: 11px;
+}
+
+.tb-guild-nav > button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  gap: 7px;
+  padding: 10px 9px;
+  text-align: left;
+}
+
+.tb-guild-nav > button > span {
+  font-size: 18px;
+  text-align: center;
+}
+
+.tb-guild-nav > button strong {
+  min-width: 0;
+  font-size: 12px;
+}
+
+.tb-guild-nav > button em {
+  border-radius: 999px;
+  padding: 3px 6px;
+  background: rgba(206, 159, 79, 0.1);
+  color: rgba(232, 190, 117, 0.66);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tb-guild-nav-duo button:hover,
+.tb-guild-nav > button:hover {
+  color: #fff;
+  background: rgba(91, 126, 194, 0.1);
+}
+
+.tb-guild-nav-duo button.active,
+.tb-guild-nav > button.active {
+  border-color: rgba(132, 169, 238, 0.19);
+  background:
+    linear-gradient(135deg, rgba(70, 102, 171, 0.32), rgba(52, 75, 126, 0.11));
+  color: #fff;
+}
+
+.tb-guild-nav-separator {
+  height: 1px;
+  margin: 10px 5px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(143, 173, 229, 0.12),
+    transparent
+  );
+}
+
+.tb-guild-content {
+  min-width: 0;
+}
+
+.tb-guild-hero,
+.tb-hall-hero {
+  position: relative;
+  min-height: 315px;
+  overflow: hidden;
+  border: 1px solid rgba(155, 185, 239, 0.13);
+  border-radius: 24px;
+  background: #0f1828;
+  box-shadow: 0 24px 65px rgba(0, 0, 0, 0.22);
+}
+
+.tb-guild-artwork-button {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.tb-guild-artwork-button.fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tb-guild-artwork-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform 350ms ease,
+    filter 350ms ease;
+}
+
+.tb-guild-artwork-button:hover img {
+  transform: scale(1.018);
+  filter: brightness(1.055);
+}
+
+.tb-guild-artwork-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 4;
+  border: 1px solid rgba(222, 233, 255, 0.15);
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: rgba(8, 14, 25, 0.62);
+  color: rgba(239, 244, 255, 0.82);
+  font-size: 9px;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  backdrop-filter: blur(8px);
+}
+
+.tb-guild-artwork-button:hover .tb-guild-artwork-badge,
+.tb-guild-artwork-button:focus-visible .tb-guild-artwork-badge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tb-guild-hero-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 92px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(96, 131, 203, 0.2), transparent 35%),
+    linear-gradient(145deg, #142039, #0b1221);
+}
+
+.tb-guild-hero-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(6, 11, 21, 0.88), rgba(6, 11, 21, 0.15) 68%),
+    linear-gradient(0deg, rgba(6, 11, 21, 0.86), transparent 58%);
+}
+
+.tb-guild-hero-shade.hall {
+  background:
+    linear-gradient(90deg, rgba(18, 14, 8, 0.82), rgba(9, 12, 19, 0.13) 72%),
+    linear-gradient(0deg, rgba(7, 10, 17, 0.8), transparent 62%);
+}
+
+.tb-guild-hero-copy,
+.tb-hall-hero-copy {
+  position: absolute;
+  left: 31px;
+  right: 31px;
+  bottom: 27px;
+  z-index: 2;
+  max-width: 690px;
+  pointer-events: none;
+}
+
+.tb-guild-kicker {
+  display: inline-flex;
+  border: 1px solid rgba(201, 216, 249, 0.18);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(8, 13, 24, 0.5);
+  color: #c8d7f7;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.tb-guild-kicker.gold {
+  border-color: rgba(229, 199, 125, 0.2);
+  color: #ead29a;
+}
+
+.tb-guild-hero-copy h2,
+.tb-hall-hero-copy h2 {
+  margin: 9px 0 5px;
+  font-size: clamp(31px, 4vw, 53px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.tb-guild-hero-copy p,
+.tb-hall-hero-copy p {
+  margin: 0;
+  max-width: 620px;
+  color: rgba(234, 241, 254, 0.69);
+  line-height: 1.48;
+}
+
+.tb-guild-overview-strip,
+.tb-hall-ledger {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  margin: 12px 0;
+  border: 1px solid rgba(151, 181, 235, 0.11);
+  border-radius: 18px;
+  background: rgba(14, 23, 40, 0.7);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.tb-guild-overview-strip > div,
+.tb-hall-ledger > div {
+  min-width: 0;
+  padding: 16px 17px;
+  border-right: 1px solid rgba(151, 181, 235, 0.09);
+}
+
+.tb-guild-overview-strip > div:last-child,
+.tb-hall-ledger > div:last-child {
+  border-right: 0;
+}
+
+.tb-guild-overview-strip span,
+.tb-guild-overview-strip small,
+.tb-hall-ledger span,
+.tb-hall-ledger small {
+  display: block;
+}
+
+.tb-guild-overview-strip span,
+.tb-hall-ledger span {
+  color: rgba(194, 209, 237, 0.52);
+  font-size: 10px;
+}
+
+.tb-guild-overview-strip strong,
+.tb-hall-ledger strong {
+  display: block;
+  overflow: hidden;
+  margin: 3px 0 1px;
+  font-size: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-guild-overview-strip small,
+.tb-hall-ledger small {
+  overflow: hidden;
+  color: rgba(178, 196, 227, 0.4);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-guild-progress-card {
+  padding: 15px 18px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(151, 181, 235, 0.1);
+  border-radius: 17px;
+  background: rgba(13, 21, 36, 0.6);
+}
+
+.tb-guild-progress-card > div:first-child {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 9px;
+}
+
+.tb-guild-progress-card > div:first-child strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+}
+
+.tb-guild-progress-card > div:first-child > span {
+  color: rgba(220, 230, 249, 0.77);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tb-guild-progress-track,
+.tb-hall-progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(126, 155, 211, 0.1);
+}
+
+.tb-guild-progress-track > span,
+.tb-hall-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #587fcf, #a8c5ff);
+  box-shadow: 0 0 18px rgba(129, 169, 247, 0.3);
+}
+
+.tb-guild-hall-preview {
+  display: grid;
+  grid-template-columns: minmax(290px, 0.9fr) 1.1fr;
+  min-height: 276px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid rgba(209, 179, 105, 0.14);
+  border-radius: 21px;
+  background:
+    radial-gradient(circle at 88% 20%, rgba(157, 119, 47, 0.1), transparent 32%),
+    rgba(14, 21, 34, 0.72);
+}
+
+.tb-guild-hall-preview-image {
+  position: relative;
+  min-height: 276px;
+  background: rgba(10, 15, 25, 0.55);
+}
+
+.tb-guild-hall-preview-image > span {
+  display: grid;
+  min-height: 276px;
+  place-items: center;
+  font-size: 70px;
+}
+
+.tb-guild-hall-preview-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 28px 31px;
+}
+
+.tb-guild-hall-preview-copy h3 {
+  margin: 5px 0 8px;
+  font-size: clamp(24px, 2.4vw, 34px);
+  letter-spacing: -0.025em;
+}
+
+.tb-guild-hall-preview-copy > p:not(.tb-guild-eyebrow) {
+  margin: 0;
+  color: rgba(216, 225, 242, 0.57);
+  line-height: 1.55;
+}
+
+.tb-guild-hall-mini-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 17px 0;
+}
+
+.tb-guild-hall-mini-stats span {
+  border: 1px solid rgba(220, 189, 112, 0.14);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgba(94, 74, 30, 0.09);
+  color: rgba(232, 210, 158, 0.78);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.tb-guild-primary-action,
+.tb-guild-state button {
+  align-self: flex-start;
+  border: 1px solid rgba(174, 198, 245, 0.2);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background:
+    linear-gradient(135deg, #5279c8, #36578f);
+  color: #fff;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(51, 82, 143, 0.22);
+}
+
+.tb-guild-primary-action span {
+  margin-left: 11px;
+}
+
+.tb-guild-members-card {
+  padding: 18px;
+  border: 1px solid rgba(151, 181, 235, 0.1);
+  border-radius: 19px;
+  background: rgba(13, 21, 36, 0.6);
+}
+
+.tb-guild-members-card > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.tb-guild-members-card h3 {
+  margin: 3px 0 0;
+  font-size: 20px;
+}
+
+.tb-guild-members-card > header > span {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(96, 130, 198, 0.1);
+  color: #bfd2f9;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.tb-guild-members-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.tb-guild-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(147, 176, 228, 0.08);
+  border-radius: 13px;
+  background: rgba(29, 41, 65, 0.31);
+}
+
+.tb-guild-member-avatar {
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.tb-guild-member-fallback {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #4968a6, #283c66);
+  color: #fff;
+  font-weight: 900;
+}
+
+.tb-guild-member > div:last-child {
+  min-width: 0;
+}
+
+.tb-guild-member strong,
+.tb-guild-member span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-guild-member strong {
+  font-size: 11px;
+}
+
+.tb-guild-member span {
+  margin-top: 2px;
+  color: rgba(188, 204, 233, 0.45);
+  font-size: 9px;
+}
+
+.tb-hall-hero {
+  min-height: 350px;
+  border-color: rgba(216, 184, 107, 0.14);
+}
+
+.tb-hall-ledger {
+  border-color: rgba(202, 173, 103, 0.1);
+  background:
+    linear-gradient(90deg, rgba(44, 36, 22, 0.33), rgba(15, 22, 34, 0.65));
+}
+
+.tb-hall-ledger > div {
+  border-right-color: rgba(204, 174, 102, 0.08);
+}
+
+.tb-hall-ledger strong {
+  color: #f5e7c6;
+}
+
+.tb-hall-library {
+  overflow: hidden;
+  border: 1px solid rgba(203, 175, 105, 0.12);
+  border-radius: 21px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(132, 100, 42, 0.1), transparent 31%),
+    rgba(13, 20, 32, 0.7);
+}
+
+.tb-hall-library-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 21px 17px;
+  border-bottom: 1px solid rgba(197, 169, 102, 0.09);
+}
+
+.tb-hall-library-header h3 {
+  margin: 4px 0 5px;
+  font-size: 23px;
+}
+
+.tb-hall-library-header p:last-child {
+  max-width: 720px;
+  margin: 0;
+  color: rgba(216, 223, 237, 0.5);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.tb-hall-library-count {
+  border: 1px solid rgba(221, 188, 109, 0.14);
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: rgba(102, 76, 29, 0.1);
+  color: rgba(235, 213, 161, 0.78);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.tb-hall-collection-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  padding: 13px 14px;
+  border-bottom: 1px solid rgba(197, 169, 102, 0.08);
+}
+
+.tb-hall-collection-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: transparent;
+  color: rgba(223, 225, 223, 0.57);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tb-hall-collection-tabs button:hover {
+  background: rgba(118, 91, 43, 0.08);
+  color: rgba(245, 237, 217, 0.8);
+}
+
+.tb-hall-collection-tabs button.active {
+  border-color: rgba(222, 188, 107, 0.18);
+  background:
+    linear-gradient(135deg, rgba(124, 94, 43, 0.23), rgba(73, 56, 31, 0.1));
+  color: #fff1ce;
+}
+
+.tb-hall-collection-dot {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(209, 179, 106, 0.08);
+  color: #dbb96d;
+  font-size: 9px;
+}
+
+.tb-hall-collection-copy {
+  min-width: 0;
+}
+
+.tb-hall-collection-copy strong,
+.tb-hall-collection-copy small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-hall-collection-copy strong {
+  font-size: 10px;
+}
+
+.tb-hall-collection-copy small {
+  margin-top: 2px;
+  color: rgba(217, 201, 163, 0.42);
+  font-size: 8px;
+}
+
+.tb-hall-selected-collection {
+  padding: 20px;
+}
+
+.tb-hall-selected-collection > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.tb-hall-selected-collection h3 {
+  margin: 4px 0 5px;
+  font-size: 25px;
+}
+
+.tb-hall-selected-collection header p:last-child {
+  max-width: 720px;
+  margin: 0;
+  color: rgba(216, 223, 237, 0.52);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.tb-hall-progress-badge {
+  min-width: 82px;
+  border: 1px solid rgba(219, 186, 106, 0.14);
+  border-radius: 13px;
+  padding: 8px 10px;
+  background: rgba(97, 73, 29, 0.09);
+  text-align: center;
+}
+
+.tb-hall-progress-badge strong,
+.tb-hall-progress-badge span {
+  display: block;
+}
+
+.tb-hall-progress-badge strong {
+  color: #f4dda9;
+  font-size: 15px;
+}
+
+.tb-hall-progress-badge span {
+  margin-top: 1px;
+  color: rgba(221, 203, 162, 0.44);
+  font-size: 8px;
+}
+
+.tb-hall-progress {
+  margin: 14px 0 17px;
+}
+
+.tb-hall-progress > span {
+  background: linear-gradient(90deg, #957137, #e3bc63);
+  box-shadow: 0 0 16px rgba(217, 174, 76, 0.24);
+}
+
+.tb-hall-relic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tb-hall-relic {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 158px;
+  padding: 13px;
+  border: 1px solid rgba(186, 158, 93, 0.11);
+  border-radius: 15px;
+  background:
+    linear-gradient(145deg, rgba(51, 42, 27, 0.26), rgba(19, 25, 37, 0.55));
+}
+
+.tb-hall-relic.locked {
+  border-style: dashed;
+  background: rgba(18, 24, 35, 0.42);
+  opacity: 0.69;
+}
+
+.tb-hall-relic-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.tb-hall-relic-index {
+  color: rgba(213, 196, 157, 0.26);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.tb-hall-relic-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: rgba(209, 177, 98, 0.08);
+  font-size: 19px;
+}
+
+.tb-hall-rarity {
+  color: rgba(225, 192, 112, 0.78);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.tb-hall-rarity.locked {
+  color: rgba(207, 192, 160, 0.4);
+}
+
+.tb-hall-relic h4 {
+  overflow: hidden;
+  margin: 3px 0 0;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-hall-relic > p {
+  flex: 1;
+  margin: 7px 0 10px;
+  color: rgba(213, 220, 233, 0.49);
+  font-size: 9px;
+  line-height: 1.48;
+}
+
+.tb-hall-relic footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(195, 167, 100, 0.08);
+  color: rgba(222, 201, 152, 0.5);
+  font-size: 8px;
+}
+
+.tb-hall-spoiler-rule {
+  margin: 14px 0 0;
+  border-radius: 11px;
+  padding: 9px 11px;
+  background: rgba(87, 70, 34, 0.12);
+  color: rgba(234, 219, 184, 0.48);
+  font-size: 9px;
+}
+
+.tb-hall-empty {
+  display: grid;
+  justify-items: center;
+  padding: 60px 24px;
+  border: 1px dashed rgba(190, 169, 115, 0.18);
+  border-radius: 20px;
+  background: rgba(25, 28, 35, 0.4);
+  text-align: center;
+}
+
+.tb-hall-empty > span {
+  font-size: 44px;
+}
+
+.tb-hall-empty h3 {
+  margin: 9px 0 4px;
+}
+
+.tb-hall-empty p {
+  margin: 0;
+  color: rgba(218, 225, 239, 0.46);
+}
+
+.tb-guild-construction,
+.tb-guild-work-preview {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  align-items: center;
+  gap: 30px;
+  min-height: 440px;
+  padding: clamp(35px, 6vw, 72px);
+  border: 1px solid rgba(151, 181, 235, 0.11);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 80% 18%, rgba(75, 110, 181, 0.15), transparent 33%),
+    rgba(12, 19, 32, 0.78);
+}
+
+.tb-guild-construction-orb,
+.tb-guild-feature-orb {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(171, 197, 246, 0.12);
+  background:
+    radial-gradient(circle, rgba(90, 122, 189, 0.19), rgba(49, 68, 107, 0.06) 60%, transparent 61%);
+  color: #eef4ff;
+  font-size: 56px;
+}
+
+.tb-guild-construction-orb {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+}
+
+.tb-guild-feature-orb {
+  width: 130px;
+  height: 130px;
+  border-radius: 35px;
+}
+
+.tb-guild-construction h2,
+.tb-guild-work-preview h2 {
+  margin: 6px 0 8px;
+  max-width: 700px;
+  font-size: clamp(28px, 3.5vw, 44px);
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+}
+
+.tb-guild-construction-copy > p:last-of-type,
+.tb-guild-work-preview > div:last-child > p {
+  max-width: 720px;
+  margin: 0;
+  color: rgba(217, 226, 244, 0.55);
+  line-height: 1.62;
+}
+
+.tb-guild-construction-pill {
+  display: inline-flex;
+  border: 1px solid rgba(235, 180, 84, 0.16);
+  border-radius: 999px;
+  padding: 4px 8px;
+  margin: 0 0 12px;
+  background: rgba(109, 73, 26, 0.12);
+  color: rgba(232, 190, 117, 0.8);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.tb-guild-history-button {
+  display: flex;
+  justify-content: space-between;
+  gap: 36px;
+  min-width: 260px;
+  margin-top: 21px;
+  border: 1px solid rgba(174, 198, 245, 0.11);
+  border-radius: 12px;
+  padding: 10px 13px;
+  background: rgba(49, 67, 103, 0.22);
+  color: rgba(224, 233, 250, 0.39);
+  font: inherit;
+}
+
+.tb-guild-work-rules {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 820px;
+  margin: 22px 0;
+}
+
+.tb-guild-work-rules > div {
+  padding: 13px;
+  border: 1px solid rgba(151, 181, 235, 0.09);
+  border-radius: 13px;
+  background: rgba(35, 50, 79, 0.25);
+}
+
+.tb-guild-work-rules span,
+.tb-guild-work-rules strong {
+  display: block;
+}
+
+.tb-guild-work-rules span {
+  color: rgba(187, 203, 232, 0.43);
+  font-size: 9px;
+}
+
+.tb-guild-work-rules strong {
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.tb-guild-work-preview > div:last-child > button {
+  border: 1px solid rgba(172, 196, 242, 0.1);
+  border-radius: 11px;
+  padding: 9px 12px;
+  background: rgba(54, 77, 124, 0.25);
+  color: rgba(225, 234, 251, 0.4);
+  font: inherit;
+  cursor: not-allowed;
+}
+
+.tb-guild-bestiary-preview {
+  background:
+    radial-gradient(circle at 83% 18%, rgba(108, 80, 172, 0.16), transparent 33%),
+    rgba(18, 17, 33, 0.8);
+}
+
+.tb-guild-state {
+  display: grid;
+  justify-items: center;
+  min-height: 500px;
+  align-content: center;
+  border: 1px solid rgba(153, 182, 237, 0.11);
+  border-radius: 24px;
+  padding: 40px;
+  background: rgba(13, 20, 34, 0.66);
+  color: #eef4ff;
+  text-align: center;
+}
+
+.tb-guild-state > div:first-child {
+  font-size: 50px;
+}
+
+.tb-guild-state h2 {
+  margin: 11px 0 5px;
+  font-size: 28px;
+}
+
+.tb-guild-state p {
+  max-width: 590px;
+  margin: 0 0 17px;
+  color: rgba(215, 226, 246, 0.54);
+  line-height: 1.6;
+}
+
+.tb-guild-state-error {
+  border-color: rgba(236, 119, 100, 0.15);
+}
+
+.tb-guild-loader {
+  animation: tbGuildFloat 1.7s ease-in-out infinite;
+}
+
+@keyframes tbGuildFloat {
+  50% { transform: translateY(-7px); }
+}
+
+@media (max-width: 1100px) {
+  .tb-guild-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-guild-nav {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .tb-guild-nav-heading {
+    display: none;
+  }
+
+  .tb-guild-nav-duo {
+    grid-column: span 2;
+  }
+
+  .tb-guild-nav-separator {
+    display: none;
+  }
+
+  .tb-guild-nav > button {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .tb-guild-nav > button em {
+    display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .tb-guild-overview-strip,
+  .tb-hall-ledger {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tb-guild-overview-strip > div:nth-child(2),
+  .tb-hall-ledger > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .tb-guild-overview-strip > div:nth-child(-n + 2),
+  .tb-hall-ledger > div:nth-child(-n + 2) {
+    border-bottom: 1px solid rgba(151, 181, 235, 0.08);
+  }
+
+  .tb-guild-hall-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-guild-hall-preview-image {
+    min-height: 225px;
+  }
+
+  .tb-guild-members-grid,
+  .tb-hall-relic-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tb-hall-collection-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tb-guild-construction,
+  .tb-guild-work-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-guild-construction-orb,
+  .tb-guild-feature-orb {
+    width: 90px;
+    height: 90px;
+    border-radius: 26px;
+    font-size: 39px;
+  }
+}
+
+@media (max-width: 620px) {
+  .tb-guild-page,
+  .tb-guild-state {
+    width: min(100% - 22px, 1480px);
+  }
+
+  .tb-guild-page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tb-guild-refresh {
+    width: 100%;
+  }
+
+  .tb-guild-nav {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tb-guild-nav-duo {
+    grid-column: 1 / -1;
+  }
+
+  .tb-guild-overview-strip,
+  .tb-hall-ledger,
+  .tb-guild-members-grid,
+  .tb-hall-relic-grid,
+  .tb-hall-collection-tabs,
+  .tb-guild-work-rules {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-guild-overview-strip > div,
+  .tb-hall-ledger > div {
+    border-right: 0;
+    border-bottom: 1px solid rgba(151, 181, 235, 0.08);
+  }
+
+  .tb-guild-overview-strip > div:last-child,
+  .tb-hall-ledger > div:last-child {
+    border-bottom: 0;
+  }
+
+  .tb-guild-hero,
+  .tb-hall-hero {
+    min-height: 300px;
+  }
+
+  .tb-guild-hero-copy,
+  .tb-hall-hero-copy {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .tb-guild-artwork-badge {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+
+/* TAILBLUE_GUILD_AUDIO_UI_V1_20260826 */
+.tb-guild-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.tb-guild-sound-control {
+  position: relative;
+}
+
+.tb-guild-sound-trigger {
+  min-width: 92px;
+  border: 1px solid rgba(159, 188, 244, 0.16);
+  border-radius: 13px;
+  padding: 10px 12px;
+  background: rgba(22, 34, 57, 0.66);
+  color: #e8f0ff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tb-guild-sound-trigger:hover {
+  border-color: rgba(159, 188, 244, 0.28);
+  background: rgba(33, 48, 78, 0.78);
+}
+
+.tb-guild-sound-popover {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 270px;
+  padding: 8px;
+  border: 1px solid rgba(158, 183, 232, 0.16);
+  border-radius: 15px;
+  background: rgba(9, 15, 27, 0.97);
+  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(18px);
+}
+
+.tb-guild-sound-popover > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  padding: 10px;
+  background: transparent;
+  color: rgba(224, 232, 248, 0.68);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tb-guild-sound-popover > button:hover {
+  background: rgba(86, 113, 172, 0.1);
+  color: #fff;
+}
+
+.tb-guild-sound-popover > button span {
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.tb-guild-sound-popover > button b {
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: rgba(72, 139, 107, 0.13);
+  color: rgba(157, 224, 190, 0.78);
+  font-size: 8px;
+}
+
+.tb-guild-sound-popover > button.off b {
+  background: rgba(126, 76, 70, 0.13);
+  color: rgba(225, 163, 153, 0.72);
+}
+
+.tb-guild-sound-popover > small {
+  display: block;
+  margin: 6px 8px 4px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(155, 180, 228, 0.09);
+  color: rgba(190, 204, 230, 0.35);
+  font-size: 7px;
+  line-height: 1.45;
+}
