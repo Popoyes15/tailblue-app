@@ -2,6 +2,7 @@ import type {
   HomeNotification,
 } from "../types/home";
 import type {
+  NotificationDeliveryMode,
   NotificationLevelSetting,
   TailBlueSettings,
 } from "../settings/tailblueSettings";
@@ -10,6 +11,12 @@ const STORAGE_KEY = "tailblue-notification-state-v2";
 const EVENT_NAME = "tailblue:notification-state";
 export const TEST_NOTIFICATION_EVENT =
   "tailblue:test-notification";
+
+export function getNotificationDeliveryMode(
+  settings: TailBlueSettings,
+): NotificationDeliveryMode {
+  return settings.notificationDeliveryMode;
+}
 
 type NotificationLocalState = {
   readIds: string[];

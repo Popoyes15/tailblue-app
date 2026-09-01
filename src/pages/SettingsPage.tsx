@@ -5,6 +5,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import {
+  type NotificationDeliveryMode,
   type NotificationLevelSetting,
   useTailBlueSettings,
 } from "../settings/tailblueSettings";
@@ -17,6 +18,9 @@ import {
   TAILBLUE_AUDIO_ASSETS,
   testAudio,
 } from "../services/audioService";
+import {
+  ensureNativeNotificationPermission,
+} from "../services/notificationDelivery";
 import "./settingsFinal.css";
 
 const LEVELS: Array<{
@@ -54,6 +58,42 @@ const LEVELS: Array<{
     icon: "🚨",
     label: "Urgentes",
     description: "Erreurs et alertes critiques.",
+  },
+];
+
+const DELIVERY_MODES: Array<{
+  id: NotificationDeliveryMode;
+  icon: string;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "sound",
+    icon: "🔊",
+    label: "Son uniquement",
+    description:
+      "Son TailBlue, aucune bannière Windows.",
+  },
+  {
+    id: "banner_sound",
+    icon: "🪟",
+    label: "Bannière + son",
+    description:
+      "Notification Windows + son TailBlue.",
+  },
+  {
+    id: "banner",
+    icon: "📣",
+    label: "Bannière",
+    description:
+      "Notification Windows sans son TailBlue.",
+  },
+  {
+    id: "silent",
+    icon: "🌙",
+    label: "Silencieux",
+    description:
+      "Centre TailBlue uniquement.",
   },
 ];
 
@@ -143,6 +183,11 @@ export default function SettingsPage() {
 
   const [resetDone, setResetDone] = useState(false);
 
+  const [
+    notificationPermissionMessage,
+    setNotificationPermissionMessage,
+  ] = useState<string | null>(null);
+
   useEffect(() => {
     configureAudio(settings);
   }, [settings]);
@@ -177,6 +222,36 @@ export default function SettingsPage() {
         ? "🎵 Test lancé. Si aucun fichier ambiance n'existe encore, TailBlue joue un petit son de démonstration."
         : "🔊 Son de test joué.",
     );
+  }
+
+  async function setDeliveryMode(
+    mode: NotificationDeliveryMode,
+  ) {
+    if (
+      mode === "banner" ||
+      mode === "banner_sound"
+    ) {
+      const allowed =
+        await ensureNativeNotificationPermission(
+          true,
+        );
+
+      setNotificationPermissionMessage(
+        allowed
+          ? "✅ Les bannières système sont autorisées."
+          : "⚠️ Windows n'a pas autorisé les bannières.",
+      );
+
+      if (!allowed) return;
+    } else {
+      setNotificationPermissionMessage(
+        null,
+      );
+    }
+
+    patchSettings({
+      notificationDeliveryMode: mode,
+    });
   }
 
   function resetEverything() {
@@ -312,6 +387,49 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
+
+          <section className="tb-notification-delivery">
+            <div>
+              <strong>
+                Comment TailBlue te prévient
+              </strong>
+              <p>
+                Par défaut : son TailBlue uniquement.
+                Les bannières Windows sont optionnelles.
+              </p>
+            </div>
+
+            <div className="tb-delivery-mode-grid">
+              {DELIVERY_MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  className={`tb-delivery-mode ${
+                    settings.notificationDeliveryMode ===
+                    mode.id
+                      ? "active"
+                      : ""
+                  }`}
+                  disabled={!settings.notifications}
+                  onClick={() =>
+                    void setDeliveryMode(mode.id)
+                  }
+                >
+                  <span>{mode.icon}</span>
+                  <div>
+                    <strong>{mode.label}</strong>
+                    <small>{mode.description}</small>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {notificationPermissionMessage && (
+              <div className="tb-notification-permission-message">
+                {notificationPermissionMessage}
+              </div>
+            )}
+          </section>
 
           <div className="tb-setting-actions">
             <button

@@ -11,6 +11,13 @@ export type NotificationLevelSetting =
   | "important"
   | "urgent";
 
+// TAILBLUE_NATIVE_NOTIFICATIONS_V1_20260901
+export type NotificationDeliveryMode =
+  | "sound"
+  | "banner_sound"
+  | "banner"
+  | "silent";
+
 export type TailBlueSettings = {
   animations: boolean;
   compact: boolean;
@@ -20,6 +27,8 @@ export type TailBlueSettings = {
     NotificationLevelSetting,
     boolean
   >;
+
+  notificationDeliveryMode: NotificationDeliveryMode;
 
   sound: boolean;
   ambientMusic: boolean;
@@ -48,6 +57,9 @@ export const DEFAULT_TAILBLUE_SETTINGS: TailBlueSettings = {
     important: true,
     urgent: true,
   },
+
+  // Par défaut : son TailBlue, aucune bannière Windows imposée.
+  notificationDeliveryMode: "sound",
 
   sound: false,
   ambientMusic: false,
@@ -79,6 +91,10 @@ function normalize(
       ...DEFAULT_TAILBLUE_SETTINGS.notificationLevels,
       ...(source.notificationLevels ?? {}),
     },
+
+    notificationDeliveryMode:
+      source.notificationDeliveryMode ??
+      DEFAULT_TAILBLUE_SETTINGS.notificationDeliveryMode,
 
     masterVolume: clampVolume(
       source.masterVolume,
