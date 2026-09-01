@@ -1,0 +1,120 @@
+/* TAILBLUE_MARKDOWN_RENDERER_V3_20260827 */
+
+.tb-markdown {
+  min-width: 0;
+  color: inherit;
+  font: inherit;
+  line-height: 1.72;
+  overflow-wrap: anywhere;
+}
+
+.tb-markdown.compact {
+  line-height: 1.55;
+}
+
+.tb-markdown p {
+  margin: 0.62em 0;
+}
+
+.tb-markdown p:first-child {
+  margin-top: 0;
+}
+
+.tb-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.tb-markdown h1,
+.tb-markdown h2,
+.tb-markdown h3,
+.tb-markdown h4,
+.tb-markdown h5,
+.tb-markdown h6 {
+  margin: 1.05em 0 0.5em;
+  color: #f2edf5;
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+}
+
+.tb-markdown h1:first-child,
+.tb-markdown h2:first-child,
+.tb-markdown h3:first-child,
+.tb-markdown h4:first-child,
+.tb-markdown h5:first-child,
+.tb-markdown h6:first-child {
+  margin-top: 0;
+}
+
+.tb-markdown h1 { font-size: 1.9rem; }
+.tb-markdown h2 { font-size: 1.58rem; }
+.tb-markdown h3 { font-size: 1.32rem; }
+.tb-markdown h4 { font-size: 1.16rem; }
+.tb-markdown h5 { font-size: 1.05rem; }
+.tb-markdown h6 { font-size: 0.98rem; }
+
+.tb-markdown strong,
+.tb-markdown-inline strong {
+  color: #f3ebf7;
+  font-weight: 950;
+}
+
+.tb-markdown em,
+.tb-markdown-inline em {
+  font-style: italic;
+}
+
+.tb-markdown code,
+.tb-markdown-inline code {
+  padding: 2px 6px;
+  border: 1px solid rgba(255,255,255,0.075);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.045);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.93em;
+}
+
+.tb-markdown ul,
+.tb-markdown ol {
+  display: grid;
+  gap: 6px;
+  margin: 0.75em 0;
+  padding-left: 27px;
+}
+
+.tb-markdown blockquote {
+  margin: 0.85em 0;
+  padding: 10px 15px;
+  border-left: 3px solid rgba(177,126,209,0.52);
+  background: rgba(116,74,145,0.075);
+  border-radius: 0 9px 9px 0;
+}
+
+.tb-markdown hr {
+  margin: 22px 0;
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.tb-md-space {
+  height: 9px;
+}
+
+.tb-markdown-inline {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.news-body-final.tb-markdown > p {
+  margin: 0.85em 0;
+}
+
+.roadmap-description-markdown {
+  max-width: 1050px;
+  margin: 0 0 20px;
+  color: #aaa7b2;
+  font-size: 1.08rem;
+}
+
+.wiki-article-body.tb-markdown {
+  display: block;
+}

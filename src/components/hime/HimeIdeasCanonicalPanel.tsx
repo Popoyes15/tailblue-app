@@ -22,6 +22,9 @@ import type {
   KingdomIdea,
 } from "../../types/ideas";
 
+// TAILBLUE_HIME_IDEAS_LAST_REAL_CACHE_V3_20260901
+let HIME_IDEAS_LAST_REAL_SNAPSHOT: HimeIdeasSnapshot | null = null;
+
 const STATUS: Record<
   IdeaStatus,
   {
@@ -87,7 +90,7 @@ export default function HimeIdeasCanonicalPanel({
     setSnapshot,
   ] = useState<
     HimeIdeasSnapshot | null
-  >(null);
+  >(() => HIME_IDEAS_LAST_REAL_SNAPSHOT);
 
   const [
     query,
@@ -122,9 +125,11 @@ export default function HimeIdeasCanonicalPanel({
     quiet = false,
   ) {
     try {
-      setSnapshot(
-        await ideasApi.himeSnapshot(),
-      );
+      const next =
+        await ideasApi.himeSnapshot();
+
+      HIME_IDEAS_LAST_REAL_SNAPSHOT = next;
+      setSnapshot(next);
 
       if (!quiet) {
         setMessage("");

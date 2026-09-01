@@ -98,24 +98,11 @@ export const previewDashboard: HimeDashboard = {
   generatedAt: now,
   totalCommandsToday: null,
   activePlayersToday: null,
-  pendingIdeas: 2,
-  unresolvedErrors: 1,
-  services: [
-    { id: "desktop", name: "Desktop Tauri", state: "online", detail: "Aperçu local actif" },
-    { id: "api", name: "API TailBlue", state: "offline", detail: "Non connectée" },
-    { id: "bot", name: "Bot Discord", state: "unknown", detail: "État disponible après connexion" },
-    { id: "data", name: "Données TailBlue", state: "unknown", detail: "Backend requis" },
-  ],
-  spotlightIdea: previewIdeas.ideas[0],
-  lastError: {
-    id: "preview-error",
-    at: now,
-    severity: "warning",
-    state: "open",
-    source: "Desktop",
-    message: "APERÇU — Backend TailBlue non connecté.",
-    occurrences: 1,
-  },
+  pendingIdeas: 0,
+  unresolvedErrors: 0,
+  services: [],
+  spotlightIdea: null,
+  lastError: null,
   lastBackupAt: null,
 };
 
@@ -134,31 +121,13 @@ export const previewStats: HimeStatsSnapshot = {
 
 export const previewLogs: HimeLogsSnapshot = {
   generatedAt: now,
-  sources: ["Desktop"],
-  logs: [
-    {
-      id: "preview-log",
-      at: now,
-      level: "warning",
-      source: "Desktop",
-      message: "APERÇU LOCAL — les vrais logs viendront du Gardien TailBlue.",
-    },
-  ],
+  sources: [],
+  logs: [],
 };
 
 export const previewErrors: HimeErrorsSnapshot = {
   generatedAt: now,
-  errors: [
-    {
-      id: "preview-error",
-      at: now,
-      severity: "warning",
-      state: "open",
-      source: "Desktop",
-      message: "APERÇU — Backend TailBlue non connecté.",
-      occurrences: 1,
-    },
-  ],
+  errors: [],
 };
 
 export const previewSecurity: HimeSecuritySnapshot = {

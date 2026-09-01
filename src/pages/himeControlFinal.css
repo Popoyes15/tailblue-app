@@ -1426,3 +1426,392 @@
   font-size: 1rem;
   font-weight: 850;
 }
+
+/* TAILBLUE_HIME_REPORTS_ARCHIVE_UI_V1_20260901 */
+.tb-hime-report-quick-actions,
+.tb-hime-report-custom { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+.tb-hime-report-custom input { min-width:180px; flex:1; }
+.tb-hime-report-library { display:grid; gap:24px; }
+.tb-hime-report-year > h2 { margin:0 0 14px; }
+.tb-hime-report-month { display:grid; gap:10px; margin-bottom:20px; }
+.tb-hime-report-month > h3 { margin:0 0 4px; opacity:.82; }
+.tb-hime-report-card { border:1px solid rgba(132,163,255,.18); border-radius:18px; background:rgba(3,14,38,.62); overflow:hidden; }
+.tb-hime-report-card > summary { cursor:pointer; list-style:none; display:flex; justify-content:space-between; gap:18px; align-items:center; padding:16px 18px; }
+.tb-hime-report-card > summary::-webkit-details-marker { display:none; }
+.tb-hime-report-card > summary > div:first-child { display:grid; gap:4px; }
+.tb-hime-report-card > summary strong { font-size:1.03rem; }
+.tb-hime-report-card > summary small { opacity:.68; }
+.tb-hime-report-kind, .tb-hime-report-summary-right span { width:fit-content; border-radius:999px; padding:3px 8px; font-size:.72rem; font-weight:800; letter-spacing:.04em; background:rgba(91,133,255,.14); }
+.tb-hime-report-summary-right { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+.tb-hime-report-summary-right .warning { background:rgba(255,179,71,.14); }
+.tb-hime-report-body { padding:0 18px 18px; display:grid; gap:16px; }
+.tb-hime-report-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.tb-hime-report-kpis > div { display:grid; gap:5px; padding:12px; border-radius:14px; background:rgba(255,255,255,.035); }
+.tb-hime-report-kpis span { opacity:.7; font-size:.82rem; }
+.tb-hime-report-kpis strong { font-size:1.2rem; }
+.tb-hime-report-columns { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr); gap:14px; }
+.tb-hime-report-days, .tb-hime-report-ranking { display:grid; gap:7px; }
+.tb-hime-report-days > div, .tb-hime-report-ranking > div { display:grid; grid-template-columns:1fr auto auto; gap:12px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.tb-hime-report-ranking > div { grid-template-columns:26px 1fr auto; }
+.tb-hime-report-days small { opacity:.62; }
+@media (max-width:900px) {
+  .tb-hime-report-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .tb-hime-report-columns { grid-template-columns:1fr; }
+  .tb-hime-report-card > summary { align-items:flex-start; flex-direction:column; }
+  .tb-hime-report-summary-right { justify-content:flex-start; }
+}
+
+/* TAILBLUE_HIME_CONTROL_CSS_SCALE_V1_20260901 */
+:root {
+  --tb-hime-font-scale: 1.14;
+  --tb-hime-text-size: 1rem;
+  --tb-hime-small-size: 0.95rem;
+  --tb-hime-title-size: clamp(2rem, 3vw, 3.35rem);
+  --tb-hime-subtitle-size: clamp(1.15rem, 1.7vw, 1.45rem);
+  --tb-hime-card-title-size: clamp(1.18rem, 1.4vw, 1.5rem);
+  --tb-hime-stat-size: clamp(1.5rem, 2vw, 2.2rem);
+}
+
+/* Agrandissement global Hime Control uniquement */
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) {
+  font-size: calc(16px * var(--tb-hime-font-scale));
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(p, li, label, input, select, textarea, button, a, span, div) {
+  font-size: inherit;
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(h1, .page-title, .section-title--hero, .hero-title) {
+  font-size: var(--tb-hime-title-size) !important;
+  line-height: 1.08;
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(h2, h3, .section-title, .card-title, .panel-title, .metric-title) {
+  font-size: var(--tb-hime-card-title-size) !important;
+  line-height: 1.16;
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(.page-subtitle, .section-kicker, .panel-kicker, .metric-label, small, .text-muted, .muted, .tiny, .caption) {
+  font-size: var(--tb-hime-small-size) !important;
+  line-height: 1.35;
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(.metric-value, .stat-value, .dashboard-stat__value, .summary-value) {
+  font-size: var(--tb-hime-stat-size) !important;
+  line-height: 1.05;
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(button, .button, .btn, input, select, textarea) {
+  font-size: var(--tb-hime-text-size) !important;
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(.sidebar, .menu, .menu-item, .nav-item, .tab, .chip, .badge, .pill, .status-pill) {
+  font-size: 0.98rem !important;
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(table, th, td, .log-row, .error-row, .player-row, .security-row) {
+  font-size: 0.98rem !important;
+}
+
+:where(
+  .hime-control-page,
+  .hime-control-root,
+  .hime-control-shell,
+  .hime-control-layout,
+  .hime-dashboard,
+  .hime-stats-page,
+  .hime-archives-page
+) :where(.panel, .card, .metric-card, .summary-card, .list-card) {
+  line-height: 1.35;
+}
+
+
+
+/* TAILBLUE_HIME_READABILITY_V3_20260901 */
+/*
+ * Le CSS Hime d'origine descendait jusqu'à 6–8px.
+ * Sur un écran 1440p/4K c'était microscopique.
+ * Ces règles sont volontairement à la FIN et en !important :
+ * elles fixent un plancher lisible sans grossir le reste de TailBlue.
+ */
+
+.tb-hime-page {
+  font-size: 14px !important;
+}
+
+.tb-hime-page :is(
+  p,
+  small,
+  span,
+  label,
+  button,
+  input,
+  select,
+  textarea,
+  code,
+  time,
+  li,
+  td,
+  th
+) {
+  font-size: 13px !important;
+  line-height: 1.42;
+}
+
+.tb-hime-page :is(strong, b) {
+  font-size: 14px !important;
+  line-height: 1.35;
+}
+
+.tb-hime-header h1 {
+  font-size: clamp(38px, 3vw, 54px) !important;
+}
+
+.tb-hime-header h1 > span {
+  font-size: .82em !important;
+}
+
+.tb-hime-header > div:first-child > p:last-child {
+  font-size: 14px !important;
+}
+
+.tb-hime-eyebrow {
+  font-size: 12px !important;
+  letter-spacing: .13em;
+}
+
+.tb-hime-card h2,
+.tb-hime-spotlight h2,
+.tb-hime-drawer h2 {
+  font-size: 23px !important;
+}
+
+.tb-hime-kpi small,
+.tb-hime-player-kpis small,
+.tb-hime-detail-grid span,
+.tb-hime-service small,
+.tb-hime-priority-list small,
+.tb-hime-author small {
+  font-size: 12px !important;
+}
+
+.tb-hime-kpi strong {
+  font-size: 27px !important;
+}
+
+.tb-hime-kpi p {
+  font-size: 12px !important;
+}
+
+.tb-hime-kpi-icon {
+  font-size: 23px !important;
+}
+
+.tb-hime-toolbar input,
+.tb-hime-toolbar select,
+.tb-hime-form-grid select,
+.tb-hime-drawer textarea,
+.tb-hime-inline-form input {
+  font-size: 13px !important;
+}
+
+.tb-hime-segmented button,
+.tb-hime-check,
+.tb-hime-connection,
+.tb-hime-preview-banner,
+.tb-hime-message {
+  font-size: 12px !important;
+}
+
+.tb-hime-service strong,
+.tb-hime-priority-list strong,
+.tb-hime-ranking strong,
+.tb-hime-ranking b,
+.tb-hime-guilds strong,
+.tb-hime-players strong,
+.tb-hime-amount-action strong {
+  font-size: 14px !important;
+}
+
+.tb-hime-service > b,
+.tb-hime-card-head > span,
+.tb-hime-mini-highlight span,
+.tb-hime-chart strong,
+.tb-hime-chart small,
+.tb-hime-ranking span {
+  font-size: 12px !important;
+}
+
+.tb-hime-mini-highlight strong {
+  font-size: 18px !important;
+}
+
+.tb-hime-mini-highlight p,
+.tb-hime-muted,
+.tb-hime-empty p {
+  font-size: 13px !important;
+}
+
+.tb-hime-empty h3 {
+  font-size: 17px !important;
+}
+
+/* Console / Logs */
+.tb-hime-console,
+.tb-hime-console :is(
+  header,
+  strong,
+  span,
+  p,
+  time,
+  b,
+  code
+) {
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+
+/* Joueurs */
+.tb-hime-players > button {
+  min-height: 72px;
+}
+
+.tb-hime-players > button :is(
+  strong,
+  small,
+  span,
+  b,
+  i
+) {
+  font-size: 13px !important;
+}
+
+.tb-hime-player-kpis strong {
+  font-size: 24px !important;
+}
+
+.tb-hime-detail-grid strong {
+  font-size: 15px !important;
+}
+
+.tb-hime-amount-action input,
+.tb-hime-amount-action button,
+.tb-hime-reset-grid button,
+.tb-hime-full-action {
+  font-size: 13px !important;
+}
+
+/* Erreurs / Sécurité / Économie / Système */
+.tb-hime-errors :is(
+  h3,
+  p,
+  span,
+  strong,
+  b,
+  time,
+  button,
+  code,
+  pre
+),
+.tb-hime-guilds :is(
+  span,
+  strong,
+  small,
+  code,
+  button
+),
+.tb-hime-wealth :is(
+  span,
+  strong,
+  b
+),
+.tb-hime-system-kpis :is(
+  small,
+  strong
+),
+.tb-hime-backups :is(
+  strong,
+  small,
+  b
+) {
+  font-size: 13px !important;
+}
+
+/* Les icônes restent visuellement des icônes. */
+.tb-hime-spotlight-icon,
+.tb-hime-empty > span,
+.tb-hime-shield-bg {
+  font-size: 30px !important;
+}

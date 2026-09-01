@@ -8,3 +8,237 @@
 @media(max-width:1180px){.wiki-final-layout{grid-template-columns:175px 1fr}.wiki-detail-final{grid-column:1/-1;position:static}.wiki-detail-card-final{display:grid;grid-template-columns:1fr 1fr}.wiki-detail-card-final>header,.wiki-detail-card-final>footer{grid-column:1/-1}.roadmap-overview-final{grid-template-columns:190px 1fr}.roadmap-kpis-final{grid-column:1/-1;justify-content:flex-start}.news-featured-final{grid-template-columns:1fr 330px}}
 @media(max-width:850px){.info-heading{display:block}.info-heading-pills,.news-actions-final{justify-content:flex-start;margin-top:10px}.wiki-final-layout{grid-template-columns:1fr}.wiki-category-rail{position:static;display:flex;overflow:auto}.wiki-category-rail>p{display:none}.wiki-category-rail>button{min-width:145px}.wiki-detail-final{position:static}.news-featured-final{grid-template-columns:1fr}.news-cover-final.large{min-height:260px}.roadmap-overview-final{grid-template-columns:1fr}.roadmap-kpis-final{grid-column:auto}.roadmap-global-bar{order:3}}
 @media(max-width:580px){.info-page{padding:8px 10px 26px}.wiki-search-final{grid-template-columns:38px 1fr}.wiki-search-final button{display:none}.wiki-command-list>button{grid-template-columns:40px 1fr 16px}.wiki-command-group{display:none}.wiki-detail-card-final{display:block}.news-reader-backdrop-final{padding:7px}.news-reader-copy-final{padding:16px}.news-reader-copy-final h1{font-size:24px}.roadmap-kpis-final{display:grid;grid-template-columns:1fr 1fr}.roadmap-item-final{grid-template-columns:52px 1fr}.roadmap-step-final{width:47px;height:47px}}
+
+
+/* TAILBLUE_WIKI_OVERFLOW_FIX_V1_20260827 */
+
+.wiki-article-grid {
+  align-items: stretch;
+}
+
+.wiki-article-grid > button {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.wiki-article-grid > button > div {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.wiki-article-grid h2,
+.wiki-article-grid p,
+.wiki-article-grid footer,
+.wiki-article-grid footer span {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.wiki-article-grid h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.wiki-article-grid p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-bottom: 18px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+}
+
+.wiki-article-grid footer {
+  align-items: flex-end;
+}
+
+.wiki-article-grid footer span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.wiki-article-grid footer b {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+
+/* TAILBLUE_ROADMAP_CARD_SIZE_V2_20260827 */
+
+.roadmap-list-final {
+  gap: 24px;
+}
+
+.roadmap-item-final {
+  min-height: 240px;
+  grid-template-columns: 82px 1fr;
+  gap: 26px;
+  padding: 30px 32px;
+  border-radius: 24px;
+}
+
+.roadmap-step-final {
+  display: grid;
+  width: 66px;
+  height: 66px;
+  place-items: center;
+  border-radius: 18px;
+  font-size: 1.2rem;
+  font-weight: 950;
+}
+
+.roadmap-item-final section {
+  min-width: 0;
+}
+
+.roadmap-item-meta-final {
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.roadmap-item-meta-final > span {
+  padding: 8px 11px;
+  font-size: 0.88rem;
+}
+
+.roadmap-status-final {
+  font-size: 0.9rem !important;
+  font-weight: 950 !important;
+}
+
+.roadmap-item-final h2 {
+  margin: 8px 0 12px;
+  font-size: clamp(1.7rem, 2.3vw, 2.15rem);
+  line-height: 1.18;
+}
+
+.roadmap-item-final > section > p {
+  max-width: 1050px;
+  margin: 0 0 20px;
+  color: #aaa7b2;
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.roadmap-progress-final {
+  height: 17px;
+  margin-top: 20px;
+  border-radius: 999px;
+}
+
+.roadmap-progress-final i {
+  border-radius: inherit;
+}
+
+.roadmap-progress-final span {
+  top: -32px;
+  font-size: 0.98rem;
+  font-weight: 950;
+}
+
+.roadmap-checklist-live {
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.roadmap-checklist-live span {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  color: #a09da8;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.roadmap-checklist-live span.done {
+  background: rgba(65,153,102,0.06);
+  color: #8dbb9f;
+}
+
+.roadmap-overview-final {
+  padding: 27px 30px;
+  border-radius: 23px;
+}
+
+.roadmap-overview-final > div:first-child strong {
+  font-size: 2.55rem;
+}
+
+.roadmap-kpis-final span {
+  padding: 13px 15px;
+  font-size: 0.94rem;
+}
+
+.roadmap-kpis-final b {
+  font-size: 1.4rem;
+}
+
+@media (max-width: 760px) {
+  .roadmap-item-final {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 23px;
+  }
+
+  .roadmap-step-final {
+    width: 54px;
+    height: 54px;
+  }
+}
+
+
+/* TAILBLUE_MARKDOWN_RENDERER_V3_20260827 */
+.roadmap-item-final > section > .roadmap-description-markdown { margin-bottom: 20px; }
+
+
+/* TAILBLUE_ROADMAP_TYPOGRAPHY_BALANCE_V4_20260827 */
+
+.roadmap-item-final h2 {
+  font-size: clamp(1.28rem, 1.55vw, 1.62rem) !important;
+  line-height: 1.25 !important;
+  margin: 7px 0 14px !important;
+  letter-spacing: -0.015em;
+}
+
+.roadmap-item-final .roadmap-description-markdown {
+  max-width: 1120px !important;
+  margin: 0 0 22px !important;
+  font-size: 1.06rem !important;
+  line-height: 1.68 !important;
+  color: #c7c4cd !important;
+}
+
+.roadmap-item-final .roadmap-description-markdown p,
+.roadmap-item-final .roadmap-description-markdown li,
+.roadmap-item-final .roadmap-description-markdown blockquote {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+}
+
+.roadmap-item-final .roadmap-description-markdown h1 {
+  font-size: 1.42rem !important;
+}
+
+.roadmap-item-final .roadmap-description-markdown h2 {
+  font-size: 1.34rem !important;
+}
+
+.roadmap-item-final .roadmap-description-markdown h3 {
+  font-size: 1.25rem !important;
+}
+
+.roadmap-item-final .roadmap-description-markdown h4,
+.roadmap-item-final .roadmap-description-markdown h5,
+.roadmap-item-final .roadmap-description-markdown h6 {
+  font-size: 1.12rem !important;
+}

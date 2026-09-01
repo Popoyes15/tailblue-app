@@ -1,0 +1,760 @@
+/* TAILBLUE_INFORMATION_STUDIO_V1_20260827 */
+
+.info-hime-manage {
+  border-color: rgba(222, 181, 83, 0.28) !important;
+  background: rgba(199, 151, 47, 0.1) !important;
+  color: #efd58f !important;
+  font-weight: 900 !important;
+}
+
+.hime-info-studio-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(3, 5, 10, 0.82);
+  backdrop-filter: blur(18px);
+}
+
+.hime-info-studio {
+  display: grid;
+  width: min(1480px, 96vw);
+  height: min(900px, 92vh);
+  grid-template-rows: auto auto 1fr;
+  overflow: hidden;
+  border: 1px solid rgba(222, 181, 83, 0.18);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(193, 147, 50, 0.08), transparent 30%),
+    linear-gradient(145deg, #131621, #0b0e16);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55);
+  color: #f2edf5;
+}
+
+.hime-info-studio-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 23px 27px 17px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.hime-info-studio-header p,
+.hime-info-editor-title p,
+.hime-info-import-copy > p {
+  margin: 0 0 5px;
+  color: #dbb75f;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+}
+
+.hime-info-studio-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.hime-info-studio-header span {
+  display: block;
+  margin-top: 6px;
+  color: #85838f;
+}
+
+.hime-info-close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  color: #aaa7b3;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.hime-info-tabs {
+  display: flex;
+  gap: 7px;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255,255,255,.055);
+  background: rgba(0,0,0,.12);
+}
+
+.hime-info-tabs button {
+  min-height: 42px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #8f8c99;
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.hime-info-tabs button.active {
+  background: rgba(177, 126, 209, .13);
+  color: #ead8f4;
+}
+
+.hime-info-message {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 112px;
+  transform: translateX(-50%);
+  max-width: 720px;
+  padding: 10px 15px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  background: rgba(20, 23, 33, .96);
+  box-shadow: 0 12px 38px rgba(0,0,0,.3);
+  color: #ddd5e4;
+}
+
+.hime-info-workspace {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: 320px 1fr;
+}
+
+.hime-info-list {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto 1fr;
+  border-right: 1px solid rgba(255,255,255,.055);
+  background: rgba(4, 7, 13, .22);
+}
+
+.hime-info-list-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+}
+
+.hime-info-list-top button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(193, 146, 226, .18);
+  border-radius: 10px;
+  background: rgba(131, 78, 167, .1);
+  color: #dec9ed;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.hime-info-items {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 9px 14px;
+}
+
+.hime-info-items > button {
+  display: grid;
+  width: 100%;
+  gap: 7px;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #c8c4ce;
+  cursor: pointer;
+  text-align: left;
+}
+
+.hime-info-items > button:hover,
+.hime-info-items > button.selected {
+  background: rgba(255,255,255,.045);
+}
+
+.hime-info-items > button.selected {
+  box-shadow: inset 2px 0 #c69b4f;
+}
+
+.hime-info-items > button > span {
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hime-info-items small {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.hime-info-items i {
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.045);
+  color: #8d8a95;
+  font-size: .65rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.hime-info-items i.app {
+  color: #a0d5f4;
+}
+
+.hime-info-items i.discord {
+  color: #b7adff;
+}
+
+.hime-info-items i.imported {
+  color: #d8ba76;
+}
+
+.hime-info-empty {
+  padding: 28px 12px;
+  color: #73717c;
+  text-align: center;
+}
+
+.hime-info-editor {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: auto 1fr auto;
+}
+
+.hime-info-editor-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 18px 22px 11px;
+}
+
+.hime-info-editor-title h2 {
+  margin: 0;
+}
+
+.hime-info-editor-title .danger {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(224, 91, 102, .2);
+  border-radius: 10px;
+  background: rgba(181, 61, 72, .08);
+  color: #d9969d;
+  cursor: pointer;
+}
+
+.hime-info-fields {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 13px;
+  overflow-y: auto;
+  padding: 12px 22px 24px;
+}
+
+.hime-info-fields label {
+  display: grid;
+  gap: 6px;
+}
+
+.hime-info-fields label.wide,
+.hime-info-publish-toggles.wide {
+  grid-column: 1 / -1;
+}
+
+.hime-info-fields label > span,
+.hime-info-editor-footer label > span,
+.hime-info-import-form label > span {
+  color: #8f8c99;
+  font-size: .79rem;
+  font-weight: 800;
+}
+
+.hime-info-fields input,
+.hime-info-fields textarea,
+.hime-info-fields select,
+.hime-info-editor-footer select,
+.hime-info-import-form select,
+.hime-info-import-form input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 11px;
+  outline: 0;
+  background: rgba(3, 6, 12, .46);
+  color: #eeeaf1;
+}
+
+.hime-info-fields input,
+.hime-info-fields select,
+.hime-info-editor-footer select,
+.hime-info-import-form select,
+.hime-info-import-form input {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.hime-info-fields textarea {
+  padding: 11px 12px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.hime-info-fields input:focus,
+.hime-info-fields textarea:focus,
+.hime-info-fields select:focus {
+  border-color: rgba(185, 132, 220, .45);
+  box-shadow: 0 0 0 3px rgba(154, 92, 194, .06);
+}
+
+.hime-info-progress-preview {
+  display: grid;
+  align-content: center;
+  min-height: 66px;
+  padding: 9px 13px;
+  border: 1px solid rgba(100, 207, 145, .14);
+  border-radius: 11px;
+  background: rgba(68, 156, 105, .05);
+}
+
+.hime-info-progress-preview span {
+  color: #7f9d8a;
+  font-size: .72rem;
+}
+
+.hime-info-progress-preview strong {
+  color: #8fd7aa;
+  font-size: 1.35rem;
+}
+
+.hime-info-publish-toggles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.hime-info-publish-toggles label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+  cursor: pointer;
+}
+
+.hime-info-publish-toggles input {
+  width: 18px;
+  height: 18px;
+}
+
+.hime-info-publish-toggles span {
+  display: grid;
+  gap: 2px;
+  color: #7e7b87;
+  font-size: .74rem;
+}
+
+.hime-info-publish-toggles b {
+  color: #cbc6d0;
+  font-size: .78rem;
+}
+
+.hime-info-editor-footer {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 13px 22px 18px;
+  border-top: 1px solid rgba(255,255,255,.055);
+}
+
+.hime-info-editor-footer label {
+  display: grid;
+  min-width: 280px;
+  gap: 5px;
+}
+
+.hime-info-save {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid rgba(216, 177, 82, .25);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(177, 132, 39, .22), rgba(128, 88, 25, .13));
+  color: #efd48b;
+  cursor: pointer;
+  font-weight: 950;
+}
+
+.hime-info-import {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 30px;
+  padding: 38px;
+  overflow-y: auto;
+}
+
+.hime-info-import-copy h2 {
+  margin: 0 0 12px;
+  font-size: 2rem;
+}
+
+.hime-info-import-copy > p:last-of-type {
+  max-width: 650px;
+  color: #93909b;
+  line-height: 1.65;
+}
+
+.hime-info-import-safe {
+  max-width: 620px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid rgba(97, 195, 138, .14);
+  border-radius: 13px;
+  background: rgba(65, 157, 103, .055);
+  color: #91b99f;
+}
+
+.hime-info-import-form {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: 18px;
+  background: rgba(255,255,255,.025);
+}
+
+.hime-info-import-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.hime-info-import-form > button {
+  min-height: 49px;
+  border: 1px solid rgba(150, 123, 230, .2);
+  border-radius: 12px;
+  background: rgba(113, 90, 195, .12);
+  color: #c5b9f5;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.hime-info-import-result {
+  padding: 12px;
+  border-radius: 11px;
+  background: rgba(69, 166, 109, .07);
+  color: #92d4aa;
+  line-height: 1.6;
+}
+
+.roadmap-checklist-live {
+  display: grid;
+  gap: 5px;
+  margin-top: 13px;
+}
+
+.roadmap-checklist-live span {
+  color: #8e8b96;
+  font-size: .84rem;
+}
+
+.roadmap-checklist-live span.done {
+  color: #7fb896;
+  text-decoration: line-through;
+}
+
+.wiki-mode-switch {
+  display: flex;
+  width: fit-content;
+  gap: 7px;
+  margin: 0 0 20px;
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 13px;
+  background: rgba(4, 7, 13, .28);
+}
+
+.wiki-mode-switch button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #8c8995;
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.wiki-mode-switch button.selected {
+  background: rgba(127, 83, 170, .14);
+  color: #dbc7eb;
+}
+
+.wiki-article-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.wiki-article-grid > button {
+  display: grid;
+  min-height: 210px;
+  align-content: space-between;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(126, 83, 173, .07), transparent 35%),
+    rgba(15, 18, 28, .68);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.wiki-article-grid h2 {
+  margin: 3px 0 8px;
+}
+
+.wiki-article-grid p {
+  color: #8e8b97;
+  line-height: 1.55;
+}
+
+.wiki-article-grid footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #777480;
+  font-size: .8rem;
+}
+
+.wiki-article-grid footer b {
+  color: #b89bd0;
+}
+
+.wiki-article-reader-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(3, 5, 10, .8);
+  backdrop-filter: blur(16px);
+}
+
+.wiki-article-reader {
+  position: relative;
+  width: min(900px, 94vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 34px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 24px;
+  background: #121620;
+  box-shadow: 0 35px 90px rgba(0,0,0,.45);
+}
+
+.wiki-article-reader > button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 11px;
+  background: rgba(255,255,255,.04);
+  color: #aaa7b1;
+  cursor: pointer;
+  font-size: 1.35rem;
+}
+
+.wiki-article-reader h1 {
+  margin: 5px 0 6px;
+  font-size: 2.2rem;
+}
+
+.wiki-article-reader > small {
+  color: #807d89;
+}
+
+.wiki-article-body {
+  display: grid;
+  gap: 4px;
+  margin-top: 26px;
+  color: #c1bdc7;
+  line-height: 1.75;
+}
+
+@media (max-width: 900px) {
+  .hime-info-studio {
+    width: 97vw;
+    height: 94vh;
+  }
+
+  .hime-info-workspace,
+  .hime-info-import {
+    grid-template-columns: 1fr;
+  }
+
+  .hime-info-list {
+    max-height: 250px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,.055);
+  }
+
+  .hime-info-fields,
+  .hime-info-publish-toggles {
+    grid-template-columns: 1fr;
+  }
+
+  .hime-info-fields label.wide,
+  .hime-info-publish-toggles.wide {
+    grid-column: auto;
+  }
+}
+
+
+/* TAILBLUE_INFORMATION_MARKDOWN_PREVIEW_V1_20260827 */
+
+.hime-markdown-field {
+  min-width: 0;
+}
+
+.hime-markdown-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hime-markdown-field-head > span {
+  color: #8f8c99;
+  font-size: 0.79rem;
+  font-weight: 800;
+}
+
+.hime-markdown-field-head > button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(183, 133, 217, 0.2);
+  border-radius: 9px;
+  background: rgba(119, 77, 151, 0.09);
+  color: #c3acd5;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.hime-markdown-field-head > button.active {
+  border-color: rgba(101, 190, 139, 0.2);
+  background: rgba(75, 151, 107, 0.09);
+  color: #a5d8b7;
+}
+
+.hime-markdown-preview {
+  min-height: 160px;
+  max-height: 430px;
+  overflow-y: auto;
+  padding: 20px 22px;
+  border: 1px solid rgba(255,255,255,0.075);
+  border-radius: 12px;
+  background: rgba(3, 6, 12, 0.45);
+  color: #c9c4ce;
+  font-size: 0.98rem;
+  line-height: 1.72;
+}
+
+.hime-markdown-preview h1,
+.hime-markdown-preview h2,
+.hime-markdown-preview h3,
+.hime-markdown-preview h4 {
+  margin: 1em 0 0.45em;
+  color: #f1ebf5;
+  line-height: 1.2;
+}
+
+.hime-markdown-preview h1 { font-size: 1.8rem; }
+.hime-markdown-preview h2 { font-size: 1.5rem; }
+.hime-markdown-preview h3 { font-size: 1.25rem; }
+.hime-markdown-preview h4 { font-size: 1.08rem; }
+
+.hime-markdown-preview p {
+  margin: 0.55em 0;
+}
+
+.hime-markdown-preview strong {
+  color: #f3e9f8;
+  font-weight: 950;
+}
+
+.hime-markdown-preview em {
+  color: #c8b7d4;
+}
+
+.hime-markdown-preview code {
+  padding: 2px 6px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.045);
+  color: #e7caee;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.hime-markdown-preview ul {
+  display: grid;
+  gap: 5px;
+  margin: 0.7em 0;
+  padding-left: 25px;
+}
+
+.hime-markdown-preview blockquote {
+  margin: 0.8em 0;
+  padding: 9px 14px;
+  border-left: 3px solid rgba(177,126,209,0.5);
+  background: rgba(116,74,145,0.07);
+  color: #aaa2af;
+}
+
+.hime-markdown-preview hr {
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.hime-markdown-preview .md-space {
+  height: 8px;
+}
+
+.hime-markdown-empty {
+  display: grid;
+  min-height: 130px;
+  place-items: center;
+  padding: 18px;
+  border: 1px dashed rgba(255,255,255,0.08);
+  border-radius: 12px;
+  color: #777480;
+}
+
+
+/* TAILBLUE_INFORMATION_TITLE_SUMMARY_PREVIEW_V2_20260827 */
+
+.hime-markdown-preview-single {
+  display: flex;
+  min-height: 46px;
+  max-height: none;
+  align-items: center;
+  padding: 10px 13px;
+  font-size: 1rem;
+}
+
+.hime-markdown-preview-single strong {
+  font-weight: 950;
+}
+
+.hime-markdown-preview-single code {
+  font-size: 0.92em;
+}

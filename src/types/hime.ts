@@ -223,6 +223,51 @@ export interface HimeEconomySnapshot {
   sinkTotals?: Record<string, number> | null;
 }
 
+export type HimeReportKind = "week" | "month";
+export type HimeReportGenerationMode = "automatic" | "manual";
+
+export interface HimeReport {
+  id: string;
+  kind: HimeReportKind;
+  periodKey: string;
+  label: string;
+  startDate: string;
+  endDate: string;
+  generatedAt: string;
+  generationMode: HimeReportGenerationMode;
+  manualVersion?: number | null;
+  finalized: boolean;
+  finalizedAt?: string | null;
+  statsThroughDate?: string | null;
+  discordDmSentAt?: string | null;
+  coverage: "complete" | "partial" | "unavailable";
+  stats: {
+    totalCommands: number;
+    uniqueUsers: number;
+    avgPerDay: number;
+    avgPerUser: number;
+    avgPerActiveUserDay: number;
+    daily: Array<{ date: string; total: number; users: number }>;
+    topCommands: HimeNamedCount[];
+    topUsers: HimeNamedCount[];
+  };
+}
+
+export interface HimeReportsSnapshot {
+  generatedAt: string;
+  reports: HimeReport[];
+}
+
+export interface HimeReportGenerateRequest {
+  kind: HimeReportKind;
+  periodKey?: string;
+}
+
+export interface HimeReportGenerateResponse {
+  ok: boolean;
+  report: HimeReport;
+}
+
 export interface HimeSystemSnapshot {
   generatedAt: string;
   services: HimeService[];

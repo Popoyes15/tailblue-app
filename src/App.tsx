@@ -52,9 +52,12 @@ import {
 import {
   configureAudio,
   ensureAmbienceStarted,
-  playNotificationTone,
   playUiClick,
 } from "./services/audioService";
+import {
+  deliverNotificationPresentation,
+  shouldShowNotificationToast,
+} from "./services/notificationDelivery";
 import {
   dismissNotificationLocal,
   dismissNotificationsLocal,
@@ -163,6 +166,11 @@ const SEARCH_ENTRIES: SearchEntry[] = [
   { icon: "✨", name: "Nouveautés", group: "Informations", keywords: ["update", "news", "annonce"] },
   { icon: "🛣️", name: "Roadmap", group: "Informations", keywords: ["avenir", "prévu", "planning"] },
   { icon: "💡", name: "Idées du Royaume", group: "Informations", keywords: ["idées", "suggestions", "communauté", "trophées", "archives royales"] },
+
+  // TAILBLUE_SOCIAL_DESKTOP_V1A_20260827
+  { icon: "👥", name: "Amis", group: "Social", keywords: ["amis", "friend", "ajouter", "présence"] },
+  { icon: "💬", name: "Messages", group: "Social", keywords: ["message", "chat", "discussion", "messagerie"] },
+  { icon: "🎟️", name: "Parrainage", group: "Social", keywords: ["parrain", "filleul", "code", "invitation"] },
 
   { icon: "📊", name: "Bilan général", group: "Hime Control", keywords: ["admin", "bilan"], himeOnly: true },
   { icon: "📈", name: "Statistiques", group: "Hime Control", keywords: ["stats", "serveur"], himeOnly: true },
@@ -1366,9 +1374,24 @@ function App() {
           notification.level
         ]
       ) {
-        setNotificationToast(notification);
-        void playNotificationTone(
-          notification.level,
+        seenNotificationIds.current.add(
+          notification.id,
+        );
+
+        if (
+          shouldShowNotificationToast(
+            settings,
+            notification,
+          )
+        ) {
+          setNotificationToast(
+            notification,
+          );
+        }
+
+        void deliverNotificationPresentation(
+          settings,
+          notification,
         );
       }
     };
@@ -1450,10 +1473,21 @@ function App() {
     const newest = unseen[0];
 
     if (newest) {
-      setNotificationToast(newest);
-      void playNotificationTone(newest.level);
+      if (
+        shouldShowNotificationToast(
+          settings,
+          newest,
+        )
+      ) {
+        setNotificationToast(newest);
+      }
+
+      void deliverNotificationPresentation(
+        settings,
+        newest,
+      );
     }
-  }, [settings.notifications, visibleNotifications]);
+  }, [settings, visibleNotifications]);
 
   const himeIdeas = home.hime?.ideas ?? 0;
   const himeErrors = home.hime?.errors ?? 0;
@@ -1980,6 +2014,12 @@ function App() {
             {navButton("🏛️", "Musée")}
             {navButton("🛒", "Marché")}
             {navButton("🏆", "Classement")}
+          </MenuSection>
+
+          <MenuSection title="Social" icon="💜">
+            {navButton("👥", "Amis")}
+            {navButton("💬", "Messages")}
+            {navButton("🎟️", "Parrainage")}
           </MenuSection>
 
           <MenuSection
@@ -2669,7 +2709,7 @@ function App() {
         ) : activePage === "Work" ? (
           <WorkPage />
         ) : isTailBlueExtraPage(activePage) ? (
-          <TailBlueExtraPages activePage={activePage} />
+          <TailBlueExtraPages activePage={activePage} isHime={isHime} />
 
 
   ) : (

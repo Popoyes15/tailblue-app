@@ -8,6 +8,7 @@ import RoadmapPage from "./RoadmapPage";
 import SettingsPage from "./SettingsPage";
 import WikiPage from "./WikiPage";
 import IdeasPage from "./IdeasPage";
+import SocialPage from "./SocialPage"; // TAILBLUE_SOCIAL_DESKTOP_V1A_20260827
 
 const EXTRA_PAGES = new Set([
   "Chenil",
@@ -18,6 +19,9 @@ const EXTRA_PAGES = new Set([
   "Nouveautés",
   "Roadmap",
   "Idées du Royaume",
+  "Amis",
+  "Messages",
+  "Parrainage",
   "ShowIdées",
   "Bilan général",
   "Statistiques",
@@ -47,15 +51,22 @@ export function isTailBlueExtraPage(page: string) {
   return EXTRA_PAGES.has(page);
 }
 
-export default function TailBlueExtraPages({ activePage }: { activePage: string }) {
+export default function TailBlueExtraPages({ activePage, isHime = false }: { activePage: string; isHime?: boolean }) {
   if (activePage === "Chenil") return <KennelPage />;
   if (activePage === "Élevage") return <BreedingPage />;
   if (activePage === "Musée") return <MuseumPage />;
   if (activePage === "Classement") return <LeaderboardPage />;
-  if (activePage === "Wiki") return <WikiPage />;
-  if (activePage === "Nouveautés") return <NewsPage />;
-  if (activePage === "Roadmap") return <RoadmapPage />;
+  if (activePage === "Wiki") return <WikiPage isHime={isHime} />;
+  if (activePage === "Nouveautés") return <NewsPage isHime={isHime} />;
+  if (activePage === "Roadmap") return <RoadmapPage isHime={isHime} />;
   if (activePage === "Idées du Royaume") return <IdeasPage />;
+  if (
+    activePage === "Amis" ||
+    activePage === "Messages" ||
+    activePage === "Parrainage"
+  ) {
+    return <SocialPage activePage={activePage} />;
+  }
   if (activePage === "Paramètres") return <SettingsPage />;
 
   if (HIME_PAGES.has(activePage as HimeSection)) {

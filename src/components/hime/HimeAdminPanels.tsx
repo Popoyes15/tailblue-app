@@ -1,5 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type {
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { himeApi, himeApiConfigured } from "../../api/himeApi";
+import HimeReportsArchive from "./HimeReportsArchive";
 import {
   previewDashboard,
   previewEconomy,
@@ -25,8 +36,54 @@ import type {
 } from "../../types/hime";
 import { Avatar, Card, Empty, Kpi, fmtDate, fmtDecimal, fmtDuration, fmtNumber } from "./HimeShared";
 
+// TAILBLUE_HIME_LAST_REAL_SNAPSHOT_CACHE_V3_20260901
+const HIME_LAST_REAL_SNAPSHOTS = new Map<string, unknown>();
+
+function useHimeLastRealSnapshot<T>(
+  key: string,
+  fallback: T,
+): [T, Dispatch<SetStateAction<T>>] {
+  const activeKey = useRef(key);
+  const fallbackRef = useRef(fallback);
+  fallbackRef.current = fallback;
+
+  const [value, setValueInternal] = useState<T>(() => {
+    const cached = HIME_LAST_REAL_SNAPSHOTS.get(key);
+    return (cached as T | undefined) ?? fallback;
+  });
+
+  useEffect(() => {
+    if (activeKey.current === key) return;
+
+    activeKey.current = key;
+    const cached = HIME_LAST_REAL_SNAPSHOTS.get(key);
+
+    setValueInternal(
+      (cached as T | undefined) ?? fallbackRef.current,
+    );
+  }, [key]);
+
+  const setValue = useCallback<Dispatch<SetStateAction<T>>>(
+    (next) => {
+      setValueInternal((previous) => {
+        const resolved =
+          typeof next === "function"
+            ? (next as (old: T) => T)(previous)
+            : next;
+
+        HIME_LAST_REAL_SNAPSHOTS.set(key, resolved);
+        return resolved;
+      });
+    },
+    [key],
+  );
+
+  return [value, setValue];
+}
+
+
 export function DashboardPanel({ refreshToken }: { refreshToken: number }) {
-  const [data, setData] = useState<HimeDashboard>(previewDashboard);
+  const [data, setData] = useHimeLastRealSnapshot<HimeDashboard>("dashboard", previewDashboard);
 
   useEffect(() => {
     let alive = true;
@@ -91,8 +148,9 @@ export function DashboardPanel({ refreshToken }: { refreshToken: number }) {
 }
 
 export function StatsPanel({ refreshToken }: { refreshToken: number }) {
+  const [view, setView] = useState<"live" | "archives">("live");
   const [period, setPeriod] = useState<"today" | "week" | "month">("week");
-  const [data, setData] = useState<HimeStatsSnapshot>(previewStats);
+  const [data, setData] = useHimeLastRealSnapshot<HimeStatsSnapshot>(`stats:${period}`, { ...previewStats, period });
 
   useEffect(() => {
     let alive = true;
@@ -102,17 +160,30 @@ export function StatsPanel({ refreshToken }: { refreshToken: number }) {
         const next = await himeApi.stats(period);
         if (alive) setData(next);
       } catch {
-        // no-op
+        // Garde le dernier snapshot réel en cas de panne transitoire.
       }
     }
     void load();
     return () => { alive = false; };
   }, [period, refreshToken]);
 
+  if (view === "archives") {
+    return (
+      <HimeReportsArchive
+        refreshToken={refreshToken}
+        onBack={() => setView("live")}
+      />
+    );
+  }
+
   const max = Math.max(1, ...data.daily.map((row) => row.total));
 
   return (
     <>
+      <div className="tb-hime-segmented">
+        <button className="active">Temps réel</button>
+        <button onClick={() => setView("archives")}>Archives</button>
+      </div>
       <div className="tb-hime-segmented">
         <button className={period === "today" ? "active" : ""} onClick={() => setPeriod("today")}>Aujourd'hui</button>
         <button className={period === "week" ? "active" : ""} onClick={() => setPeriod("week")}>Semaine</button>
@@ -142,12 +213,13 @@ export function StatsPanel({ refreshToken }: { refreshToken: number }) {
   );
 }
 
-function Ranking({ items }: { items: Array<{ label: string; count: number }> }) {
+function Ranking
+({ items }: { items: Array<{ label: string; count: number }> }) {
   return items.length ? <div className="tb-hime-ranking">{items.map((item, index) => <div key={`${item.label}-${index}`}><span>{index + 1}</span><strong>{item.label}</strong><b>{item.count}</b></div>)}</div> : <p className="tb-hime-muted">Aucune donnée.</p>;
 }
 
 export function LogsPanel({ refreshToken }: { refreshToken: number }) {
-  const [data, setData] = useState<HimeLogsSnapshot>(previewLogs);
+  const [data, setData] = useHimeLastRealSnapshot<HimeLogsSnapshot>("logs", previewLogs);
   const [level, setLevel] = useState("all");
   const [source, setSource] = useState("all");
   const [query, setQuery] = useState("");
@@ -182,7 +254,7 @@ export function LogsPanel({ refreshToken }: { refreshToken: number }) {
         <select value={level} onChange={(e) => setLevel(e.target.value)}><option value="all">Tous les niveaux</option><option value="debug">Debug</option><option value="info">Info</option><option value="success">Succès</option><option value="warning">Avertissement</option><option value="error">Erreur</option><option value="critical">Critique</option></select>
         <select value={source} onChange={(e) => setSource(e.target.value)}><option value="all">Toutes les sources</option>{data.sources.map((item) => <option key={item}>{item}</option>)}</select>
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher dans les logs…" />
-        <span className="tb-hime-live">● LIVE</span>
+        <span className="tb-hime-live">● AUTO 20s</span>
       </div>
       <article className="tb-hime-console">
         <header><div><i /><i /><i /></div><strong>tailblue://guardian/logs</strong><span>{filtered.length} ligne(s)</span></header>
@@ -195,7 +267,7 @@ export function LogsPanel({ refreshToken }: { refreshToken: number }) {
 }
 
 export function ErrorsPanel({ refreshToken }: { refreshToken: number }) {
-  const [data, setData] = useState<HimeErrorsSnapshot>(previewErrors);
+  const [data, setData] = useHimeLastRealSnapshot<HimeErrorsSnapshot>("errors", previewErrors);
   const [filter, setFilter] = useState<"open" | "resolved" | "ignored" | "all">("open");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -260,7 +332,7 @@ export function ErrorsPanel({ refreshToken }: { refreshToken: number }) {
 }
 
 export function SecurityPanel({ refreshToken }: { refreshToken: number }) {
-  const [data, setData] = useState<HimeSecuritySnapshot>(previewSecurity);
+  const [data, setData] = useHimeLastRealSnapshot<HimeSecuritySnapshot>("security", previewSecurity);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -303,7 +375,7 @@ export function SecurityPanel({ refreshToken }: { refreshToken: number }) {
 }
 
 export function PlayersPanel({ refreshToken }: { refreshToken: number }) {
-  const [data, setData] = useState<HimePlayersSnapshot>(previewPlayers);
+  const [data, setData] = useHimeLastRealSnapshot<HimePlayersSnapshot>("players", previewPlayers);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<HimePlayerDetail | null>(null);
   const [busy, setBusy] = useState(false);
@@ -358,13 +430,13 @@ function PlayerDrawer({ player, busy, onClose, onRun }: { player: HimePlayerDeta
   return <div className="tb-hime-drawer-backdrop" onMouseDown={(e) => e.currentTarget === e.target && onClose()}><aside className="tb-hime-drawer"><header className="tb-hime-drawer-head"><div className="tb-hime-author"><Avatar name={player.name} src={player.avatar} /><div><p className="tb-hime-eyebrow">👥 DOSSIER JOUEUR</p><h2>{player.name}</h2><small>{player.id}</small></div></div><button onClick={onClose}>×</button></header>
     <div className="tb-hime-player-kpis"><div><small>Niveau</small><strong>{player.level ?? "—"}</strong></div><div><small>Cookies</small><strong>{fmtNumber(player.cookies)}</strong></div><div><small>XP</small><strong>{fmtNumber(player.xp)}</strong></div><div><small>Réputation</small><strong>{fmtNumber(player.reputation)}</strong></div></div>
     <section className="tb-hime-drawer-section"><p className="tb-hime-eyebrow">PROFIL TAILBLUE</p><div className="tb-hime-detail-grid"><div><span>Rang aventurier</span><strong>{player.rank ?? "—"}</strong></div><div><span>Guilde</span><strong>{player.guild ?? "—"}</strong></div><div><span>Maison</span><strong>{player.house ?? "—"}</strong></div><div><span>Métier</span><strong>{player.job ?? "—"}</strong></div><div><span>Objets</span><strong>{fmtNumber(player.inventoryCount)}</strong></div><div><span>Musée</span><strong>{fmtNumber(player.museumCount)}</strong></div><div><span>Compagnons</span><strong>{fmtNumber(player.petsCount)}</strong></div><div><span>Succès</span><strong>{fmtNumber(player.successesCount)}</strong></div></div></section>
-    <section className="tb-hime-drawer-section"><p className="tb-hime-eyebrow">🎁 RÉCOMPENSES & PROGRESSION</p>{amountButton("Ajouter des cookies", "🍪", cookies, setCookies, "give_cookies")}{amountButton("Ajouter de l'XP", "✨", xp, setXp, "give_xp")}{amountButton("Ajouter de la réputation", "👑", rep, setRep, "give_reputation")}<button className="tb-hime-full-action" onClick={() => onRun({ action: "royal_gift" })}>🎀 Offrir un cadeau royal</button></section>
+    <section className="tb-hime-drawer-section"><p className="tb-hime-eyebrow">🎁 RÉCOMPENSES & PROGRESSION</p>{amountButton("Ajouter des cookies", "🍪", cookies, setCookies, "give_cookies")}{amountButton("Ajouter de l'XP", "✨", xp, setXp, "give_xp")}{amountButton("Ajouter de la réputation", "👑", rep, setRep, "give_reputation")}<p className="tb-hime-muted tb-hime-note">🎀 Cadeaux royaux : passe par le système Courriers/Cadeaux pour choisir le vrai contenu. Aucun cadeau fictif n'est créé ici.</p></section>
     <section className="tb-hime-drawer-section"><p className="tb-hime-eyebrow">♻️ RÉINITIALISATIONS</p><div className="tb-hime-reset-grid"><button onClick={() => onRun({ action: "reset_daily" })}>🎁 Daily</button><button onClick={() => onRun({ action: "reset_work" })}>💼 Work</button><button onClick={() => onRun({ action: "reset_hunt" })}>🏹 Hunt</button><button onClick={() => onRun({ action: "reset_coffer" })}>🧰 Coffre</button></div></section>
   </aside></div>;
 }
 
 export function EconomyPanel({ refreshToken }: { refreshToken: number }) {
-  const [data, setData] = useState<HimeEconomySnapshot>(previewEconomy);
+  const [data, setData] = useHimeLastRealSnapshot<HimeEconomySnapshot>("economy", previewEconomy);
   useEffect(() => { let alive = true; async function load() { if (!himeApiConfigured) return setData(previewEconomy); try { const next = await himeApi.economy(); if (alive) setData(next); } catch { /* no-op */ } } void load(); return () => { alive = false; }; }, [refreshToken]);
   const max = Math.max(1, ...data.richest.map((player) => player.cookies));
   return <>
@@ -374,7 +446,7 @@ export function EconomyPanel({ refreshToken }: { refreshToken: number }) {
 }
 
 export function SystemPanel({ refreshToken }: { refreshToken: number }) {
-  const [data, setData] = useState<HimeSystemSnapshot>(previewSystem);
+  const [data, setData] = useHimeLastRealSnapshot<HimeSystemSnapshot>("system", previewSystem);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => { let alive = true; async function load() { if (!himeApiConfigured) return setData(previewSystem); try { const next = await himeApi.system(); if (alive) setData(next); } catch { /* no-op */ } } void load(); return () => { alive = false; }; }, [refreshToken]);
